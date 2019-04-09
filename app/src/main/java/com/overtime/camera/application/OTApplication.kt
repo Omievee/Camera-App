@@ -1,4 +1,4 @@
-package com.overtime.camera
+package com.overtime.camera.application
 
 import android.app.Application
 import android.content.res.Configuration
