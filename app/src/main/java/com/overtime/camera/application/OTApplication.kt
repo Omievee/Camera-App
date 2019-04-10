@@ -1,9 +1,12 @@
 package com.overtime.camera.application
 
-import android.app.Application
-import android.content.res.Configuration
+import com.overtime.camera.di.AppComponent
+import dagger.android.AndroidInjector
+import dagger.android.HasActivityInjector
+import dagger.android.support.DaggerApplication
 
-class OTApplication : Application() {
+
+class OTApplication : DaggerApplication(), HasActivityInjector {
 
     override fun onCreate() {
         super.onCreate()
@@ -11,10 +14,7 @@ class OTApplication : Application() {
 
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration?) {
-        super.onConfigurationChanged(newConfig)
-
+    override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
+        return AppComponent.Builder.application(this).build()
     }
-
-
 }
