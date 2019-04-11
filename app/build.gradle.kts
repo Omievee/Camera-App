@@ -1,8 +1,12 @@
+import org.jetbrains.kotlin.kapt3.base.Kapt.kapt
+
 plugins {
     id("com.android.application")
     kotlin("android")
+    kotlin("kapt")
     kotlin("android.extensions")
 }
+
 
 android {
     compileSdkVersion(28)
@@ -14,6 +18,7 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
@@ -21,6 +26,7 @@ android {
 
         }
     }
+
 }
 
 dependencies {
@@ -36,11 +42,12 @@ dependencies {
     implementation("io.reactivex.rxjava2:rxjava:2.2.8")
     //Dagger Android
     implementation("com.google.dagger:dagger-android:2.15")
-    implementation("com.google.dagger:dagger-android-support:2.15")
-    annotationProcessor("com.google.dagger:dagger-compiler:2.15")
+    implementation("com.google.dagger:dagger-android-support:2.13")
+    implementation( "com.google.dagger:dagger:2.13")
+    kapt("com.google.dagger:dagger-compiler:2.13")
     //Dagger Core
-    implementation("com.google.dagger:dagger:2.15")
-    annotationProcessor("com.google.dagger:dagger-compiler:2.15")
+    implementation("com.google.dagger:dagger:2.13")
+    kapt("com.google.dagger:dagger-compiler:2.13")
 
 
     //Testing
