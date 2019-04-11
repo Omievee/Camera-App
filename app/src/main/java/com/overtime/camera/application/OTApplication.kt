@@ -11,12 +11,8 @@ import javax.inject.Inject
 
 class OTApplication : Application(), HasActivityInjector {
 
-
     @Inject
     lateinit var activityDispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
-
-
-
 
     override fun onCreate() {
         super.onCreate()
@@ -32,6 +28,7 @@ class OTApplication : Application(), HasActivityInjector {
             .builder()
             .application(this)
             .build()
+            .inject(this)
     }
 
 
