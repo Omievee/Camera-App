@@ -25,7 +25,7 @@
             android:supportsRtl="true"
             android:theme="@style/AppFullScreenTheme"
             tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".baseactivity.OTActivity">
+        <activity android:name=".baseactivity.BaseActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
