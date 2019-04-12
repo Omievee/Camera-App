@@ -1,10 +1,9 @@
 package com.overtime.camera.baseactivity
 
 import android.content.Context
-import android.content.res.Configuration
 import android.os.Bundle
 import android.view.OrientationEventListener
-import android.view.WindowManager
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -14,43 +13,74 @@ import androidx.viewpager.widget.ViewPager
 import com.overtime.camera.R
 import com.overtime.camera.camera.CameraFragment
 import com.overtime.camera.uploads.UploadsFragment
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class BaseActivity : AppCompatActivity() {
 
-
+    var orientation: OrientationEventListener? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+
         val viewPager = findViewById<ViewPager>(R.id.mainViewPager)
         viewPager.adapter = CustomPageAdapter(supportFragmentManager)
+
+        detectOrientation()
     }
 
     override fun onResume() {
         super.onResume()
-        detectOrientation()
+        orientation?.let {
+            if (it.canDetectOrientation()) {
+                it.enable()
+            }
+        }
+
+
     }
 
     private fun detectOrientation() {
-        val mOrientationListener = object : OrientationEventListener(this) {
+        orientation = object : OrientationEventListener(this) {
             override fun onOrientationChanged(orientation: Int) {
-                if (orientation == 0 || orientation == 180) {
-                    Toast.makeText(
-                        applicationContext, "portrait",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else if (orientation == 90 || orientation == 270) {
-                    Toast.makeText(
-                        applicationContext, "landscape",
-                        Toast.LENGTH_LONG
-                    ).show()
+                when (orientation) {
+                    0 -> {
+                        showWarnings()
+                    }
+                    180 -> {
+                        showWarnings()
+                    }
+                    90 -> {
+                        hideWarnings()
+                    }
+                    270 -> {
+                        hideWarnings()
+                    }
+                    else -> {
+
+                    }
                 }
             }
         }
 
-        if (mOrientationListener.canDetectOrientation()) {
-            mOrientationListener.enable()
-        }
+    }
+
+    fun showWarnings() {
+        rotateView.visibility = View.VISIBLE
+        rotateWarning.visibility = View.VISIBLE
+        mainViewPager.visibility = View.GONE
+    }
+
+    fun hideWarnings() {
+        rotateView.visibility = View.GONE
+        rotateWarning.visibility = View.GONE
+        mainViewPager.visibility = View.VISIBLE
+    }
+
+    override fun onPause() {
+        super.onPause()
+        orientation?.disable()
     }
 }
 
