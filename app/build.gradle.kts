@@ -34,6 +34,7 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.21")
     implementation("com.android.support:appcompat-v7:28.0.0")
+    implementation("androidx.legacy:legacy-support-v4:1.0.0")
     //RecyclerView
     implementation("com.android.support:recyclerview-v7:28.0.0")
     //ConstraintLayouts
@@ -45,6 +46,7 @@ dependencies {
     implementation("com.google.dagger:dagger-android:2.15")
     implementation("com.google.dagger:dagger-android-support:2.13")
     implementation("com.google.dagger:dagger:2.13")
+
     kapt("com.google.dagger:dagger-compiler:2.13")
     implementation("com.google.dagger:dagger:2.13")
     kapt("com.google.dagger:dagger-compiler:2.13")
@@ -55,7 +57,6 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.5.0")
     implementation("com.squareup.retrofit2:adapter-rxjava2:2.5.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.5.0")
-
 
     //Testing
     testImplementation("junit:junit:4.12")
