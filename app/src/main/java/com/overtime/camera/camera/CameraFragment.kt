@@ -16,7 +16,6 @@ private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
 class CameraFragment : Fragment() {
-    // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
 
@@ -29,12 +28,11 @@ class CameraFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_camera, container, false)
     }
 
     override fun onAttach(context: Context) {
-        //  AndroidSupportInjection.inject(this)
+        AndroidSupportInjection.inject(this)
         super.onAttach(context)
 
 

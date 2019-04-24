@@ -1,12 +1,15 @@
 package com.overtime.camera.baseactivity
 
+import android.Manifest
 import android.os.Bundle
 import android.view.OrientationEventListener
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
 import com.overtime.camera.R
 import com.overtime.camera.camera.CameraFragment
@@ -18,18 +21,21 @@ import javax.inject.Inject
 
 class BaseActivity : OTActivity() {
     var orientation: OrientationEventListener? = null
+    val PERMISSIONS_CODE = 0
+    private val CAMERA_PERMISSIONS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
 
     @Inject
     lateinit var vm: BaseActivityVM
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AndroidInjection.inject(this)
         setContentView(R.layout.activity_main)
 
-
         val viewPager = findViewById<ViewPager>(R.id.mainViewPager)
         viewPager.adapter = CustomPageAdapter(supportFragmentManager)
+
 
 
         vm.onCreate()
