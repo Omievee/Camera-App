@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.kapt3.base.Kapt.kapt
-
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -18,7 +16,9 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
     }
-
+    dataBinding {
+        isEnabled = true
+    }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
@@ -43,13 +43,13 @@ dependencies {
     implementation("io.reactivex.rxjava2:rxjava:2.2.8")
     implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
     //Dagger Android / Core (2.13 to work w/ Java)
-    implementation("com.google.dagger:dagger-android:2.15")
-    implementation("com.google.dagger:dagger-android-support:2.13")
-    implementation("com.google.dagger:dagger:2.13")
-
-    kapt("com.google.dagger:dagger-compiler:2.13")
-    implementation("com.google.dagger:dagger:2.13")
-    kapt("com.google.dagger:dagger-compiler:2.13")
+    implementation("com.google.dagger:dagger-android:2.16")
+    implementation("com.google.dagger:dagger-android-support:2.16")
+    implementation("com.google.dagger:dagger:2.16")
+    kapt("com.google.dagger:dagger-compiler:2.16")
+    kapt("com.google.dagger:dagger-android-processor:2.16")
+    implementation("com.google.dagger:dagger:2.16")
+    kapt("com.google.dagger:dagger-compiler:2.16")
     //Moshi
     implementation("com.squareup.moshi:moshi:1.8.0")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.8.0")
@@ -57,7 +57,6 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.5.0")
     implementation("com.squareup.retrofit2:adapter-rxjava2:2.5.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.5.0")
-
     //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")

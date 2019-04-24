@@ -1,5 +1,8 @@
 package com.overtime.camera.di
 
+import com.overtime.camera.baseactivity.BaseActivity
+import com.overtime.camera.baseactivity.BaseActivityModule
+import com.overtime.camera.camera.CameraFragment
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 
@@ -10,8 +13,11 @@ interface AppBindingModule {
      * Generates boilerplate
      */
 
+    @ActivityScope
+    @ContributesAndroidInjector(modules = [BaseActivityModule::class])
+    fun baseActivity(): BaseActivity
 
-//    @ActivityScope
-//    @ContributesAndroidInjector
-//    fun loginActivity(): LogInActivity
+    @FragmentScope
+    @ContributesAndroidInjector
+    fun camereaFrag(): CameraFragment
 }

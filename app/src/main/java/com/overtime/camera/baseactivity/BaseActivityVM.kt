@@ -1,4 +1,10 @@
 package com.overtime.camera.baseactivity
 
-class BaseActivityVM {
+import androidx.lifecycle.ViewModel
+
+class BaseActivityVM(val view: BaseActivity) : ViewModel() {
+
+    fun onCreate(){
+
+    }
 }

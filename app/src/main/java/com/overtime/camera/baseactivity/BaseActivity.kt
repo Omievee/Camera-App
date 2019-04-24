@@ -1,10 +1,8 @@
 package com.overtime.camera.baseactivity
 
-import android.content.Context
 import android.os.Bundle
 import android.view.OrientationEventListener
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -13,21 +11,29 @@ import androidx.viewpager.widget.ViewPager
 import com.overtime.camera.R
 import com.overtime.camera.camera.CameraFragment
 import com.overtime.camera.uploads.UploadsFragment
+import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_main.*
+import javax.inject.Inject
 
 
-class BaseActivity : AppCompatActivity() {
-
+class BaseActivity : OTActivity() {
     var orientation: OrientationEventListener? = null
+
+    @Inject
+    lateinit var vm: BaseActivityVM
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AndroidInjection.inject(this)
         setContentView(R.layout.activity_main)
 
 
         val viewPager = findViewById<ViewPager>(R.id.mainViewPager)
         viewPager.adapter = CustomPageAdapter(supportFragmentManager)
 
-        detectOrientation()
+
+        vm.onCreate()
+        // detectOrientation()
     }
 
     override fun onResume() {
@@ -37,8 +43,6 @@ class BaseActivity : AppCompatActivity() {
                 it.enable()
             }
         }
-
-
     }
 
     private fun detectOrientation() {
