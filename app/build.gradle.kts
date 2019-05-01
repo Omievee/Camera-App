@@ -72,6 +72,7 @@ dependencies {
     }
 
 
+
     implementation("android.arch.lifecycle:extensions:1.1.1")
     //Testing
     testImplementation("junit:junit:4.12")
