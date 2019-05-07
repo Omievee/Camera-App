@@ -25,13 +25,13 @@ class TXView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val width = View.MeasureSpec.getSize(widthMeasureSpec)
         val height = View.MeasureSpec.getSize(heightMeasureSpec)
-        if (ratioWidth == 0 || ratioHeight == 0) {
+        if (0 == ratioWidth || 0 == ratioHeight) {
             setMeasuredDimension(width, height)
         } else {
-            if (width < ((height * ratioWidth) / ratioHeight)) {
-                setMeasuredDimension(width, (width * ratioHeight) / ratioWidth)
+            if (width < height * ratioWidth / ratioHeight) {
+                setMeasuredDimension(height * ratioWidth / ratioHeight, height)
             } else {
-                setMeasuredDimension((height * ratioWidth) / ratioHeight, height)
+                setMeasuredDimension(width, width * ratioHeight / ratioWidth)
             }
         }
     }

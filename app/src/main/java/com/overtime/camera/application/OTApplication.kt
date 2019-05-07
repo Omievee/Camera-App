@@ -14,8 +14,6 @@ class OTApplication : Application(), HasActivityInjector {
     @Inject
     lateinit var activityDispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
 
-
-
     override fun onCreate() {
         super.onCreate()
         inject()

@@ -10,5 +10,5 @@ class BaseActivityModule {
 
     @Provides
     @ActivityScope
-    fun provideVM(baseActivity: BaseActivity): BaseActivityVM = BaseActivityVM(baseActivity)
+    fun provideVM(baseActivity: BaseActivity): BaseActivityPresenter = BaseActivityPresenter(baseActivity)
 }

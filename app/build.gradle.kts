@@ -19,6 +19,10 @@ android {
     dataBinding {
         isEnabled = true
     }
+
+    dataBinding {
+        isEnabled = true
+    }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
@@ -28,7 +32,6 @@ android {
 
     }
 }
-
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
@@ -46,6 +49,7 @@ dependencies {
     implementation("com.google.dagger:dagger-android:2.16")
     implementation("com.google.dagger:dagger-android-support:2.16")
     implementation("com.google.dagger:dagger:2.16")
+    implementation("androidx.appcompat:appcompat:1.0.2")
     kapt("com.google.dagger:dagger-compiler:2.16")
     kapt("com.google.dagger:dagger-android-processor:2.16")
     implementation("com.google.dagger:dagger:2.16")
@@ -60,6 +64,7 @@ dependencies {
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.8.0")
     //OKHTTP
     implementation("com.squareup.okhttp3:okhttp:3.14.1")
+
     implementation("com.squareup.okhttp3:logging-interceptor:3.14.1")
     //FireBase
     implementation("com.google.firebase:firebase-core:16.0.1")
@@ -70,10 +75,9 @@ dependencies {
     implementation("com.crashlytics.sdk.android:crashlytics:2.9.9@aar") {
         isTransitive = true
     }
-
-
-
+    //mvvm lifecycle
     implementation("android.arch.lifecycle:extensions:1.1.1")
+    kapt("android.arch.lifecycle:compiler:1.1.1")
     //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")

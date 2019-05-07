@@ -1,15 +1,14 @@
 package com.overtime.camera.baseactivity
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.OrientationEventListener
 import android.view.View
-import androidx.databinding.DataBindingUtil
-import androidx.databinding.ViewDataBinding
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
-import androidx.lifecycle.ViewModelProviders
 import androidx.viewpager.widget.ViewPager
 import com.overtime.camera.R
 import com.overtime.camera.camera.CameraFragment
@@ -18,27 +17,56 @@ import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_main.*
 import javax.inject.Inject
 
+class BaseActivity : OTActivity(), BaseActivityInt {
+    override fun setUpAdapter() {
+        val viewPager = findViewById<ViewPager>(R.id.mainViewPager)
+        viewPager.adapter = CustomPageAdapter(supportFragmentManager)
+    }
+    override fun displayDeniedPermissionsView() {
 
-class BaseActivity : OTActivity() {
+    }
     var orientation: OrientationEventListener? = null
     val PERMISSIONS_CODE = 0
     private val CAMERA_PERMISSIONS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
 
-    @Inject
-    lateinit var vm: BaseActivityVM
+    override fun displayPermissions() {
 
+    }
+
+    override fun displayAlert() {
+        AlertDialog.Builder(this, R.style.CUSTOM_ALERT)
+            .setTitle("Permissions Request")
+            .setMessage("Allow camera..")
+            .setPositiveButton("Continue") { _, _ ->
+                displaySystemPermissionsDialog()
+            }
+            .setNegativeButton("Not Now") { _, _ ->
+                presenter.permissionsDenied()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun displaySystemPermissionsDialog() {
+        requestPermissions(
+            CAMERA_PERMISSIONS,
+            PERMISSIONS_CODE
+        )
+    }
+
+
+    @Inject
+    lateinit var presenter: BaseActivityPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AndroidInjection.inject(this)
         setContentView(R.layout.activity_main)
 
-        val viewPager = findViewById<ViewPager>(R.id.mainViewPager)
-        viewPager.adapter = CustomPageAdapter(supportFragmentManager)
+
+        presenter.onCreate()
 
 
-
-        vm.onCreate()
         // detectOrientation()
     }
 
@@ -74,6 +102,17 @@ class BaseActivity : OTActivity() {
             }
         }
 
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSIONS_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                presenter.setUpAdapter()
+            } else {
+                presenter.permissionsDenied()
+            }
+        }
     }
 
     fun showWarnings() {
