@@ -23,8 +23,8 @@ class TXView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        val width = View.MeasureSpec.getSize(widthMeasureSpec)
-        val height = View.MeasureSpec.getSize(heightMeasureSpec)
+        val width = MeasureSpec.getSize(widthMeasureSpec)
+        val height = MeasureSpec.getSize(heightMeasureSpec)
         if (0 == ratioWidth || 0 == ratioHeight) {
             setMeasuredDimension(width, height)
         } else {
@@ -36,3 +36,4 @@ class TXView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
         }
     }
 }
+

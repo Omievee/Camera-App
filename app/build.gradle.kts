@@ -78,6 +78,8 @@ dependencies {
     //mvvm lifecycle
     implementation("android.arch.lifecycle:extensions:1.1.1")
     kapt("android.arch.lifecycle:compiler:1.1.1")
+    //ProgressBar
+    implementation ("com.github.antonKozyriatskyi:CircularProgressIndicator:1.3.0")
     //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")

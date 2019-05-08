@@ -5,6 +5,7 @@ import com.overtime.camera.baseactivity.BaseActivityModule
 import com.overtime.camera.camera.CameraFragModule
 import com.overtime.camera.camera.CameraFragment
 import com.overtime.camera.uploads.UploadsFragment
+import com.overtime.camera.uploads.UploadsModule
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 
@@ -22,6 +23,6 @@ interface AppBindingModule {
     fun cameraFrag(): CameraFragment
 
     @FragmentScope
-    @ContributesAndroidInjector
+    @ContributesAndroidInjector(modules = [UploadsModule::class])
     fun uploadFrag(): UploadsFragment
 }

@@ -20,7 +20,7 @@ class CameraPresenter(val view: CameraFragment) {
 
     fun getVideoFilePath(photoFileName: String): File {
         val mediaStorageDir =
-            File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Overtime_Technical")
+            File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime")
 
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             println("Failed....")
@@ -28,6 +28,4 @@ class CameraPresenter(val view: CameraFragment) {
         println(">>>>>>>>  + " + File(mediaStorageDir.path + File.separator + photoFileName))
         return File(mediaStorageDir.path + File.separator + photoFileName)
     }
-
-
 }
