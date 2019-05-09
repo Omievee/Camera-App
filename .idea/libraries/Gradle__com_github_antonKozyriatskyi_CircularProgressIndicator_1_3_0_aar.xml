@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="Gradle: com.github.antonKozyriatskyi:CircularProgressIndicator:1.3.0@aar">
+    <ANNOTATIONS>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/6afc7ee36ba4fe93754f1e850d5c19e5/annotations.zip!/" />
+    </ANNOTATIONS>
+    <CLASSES>
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/6afc7ee36ba4fe93754f1e850d5c19e5/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/6afc7ee36ba4fe93754f1e850d5c19e5/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.antonKozyriatskyi/CircularProgressIndicator/1.3.0/8cae56d71a0eba324a9402b855083797a0841dac/CircularProgressIndicator-1.3.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

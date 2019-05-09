@@ -1,15 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<androidx.constraintlayout.widget.ConstraintLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
+        android:background="@color/OT_White"
         android:layout_height="match_parent"
         tools:context=".uploads.UploadsFragment">
+<!--<data>-->
 
-    <!-- TODO: Update blank fragment layout -->
+        <!--<variable-->
+                <!--android:name="viewModel"-->
+                <!--android:type=".camera.UploadsFragent"/>-->
+    <!--</data>-->
+
+
     <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@string/hello_blank_fragment"/>
+            android:id="@+id/header"
+            android:layout_width="wrap_content"
+            android:gravity="center_horizontal"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            android:layout_marginTop="@dimen/margin_mid"
+            android:textSize="18sp"
+            android:padding="@dimen/margin_half"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="@string/uploads_header"/>
 
-</FrameLayout>
+    <ImageButton
+            android:id="@+id/settingsButton"
+            android:background="@color/OT_White"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/header"
+            android:layout_marginStart="@dimen/margin_spacing_min"
+            android:src="@drawable/settings_icon"
+            android:layout_width="wrap_content"
+            android:padding="@dimen/margin_half"
+            android:layout_marginTop="@dimen/margin_mid"
+            android:layout_height="wrap_content"/>
+
+    <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchHD"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="@dimen/margin_mid"
+            app:layout_constraintTop_toTopOf="parent"
+            android:padding="@dimen/margin_half"
+            android:layout_marginEnd="@dimen/margin_min"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+            app:layout_constraintTop_toBottomOf="@id/header"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

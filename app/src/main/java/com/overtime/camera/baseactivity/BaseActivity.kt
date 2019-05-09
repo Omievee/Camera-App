@@ -1,24 +1,135 @@
 package com.overtime.camera.baseactivity
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.view.OrientationEventListener
+import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import androidx.viewpager.widget.ViewPager
-import androidx.fragment.app.FragmentPagerAdapter
 import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager.widget.ViewPager
 import com.overtime.camera.R
 import com.overtime.camera.camera.CameraFragment
 import com.overtime.camera.uploads.UploadsFragment
+import dagger.android.AndroidInjection
+import kotlinx.android.synthetic.main.activity_main.*
+import javax.inject.Inject
+
+class BaseActivity : OTActivity(), BaseActivityInt {
+    override fun setUpAdapter() {
+        val viewPager = findViewById<ViewPager>(R.id.mainViewPager)
+        viewPager.adapter = CustomPageAdapter(supportFragmentManager)
+    }
+    override fun displayDeniedPermissionsView() {
+
+    }
+    var orientation: OrientationEventListener? = null
+    val PERMISSIONS_CODE = 0
+    private val CAMERA_PERMISSIONS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+
+    override fun displayPermissions() {
+
+    }
+
+    override fun displayAlert() {
+        AlertDialog.Builder(this, R.style.CUSTOM_ALERT)
+            .setTitle("Permissions Request")
+            .setMessage("Allow camera..")
+            .setPositiveButton("Continue") { _, _ ->
+                displaySystemPermissionsDialog()
+            }
+            .setNegativeButton("Not Now") { _, _ ->
+                presenter.permissionsDenied()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun displaySystemPermissionsDialog() {
+        requestPermissions(
+            CAMERA_PERMISSIONS,
+            PERMISSIONS_CODE
+        )
+    }
 
 
-class BaseActivity : AppCompatActivity() {
+    @Inject
+    lateinit var presenter: BaseActivityPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AndroidInjection.inject(this)
         setContentView(R.layout.activity_main)
-        val viewPager = findViewById<ViewPager>(R.id.mainViewPager)
-        viewPager.adapter = CustomPageAdapter(supportFragmentManager)
 
+
+        presenter.onCreate()
+
+
+        // detectOrientation()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        orientation?.let {
+            if (it.canDetectOrientation()) {
+                it.enable()
+            }
+        }
+    }
+
+    private fun detectOrientation() {
+        orientation = object : OrientationEventListener(this) {
+            override fun onOrientationChanged(orientation: Int) {
+                when (orientation) {
+                    0 -> {
+                        showWarnings()
+                    }
+                    180 -> {
+                        showWarnings()
+                    }
+                    90 -> {
+                        hideWarnings()
+                    }
+                    270 -> {
+                        hideWarnings()
+                    }
+                    else -> {
+
+                    }
+                }
+            }
+        }
+
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSIONS_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                presenter.setUpAdapter()
+            } else {
+                presenter.permissionsDenied()
+            }
+        }
+    }
+
+    fun showWarnings() {
+        rotateView.visibility = View.VISIBLE
+        rotateWarning.visibility = View.VISIBLE
+        mainViewPager.visibility = View.GONE
+    }
+
+    fun hideWarnings() {
+        rotateView.visibility = View.GONE
+        rotateWarning.visibility = View.GONE
+        mainViewPager.visibility = View.VISIBLE
+    }
+
+    override fun onPause() {
+        super.onPause()
+        orientation?.disable()
     }
 }
 
@@ -26,15 +137,16 @@ class CustomPageAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter
     override fun getCount(): Int {
         return TABS
     }
+
     override fun getItem(position: Int): Fragment? {
         return when (position) {
-            0 -> CameraFragment.newInstance("", "")
+            0 -> CameraFragment()
             1 -> UploadsFragment.newInstance("", "")
             else -> null
         }
     }
 
-//    override fun getPageTitle(position: Int): CharSequence? {
+    //    override fun getPageTitle(position: Int): CharSequence? {
 //        return "Page $position"
 ////    }
     companion object {

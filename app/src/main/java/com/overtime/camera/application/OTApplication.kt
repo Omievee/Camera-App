@@ -1,11 +1,11 @@
 package com.overtime.camera.application
 
-import dagger.android.AndroidInjector
-import dagger.android.HasActivityInjector
 import android.app.Activity
 import android.app.Application
 import com.overtime.camera.di.DaggerAppComponent
+import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
+import dagger.android.HasActivityInjector
 import javax.inject.Inject
 
 
@@ -19,16 +19,16 @@ class OTApplication : Application(), HasActivityInjector {
         inject()
     }
 
-    override fun activityInjector(): AndroidInjector<Activity> {
-        return activityDispatchingAndroidInjector
-    }
-
-    protected fun inject() {
+     fun inject() {
         DaggerAppComponent
             .builder()
             .application(this)
             .build()
             .inject(this)
+    }
+
+    override fun activityInjector(): AndroidInjector<Activity> {
+        return activityDispatchingAndroidInjector
     }
 
 

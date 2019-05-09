@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <dimen name="margin_half">5dp</dimen>
+    <dimen name="margin_standard">10dp</dimen>
+    <dimen name="margin_double">20dp</dimen>
+    <dimen name="margin_mid">15dp</dimen>
+    <dimen name="margin_spacing_extra">55dp</dimen>
+    <dimen name="margin_spacing_min">35dp</dimen>
+    <dimen name="margin_min">2dp</dimen>
+
+
+
+</resources>

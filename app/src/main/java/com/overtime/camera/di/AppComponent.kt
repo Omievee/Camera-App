@@ -1,6 +1,7 @@
 package com.overtime.camera.di
 
 import android.app.Application
+import com.overtime.camera.application.OTApplication
 import dagger.BindsInstance
 import dagger.Component
 import dagger.android.AndroidInjectionModule
@@ -17,16 +18,15 @@ import javax.inject.Singleton
         AndroidSupportInjectionModule::class,
         AppModule::class]
 )
-
-interface AppComponent : AndroidInjector<@kotlin.jvm.JvmSuppressWildcards DaggerApplication> {
+interface AppComponent : AndroidInjector<DaggerApplication> {
 
     @Component.Builder
     interface Builder {
         @BindsInstance
-        fun application(application: Application): Builder
+        fun application(application: OTApplication): Builder
 
         fun build(): AppComponent
     }
 
-    fun inject(app: Application)
+    fun inject(app: OTApplication)
 }
