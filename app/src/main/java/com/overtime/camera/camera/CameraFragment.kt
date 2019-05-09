@@ -7,12 +7,14 @@ import android.content.res.Configuration
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
+import android.media.CamcorderProfile
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
+import android.util.Range
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.*
@@ -94,7 +96,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
             stop()
             reset()
         }
-        stopRecordingThread()
+
         //showToast(getString(R.string.camera_video_saved))
         presenter.startPreview()
     }
@@ -130,13 +132,33 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
             } ?: return
 
 
+
+
+
             println("camera device... $cameraDevice")
             cameraDevice?.createCaptureSession(surfaces, object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                     println("create capture....")
                     captureSession = cameraCaptureSession
-                    updatePreview()
-                    activity?.runOnUiThread {
+                    previewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_SCENE_MODE_ACTION);
+//                    previewRequestBuilder.set(CaptureRequest.CONTROL_SCENE_MODE, CaptureRequest.CONTROL_SCENE_MODE_HIGH_SPEED_VIDEO);
+//                    previewRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range<Int>(60, 60))
+
+                    try {
+                        setUpCaptureRequestBuilder(previewRequestBuilder)
+                        HandlerThread("CameraPreview").start()
+                        println("pre rec thread")
+
+                        captureSession?.setRepeatingRequest(
+                                previewRequestBuilder.build(),
+                                null, null
+                        )
+                    } catch (e: CameraAccessException) {
+                        Log.e("CameraMain", e.toString())
+                    } catch (ise: IllegalStateException) {
+                        println("state : ${ise.printStackTrace()}")
+                    }
+                    activity?.run {
                         println("started media recorder.....")
                         mediaRecorder?.start()
                     }
@@ -145,7 +167,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
                     showToast("Failed")
                 }
-            }, backgroundHandler
+            }, null
             )
         } catch (e: CameraAccessException) {
             e.printStackTrace()
@@ -229,10 +251,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         try {
             setUpCaptureRequestBuilder(previewRequestBuilder)
             HandlerThread("CameraPreview").start()
-            startRecordingThread()
+            println("pre rec thread")
             captureSession?.setRepeatingRequest(
                     previewRequestBuilder.build(),
-                    null, recordHandler
+                    null, backgroundHandler
             )
         } catch (e: CameraAccessException) {
             Log.e("CameraMain", e.toString())
@@ -268,7 +290,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         txView = cameraView
         progressBar.setOnClickListener(this)
         tapToSave.setOnClickListener(this)
-//        txView.setOnTouchListener(this)
     }
 
     val surfaceTextureListener = object : TextureView.SurfaceTextureListener {
@@ -295,9 +316,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
     override fun onPause() {
         closeCamera()
         stopBackgroundThread()
-        stopRecordingThread()
         if (recording) {
-
             clickedStop = true
             stopVideo()
         }
@@ -345,6 +364,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java), width, height, it)
             }
 
+            println("????? ${characteristics.availableCaptureRequestKeys}")
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 txView.setAspectRatio(previewSize?.width ?: 0, previewSize?.height ?: 0)
             } else {
@@ -352,14 +372,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
             }
             mediaRecorder = MediaRecorder()
             txView.setTransform(Matrix())
-
-
             println("manager open start:::::::")
             manager.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
 
-
         } catch (e: CameraAccessException) {
-            //  showToast(getString(com.overtimetechnical.R.string.camera_cannot_access))
             activity?.finishAffinity()
         } catch (e: NullPointerException) {
             e.printStackTrace()
@@ -374,10 +390,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         backgroundHandler = Handler(backgroundThread?.looper)
     }
 
-    fun startRecordingThread() {
+    fun startRecordingThread(): Handler {
         recordThread = HandlerThread("Recording")
         recordThread?.start()
         recordHandler = Handler(recordThread?.looper)
+
+        return recordHandler as Handler
     }
 
     var recordHandler: Handler? = null
@@ -414,16 +432,19 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation))
         }
 
+
+        val profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
         mediaRecorder?.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setOutputFile(videoFile?.absolutePath)
-            setVideoEncodingBitRate(10000000)
-            setVideoFrameRate(60)
-            setVideoSize(videoSize?.width ?: 0, videoSize?.height ?: 0)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setVideoEncodingBitRate(profile.videoBitRate)
+            setVideoFrameRate(profile.videoFrameRate)
+            setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight)
+            setAudioEncodingBitRate(profile.audioBitRate)
+            setAudioEncoder(MediaRecorder.AudioEncoder.HE_AAC)
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
             prepare()
         }
     }
