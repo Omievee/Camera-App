@@ -140,7 +140,7 @@ class CustomPageAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter
 
     override fun getItem(position: Int): Fragment? {
         return when (position) {
-            0 -> CameraFragment.newInstance("", "")
+            0 -> CameraFragment()
             1 -> UploadsFragment.newInstance("", "")
             else -> null
         }
