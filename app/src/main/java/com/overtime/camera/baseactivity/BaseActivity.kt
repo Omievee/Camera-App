@@ -22,12 +22,19 @@ class BaseActivity : OTActivity(), BaseActivityInt {
         val viewPager = findViewById<ViewPager>(R.id.mainViewPager)
         viewPager.adapter = CustomPageAdapter(supportFragmentManager)
     }
+
     override fun displayDeniedPermissionsView() {
 
     }
+
     var orientation: OrientationEventListener? = null
     val PERMISSIONS_CODE = 0
-    private val CAMERA_PERMISSIONS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+    private val CAMERA_PERMISSIONS = arrayOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.READ_EXTERNAL_STORAGE
+    )
 
     override fun displayPermissions() {
 
