@@ -31,6 +31,10 @@ android {
         }
 
     }
+    androidExtensions {
+        isExperimental = true
+    }
+
 }
 
 dependencies {
@@ -64,7 +68,6 @@ dependencies {
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.8.0")
     //OKHTTP
     implementation("com.squareup.okhttp3:okhttp:3.14.1")
-
     implementation("com.squareup.okhttp3:logging-interceptor:3.14.1")
     //FireBase
     implementation("com.google.firebase:firebase-core:16.0.1")
@@ -78,8 +81,8 @@ dependencies {
     //mvvm lifecycle
     implementation("android.arch.lifecycle:extensions:1.1.1")
     kapt("android.arch.lifecycle:compiler:1.1.1")
-    //ProgressBar
-    implementation ("com.github.antonKozyriatskyi:CircularProgressIndicator:1.3.0")
+    //Fresco
+    implementation("com.facebook.fresco:fresco:1.13.0")
     //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")

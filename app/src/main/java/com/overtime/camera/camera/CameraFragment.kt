@@ -320,15 +320,15 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
     }
 
     fun playVideo() {
-        showToast("STARTED!!")
-        startRecording()
-        startProgressAnimation()
+//        showToast("STARTED!!")
+//        startRecording()
+//        startProgressAnimation()
     }
 
     fun stopVideo() {
-        showToast("STOPPED!")
-        stopRecording()
-        (countDown as CountDownTimer).cancel()
+//        showToast("STOPPED!")
+//        stopRecording()
+//        (countDown as CountDownTimer).cancel()
     }
 
     fun showToast(message: String) {
@@ -357,7 +357,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java), width, height, it)
             }
 
-            println("????? ${characteristics.availableCaptureRequestKeys}")
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 txView.setAspectRatio(previewSize?.width ?: 0, previewSize?.height ?: 0)
             } else {

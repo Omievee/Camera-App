@@ -10,9 +10,24 @@ class BaseActivityPresenter(val view: BaseActivity) {
         checkPermissions()
     }
 
-    private fun checkPermissions()  {
-        if (ContextCompat.checkSelfPermission(view, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-            && ContextCompat.checkSelfPermission(view, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+    private fun checkPermissions() {
+        if (ContextCompat.checkSelfPermission(
+                view,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
+            || ContextCompat.checkSelfPermission(
+                view,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                view,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                view,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             view.displayAlert()
         } else {
             view.setUpAdapter()

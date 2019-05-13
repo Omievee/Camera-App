@@ -2,6 +2,8 @@ package com.overtime.camera.di
 
 import android.app.Application
 import android.content.Context
+import com.overtime.camera.videomanager.VideosManager
+import com.overtime.camera.videomanager.VideosManagerImpl
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -10,10 +12,9 @@ import javax.inject.Singleton
 @Module
 class AppModule {
 
-//    @Provides
-//    @Singleton
-//    fun provideAnalyticsManager(context: Application, goWatchItManager: GoWatchItManager): AnalyticsManager {
-//        return AnalyticsManagerImpl(context, goWatchItManager)
-//    }
-
+    @Provides
+    @Singleton
+    fun provideoVideosManager(): VideosManager {
+        return VideosManagerImpl()
+    }
 }

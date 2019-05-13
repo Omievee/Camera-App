@@ -2,6 +2,7 @@ package com.overtime.camera.application
 
 import android.app.Activity
 import android.app.Application
+import com.facebook.drawee.backends.pipeline.Fresco
 import com.overtime.camera.di.DaggerAppComponent
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -16,10 +17,11 @@ class OTApplication : Application(), HasActivityInjector {
 
     override fun onCreate() {
         super.onCreate()
+        Fresco.initialize(this)
         inject()
     }
 
-     fun inject() {
+    fun inject() {
         DaggerAppComponent
             .builder()
             .application(this)

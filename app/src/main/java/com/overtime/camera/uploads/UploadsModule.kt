@@ -1,6 +1,7 @@
 package com.overtime.camera.uploads
 
 import com.overtime.camera.di.FragmentScope
+import com.overtime.camera.videomanager.VideosManager
 import dagger.Module
 import dagger.Provides
 
@@ -8,6 +9,6 @@ import dagger.Provides
 class UploadsModule {
     @Provides
     @FragmentScope
-    fun providePresenter(fragment: UploadsFragment): UploadsPresenter = UploadsPresenter(fragment)
+    fun providePresenter(fragment: UploadsFragment, manager: VideosManager): UploadsPresenter = UploadsPresenter(fragment, manager)
 }
 
