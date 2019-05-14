@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/OT_White"
+    android:fitsSystemWindows="true"
     tools:context=".uploads.UploadsFragment">
 
     <TextView
@@ -49,7 +50,8 @@
         android:id="@+id/uploadsRecycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/margin_double"
+        android:clipChildren="true"
+        android:clipToPadding="true"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -21,7 +21,6 @@ import javax.inject.Inject
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-
 class UploadsFragment : Fragment(), UploadsInt {
     private var param1: String? = null
 
@@ -43,11 +42,7 @@ class UploadsFragment : Fragment(), UploadsInt {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_uploads, container, false)
     }
 

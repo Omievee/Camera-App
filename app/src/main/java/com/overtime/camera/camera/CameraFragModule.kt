@@ -13,3 +13,7 @@ class CameraFragModule {
         CameraPresenter(fragment, manager)
 }
 
+
+
+
+//TODO: Fix adapter being updated.... See why wont save local... Clipping Recyclerview children...

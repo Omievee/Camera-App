@@ -3,6 +3,8 @@ package com.overtime.camera.camera
 import android.os.Environment
 import com.overtime.camera.videomanager.VideosManager
 import java.io.File
+import android.graphics.Bitmap
+import java.io.FileOutputStream
 
 
 class CameraPresenter(private val view: CameraFragment, val manager: VideosManager) {
@@ -14,18 +16,28 @@ class CameraPresenter(private val view: CameraFragment, val manager: VideosManag
         }
 
         println("path is: ${mediaStorageDir.path + File.separator + "$photoFileName.mp4"}")
-        saveToDB(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
+        saveToDB(mediaStorageDir.path + File.separator + "$photoFileName.mp4", photoFileName)
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
-    fun saveToDB(path: String) {
+    fun saveToDB(path: String, photoFileName: String) {
         manager.saveVideoToDB(view.context ?: return, path)
-//        val dirPath = Environment.getExternalStorageDirectory().absolutePath.toString()
-//        val myDir = File("$dirPath/OverTime")
-//        if (!myDir.exists()) {
-//            myDir.mkdirs()
-//        }
-//        return File(myDir, "$photoFileName.mp4")
+
+        val dirPath = Environment.getExternalStorageDirectory().absolutePath.toString()
+        val myDir = File("$dirPath/OverTime")
+        if (!myDir.exists()) {
+            myDir.mkdirs()
+        }
+        val file = File(myDir, "$photoFileName.mp4")
+        try {
+            val out = FileOutputStream(file)
+            out.flush()
+            out.close()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
     }
 
     fun startPreview() {
