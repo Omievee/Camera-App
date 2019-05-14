@@ -1,6 +1,5 @@
 package com.overtime.camera.uploads
 
-import android.os.Environment
 import com.overtime.camera.videomanager.VideosManager
 import io.reactivex.disposables.Disposable
 
@@ -8,12 +7,27 @@ class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager) {
 
     var managerDisposable: Disposable? = null
 
+    fun onCreate(){
+        manager.loadFromDB(view.context ?: return)
+    }
     fun onResume() {
         retrieveVideos()
     }
 
     private fun retrieveVideos() {
-        view.context?.let { manager.loadVideosFromGallery(it) }
+        subscribeToVideosFromGallery()
+    }
+
+    private fun subscribeToVideosFromGallery() {
+        managerDisposable?.dispose()
+        managerDisposable = manager
+            .subscribeToVideoGallery()
+            .map {
+                view.updateAdapter(it)
+            }.subscribe({
+            }, {
+                println("throwable: ${it.printStackTrace()}")
+            })
     }
 
 

@@ -8,6 +8,9 @@ import java.io.File
 
 interface VideosManager {
 
-    fun subscribeToVideoGallery(): Observable<SavedVideo>
-    fun loadVideosFromGallery(context: Context)
+    fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
+    fun loadFromDB(context: Context)
+    fun saveVideoToDB(context: Context,filePath:String)
+
+
 }

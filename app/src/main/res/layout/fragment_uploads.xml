@@ -6,13 +6,6 @@
     android:layout_height="match_parent"
     android:background="@color/OT_White"
     tools:context=".uploads.UploadsFragment">
-<!--<data>-->
-
-    <!--<variable-->
-    <!--android:name="viewModel"-->
-    <!--android:type=".camera.UploadsFragent"/>-->
-    <!--</data>-->
-
 
     <TextView
         android:id="@+id/header"
@@ -56,6 +49,7 @@
         android:id="@+id/uploadsRecycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/margin_double"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

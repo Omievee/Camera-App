@@ -91,6 +91,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
     override fun stopRecording() {
         stopRecordingThread()
         recording = false
+
         mediaRecorder?.apply {
             stop()
             reset()
@@ -252,7 +253,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 previewRequestBuilder.build(),
                 null, backgroundHandler
             )
-        } catch (e: CameraAccessException) {
+        } catch (e: CameraAccessException ) {
             Log.e("CameraMain", e.toString())
         } catch (ise: IllegalStateException) {
             println("state : ${ise.printStackTrace()}")
@@ -320,14 +321,14 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
     }
 
     fun playVideo() {
-//        showToast("STARTED!!")
-//        startRecording()
-//        startProgressAnimation()
+        showToast("STARTED!!")
+        startRecording()
+        //   startProgressAnimation()
     }
 
     fun stopVideo() {
-//        showToast("STOPPED!")
-//        stopRecording()
+        showToast("STOPPED!")
+        stopRecording()
 //        (countDown as CountDownTimer).cancel()
     }
 

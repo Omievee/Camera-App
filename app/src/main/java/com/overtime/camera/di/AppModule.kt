@@ -2,6 +2,7 @@ package com.overtime.camera.di
 
 import android.app.Application
 import android.content.Context
+import com.overtime.camera.db.AppDatabase
 import com.overtime.camera.videomanager.VideosManager
 import com.overtime.camera.videomanager.VideosManagerImpl
 import dagger.Module

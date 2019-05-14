@@ -1,6 +1,8 @@
 package com.overtime.camera.uploads
 
+import com.overtime.camera.model.SavedVideo
+
 interface UploadsInt {
 
-    fun updateAdater()
+    fun updateAdapter(videos:List<SavedVideo>)
 }

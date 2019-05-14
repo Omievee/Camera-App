@@ -83,6 +83,9 @@ dependencies {
     kapt("android.arch.lifecycle:compiler:1.1.1")
     //Fresco
     implementation("com.facebook.fresco:fresco:1.13.0")
+    //Room
+    implementation("android.arch.persistence.room:runtime:1.1.1")
+    kapt("android.arch.persistence.room:compiler:1.1.1")
     //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")
