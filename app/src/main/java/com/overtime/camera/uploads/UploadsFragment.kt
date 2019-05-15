@@ -8,12 +8,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.overtime.camera.R
 import com.overtime.camera.model.SavedVideo
+import com.overtime.camera.settings.SettingsFragment
 import com.overtime.camera.uploads_data.UploadsAdapter
 import dagger.android.support.AndroidSupportInjection
 import io.reactivex.Observable
 import kotlinx.android.synthetic.main.fragment_uploads.*
+import kotlinx.android.synthetic.main.uploads_view_toolbar.*
 import java.io.File
 import java.util.*
 import javax.inject.Inject
@@ -21,7 +24,22 @@ import javax.inject.Inject
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-class UploadsFragment : Fragment(), UploadsInt {
+class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener {
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.settingsButton -> {
+//                val manager = childFragmentManager
+//                val transaction = manager.beginTransaction()
+//                transaction.add(
+//                        R.id.fragmentContainer,
+//                        SettingsFragment.newInstance("", "")
+//                )
+//                transaction.addToBackStack("main")
+//                transaction.commit()
+            }
+        }
+    }
+
     private var param1: String? = null
 
     override fun updateAdapter(videos: List<SavedVideo>) {
@@ -31,6 +49,7 @@ class UploadsFragment : Fragment(), UploadsInt {
     }
 
     private var param2: String? = null
+
     @Inject
     lateinit var presenter: UploadsPresenter
 
@@ -60,6 +79,8 @@ class UploadsFragment : Fragment(), UploadsInt {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         presenter.onCreate()
+        settingsButton.setOnClickListener(this)
+        debug.setOnClickListener(this)
         uploadsRecycler.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
 
     }

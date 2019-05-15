@@ -1,5 +1,11 @@
 <resources>
     <string name="app_name">OverTimeCamera</string>
 
-    <string name="hello_blank_fragment">Hello blank fragment</string><string name="uploads_header">Uploads Queue</string>
+    <string name="uploads_header">Upload Queue</string>
+    <string name="upload_queue_turn_on_wifi">Turn on HD uploading to finish (WiFi Recommended)</string>
+    <string name="upload_queue_uploading_hd">Uploading high quality videos…</string>
+    <string name="settings_view_terms"><![CDATA[Terms Of Service & Privacy Policy]]></string>
+    <string name="settings_view_contact">Contact Overtime</string>
+    <string name="settings_view_logout">Logout</string>
+
 </resources>

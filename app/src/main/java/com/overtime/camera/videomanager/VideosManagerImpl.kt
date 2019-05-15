@@ -19,6 +19,7 @@ class VideosManagerImpl : VideosManager {
 
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
 
+    @SuppressLint("CheckResult")
     override fun saveVideoToDB(context: Context, filePath: String) {
         println("SAVING")
         val db = AppDatabase.getAppDataBase(context = context)
@@ -34,7 +35,11 @@ class VideosManagerImpl : VideosManager {
             .onErrorReturn {
                 it.printStackTrace()
             }
-            .subscribe()
+            .subscribe({
+                loadFromDB(context)
+            }, {
+                it.printStackTrace()
+            })
     }
 
     @SuppressLint("CheckResult")
@@ -53,7 +58,7 @@ class VideosManagerImpl : VideosManager {
             .subscribe({
                 subject.onNext(listOfVideos)
             }, {
-
+                it.printStackTrace()
             })
     }
 
@@ -64,7 +69,6 @@ class VideosManagerImpl : VideosManager {
             .observeOn(AndroidSchedulers.mainThread())
     }
 }
-
 
 
 //        val uri: Uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI

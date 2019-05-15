@@ -34,5 +34,4 @@ class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager) {
     fun onDestroy() {
         managerDisposable?.dispose()
     }
-
 }

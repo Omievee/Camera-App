@@ -253,7 +253,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 previewRequestBuilder.build(),
                 null, backgroundHandler
             )
-        } catch (e: CameraAccessException ) {
+        } catch (e: CameraAccessException) {
             Log.e("CameraMain", e.toString())
         } catch (ise: IllegalStateException) {
             println("state : ${ise.printStackTrace()}")

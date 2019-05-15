@@ -7,8 +7,8 @@
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/thumbNail"
-        android:layout_width="120dp"
-        android:layout_height="80dp"
+        android:layout_width="100dp"
+        android:layout_height="70dp"
         android:layout_margin="@dimen/margin_half"
         android:scaleType="fitXY"
         app:layout_constraintBottom_toBottomOf="parent"

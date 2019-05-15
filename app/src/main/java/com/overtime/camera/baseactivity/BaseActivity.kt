@@ -73,7 +73,6 @@ class BaseActivity : OTActivity(), BaseActivityInt {
 
         presenter.onCreate()
 
-
         // detectOrientation()
     }
 
@@ -144,7 +143,6 @@ class CustomPageAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter
     override fun getCount(): Int {
         return TABS
     }
-
     override fun getItem(position: Int): Fragment? {
         return when (position) {
             0 -> CameraFragment()
