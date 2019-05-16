@@ -12,7 +12,7 @@ import com.overtime.camera.uploads_data.BaseViewHolder
 import io.fabric.sdk.android.services.settings.SettingsData
 
 class SettingsAdapter(
-    val clickListener: SettingsClickListener
+        val clickListener: SettingsClickListener
 ) : RecyclerView.Adapter<BaseViewHolder>() {
 
     var data: SettingsViewData? = null
@@ -22,7 +22,9 @@ class SettingsAdapter(
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-        return BaseViewHolder(SettingsView(parent.context))
+        return BaseViewHolder(SettingsView(parent.context).apply {
+            layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        })
     }
 
     override fun getItemCount(): Int {
@@ -30,26 +32,28 @@ class SettingsAdapter(
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
+        println("data?: ${data?.data?.get(position)}")
         (holder.itemView as SettingsView).bind(data?.data?.get(position))
         holder.itemView.settingsClickListener = clickListener
     }
 
 
     companion object {
-        fun createData(context: Context, last: SettingsViewData): SettingsViewData {
+        fun createData(context: Context, last: SettingsViewData?): SettingsViewData {
+            val old = last?.data ?: emptyList()
             val newData = mutableListOf(
-                SettingsPresentation(
-                    type = Settings.CONTACT_OVERTIME,
-                    title = context.getString(R.string.settings_view_contact)
-                ), SettingsPresentation(
+                    SettingsPresentation(
+                            type = Settings.CONTACT_OVERTIME,
+                            title = context.getString(R.string.settings_view_contact)
+                    ), SettingsPresentation(
                     type = Settings.TERMS_OF_SERVICE,
                     title = context.getString(R.string.settings_view_terms)
-                ), SettingsPresentation(
+            ), SettingsPresentation(
                     type = Settings.LOGOUT,
                     title = context.getString(R.string.settings_view_logout)
-                )
             )
-            return SettingsViewData(newData, calculateDiff(BasicDiffCallback(last.data, newData)))
+            )
+            return SettingsViewData(newData, calculateDiff(BasicDiffCallback(old, newData)))
         }
     }
 }

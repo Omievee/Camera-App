@@ -44,7 +44,7 @@ class VideosManagerImpl : VideosManager {
 
     @SuppressLint("CheckResult")
     override fun loadFromDB(context: Context) {
-        var listOfVideos = mutableListOf<SavedVideo>()
+        val listOfVideos = mutableListOf<SavedVideo>()
         println("LOADING")
         val db = AppDatabase.getAppDataBase(context = context)
         Observable.fromCallable {

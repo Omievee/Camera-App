@@ -2,13 +2,16 @@ package com.overtime.camera.settings
 
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.ItemTouchHelper.*
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 import com.overtime.camera.R
@@ -28,16 +31,23 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
 
     }
 
-    override fun onTermsClicked() {
-
+    override fun onTermsClicked(urlIntent:Intent) {
+        startActivity(urlIntent)
     }
 
-    override fun onContactUs() {
-
+    override fun onContactUs(emailIntent: Intent) {
+        startActivity(emailIntent)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_settings, container, false)
+        val view = inflater.inflate(R.layout.fragment_settings, container, false)
+        view.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                activity?.onBackPressed()
+            }
+            true
+        }
+        return view
     }
 
 
@@ -58,16 +68,29 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
 
     }
 
-    var adapter = SettingsAdapter(clickListener = clickListener)
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        val adapter = SettingsAdapter(clickListener = clickListener)
         settingsRecycler.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        settingsRecycler.adapter = adapter
-        adapter.data = adapter.data?.let {
-            SettingsAdapter.createData(context ?: return, it)
+        adapter.data = SettingsAdapter.createData(context ?: return, adapter.data)
+        settingsRecycler.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                activity?.onBackPressed()
+            }
+            true
         }
-
+        settingsRecycler.adapter = adapter
+        val itemDecorator = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
+        ContextCompat.getDrawable(
+                this.context
+                        ?: return, R.drawable.divider
+        )?.let {
+            itemDecorator.setDrawable(
+                    it
+            )
+        }
+        settingsRecycler.addItemDecoration(itemDecorator)
     }
 
     companion object {

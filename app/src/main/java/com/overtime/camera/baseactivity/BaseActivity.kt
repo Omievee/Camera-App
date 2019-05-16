@@ -29,11 +29,11 @@ class BaseActivity : OTActivity(), BaseActivityInt {
 
     var orientation: OrientationEventListener? = null
     val PERMISSIONS_CODE = 0
-    private val CAMERA_PERMISSIONS = arrayOf(
-        Manifest.permission.CAMERA,
-        Manifest.permission.RECORD_AUDIO,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE
+    private val APP_PERMISSIONS = arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE
     )
 
     override fun displayPermissions() {
@@ -42,22 +42,22 @@ class BaseActivity : OTActivity(), BaseActivityInt {
 
     override fun displayAlert() {
         AlertDialog.Builder(this, R.style.CUSTOM_ALERT)
-            .setTitle("Permissions Request")
-            .setMessage("Allow camera..")
-            .setPositiveButton("Continue") { _, _ ->
-                displaySystemPermissionsDialog()
-            }
-            .setNegativeButton("Not Now") { _, _ ->
-                presenter.permissionsDenied()
-            }
-            .setCancelable(false)
-            .show()
+                .setTitle("Permissions Request")
+                .setMessage("Allow camera..")
+                .setPositiveButton("Continue") { _, _ ->
+                    displaySystemPermissionsDialog()
+                }
+                .setNegativeButton("Not Now") { _, _ ->
+                    presenter.permissionsDenied()
+                }
+                .setCancelable(false)
+                .show()
     }
 
     private fun displaySystemPermissionsDialog() {
         requestPermissions(
-            CAMERA_PERMISSIONS,
-            PERMISSIONS_CODE
+                APP_PERMISSIONS,
+                PERMISSIONS_CODE
         )
     }
 
@@ -137,12 +137,28 @@ class BaseActivity : OTActivity(), BaseActivityInt {
         super.onPause()
         orientation?.disable()
     }
+
+    override fun onBackPressed() {
+        supportFragmentManager.fragments.forEach {
+            when (it) {
+                is UploadsFragment -> {
+                    if (it.childFragmentManager.backStackEntryCount > 0) {
+                        it.childFragmentManager.popBackStack()
+                    } else {
+                        finishAffinity()
+                    }
+                }
+            }
+        }
+
+    }
 }
 
 class CustomPageAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
     override fun getCount(): Int {
         return TABS
     }
+
     override fun getItem(position: Int): Fragment? {
         return when (position) {
             0 -> CameraFragment()

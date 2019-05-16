@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.overtime.camera.R
@@ -28,14 +29,11 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener {
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.settingsButton -> {
-//                val manager = childFragmentManager
-//                val transaction = manager.beginTransaction()
-//                transaction.add(
-//                        R.id.fragmentContainer,
-//                        SettingsFragment.newInstance("", "")
-//                )
-//                transaction.addToBackStack("main")
-//                transaction.commit()
+                val manager = childFragmentManager
+                val transaction = manager?.beginTransaction()
+                transaction?.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                transaction?.setCustomAnimations(R.anim.slide_up, R.anim.slide_out)
+                transaction?.replace(R.id.fragContainer, SettingsFragment.newInstance("", ""))?.addToBackStack("settings").commit()
             }
         }
     }
@@ -94,11 +92,11 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener {
     companion object {
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
-            UploadsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+                UploadsFragment().apply {
+                    arguments = Bundle().apply {
+                        putString(ARG_PARAM1, param1)
+                        putString(ARG_PARAM2, param2)
+                    }
                 }
-            }
     }
 }
