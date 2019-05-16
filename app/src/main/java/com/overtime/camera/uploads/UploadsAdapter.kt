@@ -1,8 +1,9 @@
-package com.overtime.camera.uploads_data
+package com.overtime.camera.uploads
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.overtime.camera.model.SavedVideo
+import com.overtime.camera.baseviewholder.BaseViewHolder
 
 class UploadsAdapter(
     val savedVideos: List<SavedVideo>?
@@ -10,10 +11,10 @@ class UploadsAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
         return BaseViewHolder(UploadsView(parent.context).apply {
             layoutParams =
-                ViewGroup.MarginLayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
+                    ViewGroup.MarginLayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
         })
     }
     override fun getItemCount(): Int {

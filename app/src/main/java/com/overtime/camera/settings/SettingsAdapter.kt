@@ -2,14 +2,11 @@ package com.overtime.camera.settings
 
 import android.content.Context
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DiffUtil.calculateDiff
 import androidx.recyclerview.widget.RecyclerView
 import com.overtime.camera.R
 import com.overtime.camera.itemsame.BasicDiffCallback
-import com.overtime.camera.uploads_data.BaseViewHolder
-import io.fabric.sdk.android.services.settings.SettingsData
+import com.overtime.camera.baseviewholder.BaseViewHolder
 
 class SettingsAdapter(
         val clickListener: SettingsClickListener

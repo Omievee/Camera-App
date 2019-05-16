@@ -150,7 +150,6 @@ class BaseActivity : OTActivity(), BaseActivityInt {
                 }
             }
         }
-
     }
 }
 

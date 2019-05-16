@@ -1,4 +1,4 @@
-package com.overtime.camera.uploads_data
+package com.overtime.camera.uploads
 
 import android.content.Context
 import android.net.Uri
@@ -13,7 +13,7 @@ import com.overtime.camera.model.SavedVideo
 import kotlinx.android.synthetic.main.upload_item_view.view.*
 import java.io.File
 
-class UploadsView(context: Context?, attrbs: AttributeSet? = null) : ConstraintLayout(context, attrbs) {
+class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLayout(context, attrs) {
 
 
     init {
@@ -22,24 +22,21 @@ class UploadsView(context: Context?, attrbs: AttributeSet? = null) : ConstraintL
 
 
     fun bind(video: SavedVideo?) {
-
-        if(video?.isFavorite!!){
+        if (video?.isFavorite!!) {
 
         }
 
-
         val uri = Uri.fromFile(File(video.vidPath))
         val request = ImageRequestBuilder
-            .newBuilderWithSource(uri)
-            .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
-            .setProgressiveRenderingEnabled(false)
-            .build()
+                .newBuilderWithSource(uri)
+                .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+                .setProgressiveRenderingEnabled(true)
+                .build()
 
         val controller = Fresco.newDraweeControllerBuilder()
-            .setUri(uri)
-            .setImageRequest(request)
-            .build()
-
+                .setUri(uri)
+                .setImageRequest(request)
+                .build()
 
         thumbNail.controller = controller
 

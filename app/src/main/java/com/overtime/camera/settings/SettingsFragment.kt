@@ -28,7 +28,6 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
     lateinit var presenter: SettingsPresenter
 
     override fun onLogOut() {
-
     }
 
     override fun onTermsClicked(urlIntent:Intent) {

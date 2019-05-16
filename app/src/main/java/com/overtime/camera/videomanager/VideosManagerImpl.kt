@@ -12,10 +12,15 @@ import io.reactivex.subjects.BehaviorSubject
 import android.provider.MediaStore
 import android.util.Log
 import com.overtime.camera.db.AppDatabase
+import com.overtime.camera.network.UploadResponse
+import io.reactivex.Single
 import kotlin.random.Random
 
 
-class VideosManagerImpl : VideosManager {
+class VideosManagerImpl() : VideosManager {
+    override fun uploadVideo(): Single<UploadResponse> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
 
@@ -28,7 +33,6 @@ class VideosManagerImpl : VideosManager {
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.saveVideo(video)
-                println("SAVING 2>>>>>>>>")
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

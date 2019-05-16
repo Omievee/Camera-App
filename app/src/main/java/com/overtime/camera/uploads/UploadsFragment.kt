@@ -2,24 +2,18 @@ package com.overtime.camera.uploads
 
 import android.content.Context
 import android.os.Bundle
-import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.overtime.camera.R
 import com.overtime.camera.model.SavedVideo
 import com.overtime.camera.settings.SettingsFragment
-import com.overtime.camera.uploads_data.UploadsAdapter
 import dagger.android.support.AndroidSupportInjection
-import io.reactivex.Observable
 import kotlinx.android.synthetic.main.fragment_uploads.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
-import java.io.File
-import java.util.*
 import javax.inject.Inject
 
 private const val ARG_PARAM1 = "param1"

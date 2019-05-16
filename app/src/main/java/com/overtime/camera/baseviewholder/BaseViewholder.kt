@@ -1,4 +1,4 @@
-package com.overtime.camera.uploads_data
+package com.overtime.camera.baseviewholder
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView

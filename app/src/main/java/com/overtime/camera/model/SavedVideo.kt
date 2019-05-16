@@ -12,5 +12,5 @@ data class SavedVideo(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val vidPath: String?,
-    val isFavorite: Boolean? = false
+    val isFavorite: Boolean = false
 ) : Parcelable

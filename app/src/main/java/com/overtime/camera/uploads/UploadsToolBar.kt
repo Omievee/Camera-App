@@ -6,7 +6,7 @@ import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.overtime.camera.R
 
-class UploadsToolBar(context: Context, arrgs: AttributeSet? = null) : ConstraintLayout(context, arrgs) {
+class UploadsToolBar(context: Context, args: AttributeSet? = null) : ConstraintLayout(context, args) {
     init {
         View.inflate(context, R.layout.uploads_view_toolbar, this)
     }
