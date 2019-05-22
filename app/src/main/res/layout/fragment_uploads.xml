@@ -7,10 +7,10 @@
     android:id="@+id/frag"
     android:background="@color/OT_White"
     android:fitsSystemWindows="true"
-    tools:context=".uploads.UploadsFragment">
+    tools:context=".play.uploads.UploadsFragment">
 
 
-    <com.overtime.camera.uploads.UploadsToolBar
+    <com.itsovertime.overtimecamera.play.uploads.UploadsToolBar
         android:id="@+id/header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

@@ -2,7 +2,7 @@
 <manifest
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        package="com.overtime.camera">
+        package="com.itsovertime.overtimecamera">
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -16,7 +16,7 @@
 
 
     <application
-            android:name=".application.OTApplication"
+            android:name="com.itsovertime.overtimecamera.play.application.OTApplication"
             android:allowBackup="true"
             android:configChanges="orientation|screenSize"
             android:icon="@mipmap/ic_launcher"
@@ -25,9 +25,9 @@
             android:supportsRtl="true"
             android:theme="@style/AppFullScreenTheme"
             tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".splashscreen.SplashActivity">
+        <activity android:name="com.itsovertime.overtimecamera.play.splashscreen.SplashActivity">
         </activity>
-        <activity android:name=".baseactivity.BaseActivity">
+        <activity android:name="com.itsovertime.overtimecamera.play.baseactivity.BaseActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

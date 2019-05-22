@@ -9,15 +9,12 @@ plugins {
 android {
     compileSdkVersion(28)
     defaultConfig {
-        applicationId = "com.overtime.camera"
+        applicationId = "com.itsovertime.overtimecamera"
         minSdkVersion(26)
         targetSdkVersion(28)
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
-    }
-    dataBinding {
-        isEnabled = true
     }
 
     dataBinding {
@@ -29,19 +26,17 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
 
         }
-
     }
     androidExtensions {
         isExperimental = true
     }
-
 }
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.21")
     implementation("com.android.support:appcompat-v7:28.0.0")
-    implementation ("com.android.support:design:28.0.0")
+    implementation("com.android.support:design:28.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     //RecyclerView
     implementation("com.android.support:recyclerview-v7:28.0.0")
@@ -87,6 +82,11 @@ dependencies {
     //Room
     implementation("android.arch.persistence.room:runtime:1.1.1")
     kapt("android.arch.persistence.room:compiler:1.1.1")
+
+    //transcoder
+    implementation("com.writingminds:FFmpegAndroid:0.3.2")
+    implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
+
     //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")

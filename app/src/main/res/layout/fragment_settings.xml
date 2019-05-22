@@ -7,7 +7,7 @@
     android:background="@color/OT_White"
     android:clickable="true"
     android:focusable="true"
-    tools:context=".settings.SettingsFragment">
+    tools:context=".play.settings.SettingsFragment">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/settingsRecycler"
