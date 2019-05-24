@@ -84,7 +84,6 @@ dependencies {
     kapt("android.arch.persistence.room:compiler:1.1.1")
 
     //transcoder
-    implementation("com.writingminds:FFmpegAndroid:0.3.2")
     implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
 
     //Testing

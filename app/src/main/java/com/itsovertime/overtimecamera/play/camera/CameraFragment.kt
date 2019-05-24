@@ -325,13 +325,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
 
     fun playVideo() {
         showToast("STARTED!!")
-        //startRecording()
+        startRecording()
         //   startProgressAnimation()
     }
 
     fun stopVideo() {
         showToast("STOPPED!")
-        // stopRecording()
+        stopRecording()
 //        (countDown as CountDownTimer).cancel()
     }
 

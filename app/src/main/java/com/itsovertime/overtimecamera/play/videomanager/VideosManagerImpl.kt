@@ -27,6 +27,7 @@ import android.net.Uri
 import java.lang.Exception
 import android.R.attr.data
 import android.os.Environment
+import java.io.IOException
 import java.lang.RuntimeException
 
 
@@ -61,15 +62,18 @@ class VideosManagerImpl() : VideosManager {
             if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
                 println("Failed....")
             }
-            val f = File(mediaStorageDir.path + File.separator + "${videoFile.name}.mp4")
+            val f = File(mediaStorageDir.path + File.separator + videoFile.name)
             MediaTranscoder.getInstance().transcodeVideo(
                 fileDescriptor, f.absolutePath,
                 MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
             )
         } catch (r: RuntimeException) {
+            println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RUNTIME EXCEPTION")
             r.printStackTrace()
+        } catch (io: IOException) {
+            io.printStackTrace()
+            println("+++++++++++++++++++++++++++++++IO EXCEPTION")
         }
-
     }
 
     override fun uploadVideo(): Single<UploadResponse> {
@@ -93,8 +97,10 @@ class VideosManagerImpl() : VideosManager {
             .onErrorReturn {
                 it.printStackTrace()
             }
-            .subscribe({
+            .doFinally {
                 loadFromDB(context)
+            }
+            .subscribe({
             }, {
                 it.printStackTrace()
             })
@@ -111,13 +117,15 @@ class VideosManagerImpl() : VideosManager {
             println("LOADING")
             it.forEach {
                 listOfVideos.add(0, it)
-
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 subject.onNext(listOfVideos)
-                transcodeVideo(context, File(listOfVideos[3].vidPath))
+                listOfVideos.forEach {
+                    transcodeVideo(context, File(it.vidPath))
+                }
+
             },
                 {
                     it.printStackTrace()
