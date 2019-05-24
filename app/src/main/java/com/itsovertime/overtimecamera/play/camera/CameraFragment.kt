@@ -417,8 +417,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
 
     @Throws(IOException::class)
     private fun setUpMediaRecorder() {
-        val time = System.currentTimeMillis().toString()
-        videoFile = presenter.getVideoFilePath(time)
+        val videoTimeStamp = System.currentTimeMillis().toString()
+        videoFile = presenter.getVideoFilePath(videoTimeStamp)
         val rotation = activity?.windowManager?.defaultDisplay?.rotation ?: return
         when (sensorOrientation) {
             SENSOR_ORIENTATION_DEFAULT_DEGREES ->
@@ -442,6 +442,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
             setCaptureRate(120.0)
             prepare()
         }
+
     }
 
     private val cameraStateCallBack = object : CameraDevice.StateCallback() {

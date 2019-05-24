@@ -26,6 +26,8 @@ import android.content.ContentResolver
 import android.net.Uri
 import java.lang.Exception
 import android.R.attr.data
+import android.os.Environment
+import java.lang.RuntimeException
 
 
 class VideosManagerImpl() : VideosManager {
@@ -34,7 +36,7 @@ class VideosManagerImpl() : VideosManager {
         val file = Uri.fromFile(videoFile)
         println("file?? $file")
 
-        val parcelFileDescriptor = context.contentResolver.openFileDescriptor(file, "rw")
+        val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
 
         val listener = object : MediaTranscoder.Listener {
@@ -54,10 +56,20 @@ class VideosManagerImpl() : VideosManager {
                 println("complete :::")
             }
         }
-        MediaTranscoder.getInstance().transcodeVideo(
-            fileDescriptor, videoFile.absolutePath,
-            MediaFormatStrategyPresets.createExportPreset960x540Strategy(), listener
-        )
+        try {
+            val mediaStorageDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
+            if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+                println("Failed....")
+            }
+            val f = File(mediaStorageDir.path + File.separator + "${videoFile.name}.mp4")
+            MediaTranscoder.getInstance().transcodeVideo(
+                fileDescriptor, f.absolutePath,
+                MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
+            )
+        } catch (r: RuntimeException) {
+            r.printStackTrace()
+        }
+
     }
 
     override fun uploadVideo(): Single<UploadResponse> {
@@ -105,10 +117,12 @@ class VideosManagerImpl() : VideosManager {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 subject.onNext(listOfVideos)
-                transcodeVideo(context, File(listOfVideos[1].vidPath))
-            }, {
-                it.printStackTrace()
-            })
+                transcodeVideo(context, File(listOfVideos[3].vidPath))
+            },
+                {
+                    it.printStackTrace()
+                }
+            )
     }
 
 

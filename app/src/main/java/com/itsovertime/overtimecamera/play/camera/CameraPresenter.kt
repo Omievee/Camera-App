@@ -10,12 +10,10 @@ import java.util.*
 class CameraPresenter(private val view: CameraFragment, val manager: VideosManager) {
 
     fun getVideoFilePath(photoFileName: String): File {
-        val mediaStorageDir = File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime")
+        val mediaStorageDir = File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime1080")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             println("Failed....")
         }
-
-        println("path is: ${mediaStorageDir.path + File.separator + "$photoFileName.mp4"}")
 
         saveToDB(
             path = mediaStorageDir.path + File.separator + "$photoFileName.mp4",
@@ -24,7 +22,6 @@ class CameraPresenter(private val view: CameraFragment, val manager: VideosManag
         )
 
         val f = File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
-
         return f
     }
 
