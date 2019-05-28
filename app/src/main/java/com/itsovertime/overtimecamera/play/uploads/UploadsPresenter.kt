@@ -7,10 +7,12 @@ class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager) {
 
     var managerDisposable: Disposable? = null
 
-    fun onCreate(){
+    fun onCreate() {
         manager.loadFromDB(view.context ?: return)
     }
+
     fun onResume() {
+        view.swipe2RefreshIsTrue()
         retrieveVideos()
     }
 
@@ -24,6 +26,7 @@ class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager) {
             .subscribeToVideoGallery()
             .map {
                 view.updateAdapter(it)
+                view.swipe2RefreshIsFalse()
             }.subscribe({
             }, {
                 println("throwable: ${it.printStackTrace()}")

@@ -21,6 +21,7 @@ import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.itsovertime.overtimecamera.play.R
+import com.itsovertime.overtimecamera.play.onfavorite.onFavoriteListener
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.File
@@ -39,6 +40,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
 
     @Inject
     lateinit var presenter: CameraPresenter
+
 
     override fun closeCamera() {
         try {
@@ -87,6 +89,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
     var captureSession: CameraCaptureSession? = null
     lateinit var previewRequestBuilder: CaptureRequest.Builder
 
+    var isFavorite: Boolean = false
 
     override fun stopRecording() {
         stopRecordingThread()
@@ -97,13 +100,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 reset()
             }
             presenter.recordingStopped()
+
         } catch (r: RuntimeException) {
             r.printStackTrace()
         } catch (e: java.lang.IllegalStateException) {
             e.printStackTrace()
         }
-
-
     }
 
 
@@ -111,11 +113,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         println("pre try:::::::")
         recording = true
         if (cameraDevice == null || !txView.isAvailable) {
-            println("overtimecamera device: " + cameraDevice)
             return
         }
         try {
-            println(" start:::::::")
             closePreviewSession()
             setUpMediaRecorder()
             val texture = txView.surfaceTexture.apply {
@@ -136,40 +136,39 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
 
             } ?: return
 
-            println("overtimecamera device... $cameraDevice")
             cameraDevice?.createCaptureSession(
-                surfaces, object : CameraCaptureSession.StateCallback() {
-                    override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                        println("create capture....")
-                        captureSession = cameraCaptureSession
-                        previewRequestBuilder.set(
+                    surfaces, object : CameraCaptureSession.StateCallback() {
+                override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                    println("create capture....")
+                    captureSession = cameraCaptureSession
+                    previewRequestBuilder.set(
                             CaptureRequest.CONTROL_MODE,
                             CaptureRequest.CONTROL_SCENE_MODE_ACTION
-                        )
-                        try {
-                            setUpCaptureRequestBuilder(previewRequestBuilder)
-                            HandlerThread("CameraPreview").start()
-                            println("pre rec thread")
-                            startRecordingThread()
-                            captureSession?.setRepeatingRequest(
+                    )
+                    try {
+                        setUpCaptureRequestBuilder(previewRequestBuilder)
+                        HandlerThread("CameraPreview").start()
+                        println("pre rec thread")
+                        startRecordingThread()
+                        captureSession?.setRepeatingRequest(
                                 previewRequestBuilder.build(),
                                 null, recordHandler
-                            )
-                        } catch (e: CameraAccessException) {
-                            Log.e("CameraMain", e.toString())
-                        } catch (ise: IllegalStateException) {
-                            println("state : ${ise.printStackTrace()}")
-                        }
-                        activity?.run {
-                            println("started media recorder.....")
-                            mediaRecorder?.start()
-                        }
+                        )
+                    } catch (e: CameraAccessException) {
+                        Log.e("CameraMain", e.toString())
+                    } catch (ise: IllegalStateException) {
+                        println("state : ${ise.printStackTrace()}")
                     }
+                    activity?.run {
+                        println("started media recorder.....")
+                        mediaRecorder?.start()
+                    }
+                }
 
-                    override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
-                        showToast("Failed")
-                    }
-                }, null
+                override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
+                    showToast("Failed")
+                }
+            }, null
             )
         } catch (e: CameraAccessException) {
             e.printStackTrace()
@@ -186,7 +185,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
 
     var countDown: CountDownTimer? = null
     private fun startProgressAnimation() {
-        countDown = object : CountDownTimer(18000, 1000) {
+        countDown = object : CountDownTimer(12000, 1000) {
             override fun onFinish() {
                 progressBar.progress = 100
             }
@@ -219,21 +218,21 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
             previewRequestBuilder.addTarget(previewSurface)
 
             cameraDevice?.createCaptureSession(
-                listOf(previewSurface),
-                object : CameraCaptureSession.StateCallback() {
-                    override fun onConfigured(session: CameraCaptureSession) {
-                        captureSession = session
-                        updatePreview()
-                    }
+                    listOf(previewSurface),
+                    object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) {
+                            captureSession = session
+                            updatePreview()
+                        }
 
-                    override fun onConfigureFailed(session: CameraCaptureSession) {
-                        //  showToast(getString(com.overtimetechnical.R.string.camera_fail))
-                    }
-                }, backgroundHandler
+                        override fun onConfigureFailed(session: CameraCaptureSession) {
+                            //  showToast(getString(com.overtimetechnical.R.string.camera_fail))
+                        }
+                    }, backgroundHandler
             )
 
             if (!clickedStop) {
-                playVideo()
+                startLiveView()
             }
         } catch (e: CameraAccessException) {
             e.printStackTrace()
@@ -253,8 +252,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
             HandlerThread("CameraPreview").start()
             println("pre rec thread")
             captureSession?.setRepeatingRequest(
-                previewRequestBuilder.build(),
-                null, backgroundHandler
+                    previewRequestBuilder.build(),
+                    null, backgroundHandler
             )
         } catch (e: CameraAccessException) {
             Log.e("CameraMain", e.toString())
@@ -275,8 +274,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                     clickedStop = true
                     stopVideo()
                 } else {
-                    playVideo()
+                    startLiveView()
                 }
+            R.id.favoriteIcon -> {
+                favoriteIcon.visibility = View.GONE
+                isFavorite = true
+            }
         }
     }
 
@@ -290,6 +293,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         txView = cameraView
         progressBar.setOnClickListener(this)
         tapToSave.setOnClickListener(this)
+        favoriteIcon.setOnClickListener(this)
     }
 
     val surfaceTextureListener = object : TextureView.SurfaceTextureListener {
@@ -323,23 +327,28 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         super.onPause()
     }
 
-    fun playVideo() {
-        showToast("STARTED!!")
+    fun startLiveView() {
+        startProgressAnimation()
+        isFavorite = false
+        favoriteIcon.visibility = View.GONE
         startRecording()
-        //   startProgressAnimation()
+//        Handler().postDelayed({
+//            stopVideo()
+//        }, 12000)
+
     }
 
     fun stopVideo() {
-        showToast("STOPPED!")
         stopRecording()
+        favoriteIcon.visibility = View.VISIBLE
 //        (countDown as CountDownTimer).cancel()
     }
 
     fun showToast(message: String) {
         Toast.makeText(
-            context,
-            message,
-            Toast.LENGTH_LONG
+                context,
+                message,
+                Toast.LENGTH_LONG
         ).show()
     }
 
@@ -354,7 +363,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
 
             val characteristics = manager.getCameraCharacteristics(cameraId)
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                ?: throw RuntimeException("Cannot get available preview/video sizes")
+                    ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
             videoSize?.let {
@@ -475,10 +484,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
 
 
     private fun chooseOptimalSize(
-        choices: Array<Size>,
-        width: Int,
-        height: Int,
-        aspectRatio: Size
+            choices: Array<Size>,
+            width: Int,
+            height: Int,
+            aspectRatio: Size
     ): Size {
 
         val w = aspectRatio.width
@@ -499,5 +508,5 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
 
 class Compare : Comparator<Size> {
     override fun compare(lhs: Size, rhs: Size) =
-        Long.signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
+            Long.signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
 }

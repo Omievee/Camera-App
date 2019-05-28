@@ -21,8 +21,8 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLa
     }
 
 
-    fun bind(video: SavedVideo?) {
-        if (video?.isFavorite!!) {
+    fun bind(video: SavedVideo) {
+        if (video.isFavorite) {
 
         }
 
