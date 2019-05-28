@@ -2,11 +2,14 @@ package com.itsovertime.overtimecamera.play.application
 
 import android.app.Activity
 import android.app.Application
+import com.crashlytics.android.Crashlytics
+import com.facebook.drawee.backends.pipeline.BuildConfig
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.itsovertime.overtimecamera.play.di.DaggerAppComponent
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasActivityInjector
+import io.fabric.sdk.android.Fabric
 import javax.inject.Inject
 
 
@@ -17,6 +20,9 @@ class OTApplication : Application(), HasActivityInjector {
 
     override fun onCreate() {
         super.onCreate()
+        if(!BuildConfig.DEBUG){
+            Fabric.with(this, Crashlytics())
+        }
         Fresco.initialize(this)
         inject()
     }

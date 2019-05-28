@@ -27,13 +27,19 @@ import android.net.Uri
 import java.lang.Exception
 import android.R.attr.data
 import android.os.Environment
+import com.crashlytics.android.Crashlytics
 import java.io.IOException
 import java.lang.RuntimeException
 
 
 class VideosManagerImpl() : VideosManager {
+    override fun uploadVideo(): Single<UploadResponse> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
+    var context: Context? = null
     override fun transcodeVideo(context: Context, videoFile: File) {
+        this.context = context
         val file = Uri.fromFile(videoFile)
         println("file?? $file")
 
@@ -45,39 +51,38 @@ class VideosManagerImpl() : VideosManager {
                 println("progress ::: $progress")
             }
 
-            override fun onTranscodeCanceled() {
-                println("canceled")
-            }
-
+            override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
+                //Place crashlytics logic here..
                 exception?.printStackTrace()
             }
 
             override fun onTranscodeCompleted() {
+                //begin upload
                 println("complete :::")
             }
         }
         try {
-            val mediaStorageDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
-            if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-                println("Failed....")
-            }
-            val f = File(mediaStorageDir.path + File.separator + videoFile.name)
             MediaTranscoder.getInstance().transcodeVideo(
-                fileDescriptor, f.absolutePath,
+                fileDescriptor, compressedFile(videoFile).absolutePath,
                 MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
             )
         } catch (r: RuntimeException) {
-            println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>RUNTIME EXCEPTION")
+            Crashlytics.log("MediaTranscoder-RuntimeException ${r.message}")
             r.printStackTrace()
         } catch (io: IOException) {
             io.printStackTrace()
-            println("+++++++++++++++++++++++++++++++IO EXCEPTION")
+        } catch (ia: IllegalArgumentException) {
+            ia.printStackTrace()
         }
     }
 
-    override fun uploadVideo(): Single<UploadResponse> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    private fun compressedFile(file: File): File {
+        val mediaStorageDir = File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+            println("Failed....")
+        }
+        return File(mediaStorageDir.path + File.separator + file.name)
     }
 
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
@@ -96,9 +101,6 @@ class VideosManagerImpl() : VideosManager {
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorReturn {
                 it.printStackTrace()
-            }
-            .doFinally {
-                loadFromDB(context)
             }
             .subscribe({
             }, {
@@ -120,11 +122,19 @@ class VideosManagerImpl() : VideosManager {
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doFinally {
+                when(listOfVideos.size){
+                     0 -> {
+
+                     }
+                    else ->{
+                        transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
+                    }
+                }
+
+            }
             .subscribe({
                 subject.onNext(listOfVideos)
-                listOfVideos.forEach {
-                    transcodeVideo(context, File(it.vidPath))
-                }
 
             },
                 {
@@ -132,7 +142,6 @@ class VideosManagerImpl() : VideosManager {
                 }
             )
     }
-
 
     override fun subscribeToVideoGallery(): Observable<List<SavedVideo>> {
         return subject

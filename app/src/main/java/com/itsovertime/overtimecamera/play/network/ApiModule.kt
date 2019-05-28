@@ -1,7 +1,7 @@
 package com.itsovertime.overtimecamera.play.network
 
 import android.app.Application
-import com.itsovertime.overtimecamera.BuildConfig
+import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.utils.Constants
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Rfc3339DateJsonAdapter

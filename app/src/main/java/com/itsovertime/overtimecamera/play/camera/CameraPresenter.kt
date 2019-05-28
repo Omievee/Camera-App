@@ -44,7 +44,9 @@ class CameraPresenter(private val view: CameraFragment, val manager: VideosManag
         }
     }
 
-    fun startPreview() {
+    fun recordingStopped() {
+        manager.loadFromDB(view.context ?: return)
+
         view.startPreview()
     }
 }

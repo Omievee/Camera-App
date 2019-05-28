@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.itsovertime.overtimecamera.R
+import com.itsovertime.overtimecamera.play.R
 
 class UploadsToolBar(context: Context, args: AttributeSet? = null) : ConstraintLayout(context, args) {
     init {

@@ -8,7 +8,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.imagepipeline.request.ImageRequest
 import com.facebook.imagepipeline.request.ImageRequestBuilder
-import com.itsovertime.overtimecamera.R
+import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import kotlinx.android.synthetic.main.upload_item_view.view.*
 import java.io.File

@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.itsovertime.overtimecamera.R
+import com.itsovertime.overtimecamera.play.R
 import kotlinx.android.synthetic.main.item_layout_settings.view.*
 
 class SettingsView(context: Context, attributeSet: AttributeSet? = null) : ConstraintLayout(context, attributeSet),

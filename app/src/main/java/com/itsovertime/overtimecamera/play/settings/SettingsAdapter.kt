@@ -4,7 +4,7 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil.calculateDiff
 import androidx.recyclerview.widget.RecyclerView
-import com.itsovertime.overtimecamera.R
+import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.baseviewholder.BaseViewHolder
 

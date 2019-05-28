@@ -20,7 +20,7 @@ import android.view.*
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.itsovertime.overtimecamera.R
+import com.itsovertime.overtimecamera.play.R
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.File
@@ -96,7 +96,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 stop()
                 reset()
             }
-            presenter.startPreview()
+            presenter.recordingStopped()
         } catch (r: RuntimeException) {
             r.printStackTrace()
         } catch (e: java.lang.IllegalStateException) {

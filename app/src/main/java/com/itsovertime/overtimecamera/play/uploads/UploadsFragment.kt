@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.itsovertime.overtimecamera.R
+import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
 import dagger.android.support.AndroidSupportInjection

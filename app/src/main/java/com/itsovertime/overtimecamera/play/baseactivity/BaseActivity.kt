@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
-import com.itsovertime.overtimecamera.R
+import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.AndroidInjection
@@ -30,10 +30,12 @@ class BaseActivity : OTActivity(), BaseActivityInt {
     var orientation: OrientationEventListener? = null
     val PERMISSIONS_CODE = 0
     private val APP_PERMISSIONS = arrayOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION
     )
 
     override fun displayPermissions() {
@@ -42,22 +44,22 @@ class BaseActivity : OTActivity(), BaseActivityInt {
 
     override fun displayAlert() {
         AlertDialog.Builder(this, R.style.CUSTOM_ALERT)
-                .setTitle("Permissions Request")
-                .setMessage("Allow overtimecamera..")
-                .setPositiveButton("Continue") { _, _ ->
-                    displaySystemPermissionsDialog()
-                }
-                .setNegativeButton("Not Now") { _, _ ->
-                    presenter.permissionsDenied()
-                }
-                .setCancelable(false)
-                .show()
+            .setTitle("Permissions Request")
+            .setMessage("Allow overtimecamera..")
+            .setPositiveButton("Continue") { _, _ ->
+                displaySystemPermissionsDialog()
+            }
+            .setNegativeButton("Not Now") { _, _ ->
+                presenter.permissionsDenied()
+            }
+            .setCancelable(false)
+            .show()
     }
 
     private fun displaySystemPermissionsDialog() {
         requestPermissions(
-                APP_PERMISSIONS,
-                PERMISSIONS_CODE
+            APP_PERMISSIONS,
+            PERMISSIONS_CODE
         )
     }
 

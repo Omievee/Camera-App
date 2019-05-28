@@ -2,9 +2,9 @@
 <manifest
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        package="com.itsovertime.overtimecamera">
+        package="com.itsovertime.overtimecamera.play">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -25,15 +25,18 @@
             android:supportsRtl="true"
             android:theme="@style/AppFullScreenTheme"
             tools:ignore="GoogleAppIndexingWarning">
+
         <activity android:name="com.itsovertime.overtimecamera.play.splashscreen.SplashActivity">
         </activity>
         <activity android:name="com.itsovertime.overtimecamera.play.baseactivity.BaseActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <meta-data
+                android:name="io.fabric.ApiKey"
+                android:value="cbe7680d1c986532833d98dc1134f52925897f2e" />
     </application>
-
+    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

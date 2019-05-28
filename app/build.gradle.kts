@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("io.fabric")
     kotlin("android")
     kotlin("kapt")
     kotlin("android.extensions")
@@ -9,12 +10,13 @@ plugins {
 android {
     compileSdkVersion(28)
     defaultConfig {
-        applicationId = "com.itsovertime.overtimecamera"
+        applicationId = "com.itsovertime.overtimecamera.play"
         minSdkVersion(26)
         targetSdkVersion(28)
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
     }
 
     dataBinding {
@@ -24,7 +26,6 @@ android {
         getByName("release") {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-
         }
     }
     androidExtensions {
@@ -70,10 +71,6 @@ dependencies {
     //MixPanel
     implementation("com.mixpanel.android:mixpanel-android:5.+")
     implementation("com.google.firebase:firebase-messaging:17.3.4")
-    //Fabric
-    implementation("com.crashlytics.sdk.android:crashlytics:2.9.9@aar") {
-        isTransitive = true
-    }
     //mvvm lifecycle
     implementation("android.arch.lifecycle:extensions:1.1.1")
     kapt("android.arch.lifecycle:compiler:1.1.1")
@@ -82,10 +79,12 @@ dependencies {
     //Room
     implementation("android.arch.persistence.room:runtime:1.1.1")
     kapt("android.arch.persistence.room:compiler:1.1.1")
-
     //transcoder
     implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
-
+    //Fabric
+    implementation("com.crashlytics.sdk.android:crashlytics:2.10.1@aar") {
+        isTransitive = true
+    }
     //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")

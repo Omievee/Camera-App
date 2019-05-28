@@ -3,7 +3,7 @@ package com.itsovertime.overtimecamera.play.splashscreen
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
-import com.itsovertime.overtimecamera.R
+import com.itsovertime.overtimecamera.play.R
 
 class SplashActivity : AppCompatActivity() {
 
