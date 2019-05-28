@@ -12,6 +12,10 @@ interface VideoObjectDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun saveVideo(video: SavedVideo)
 
+
+//    @Query("SELECT * FROM SavedVideo")
+//    fun set(): List<SavedVideo>
+
     @Query("SELECT * FROM SavedVideo")
     fun getVideos(): List<SavedVideo>
 
