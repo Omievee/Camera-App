@@ -81,6 +81,7 @@ class VideosManagerImpl : VideosManager {
 
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
+                transcodeVideo(context, videoFile)
                 exception?.printStackTrace()
             }
 
@@ -90,10 +91,9 @@ class VideosManagerImpl : VideosManager {
             }
         }
         try {
-            val profile = CamcorderProfile.get(CamcorderProfile.QUALITY_720P)
             MediaTranscoder.getInstance().transcodeVideo(
                     fileDescriptor, compressedFile(videoFile).absolutePath,
-                    MediaFormatStrategyPresets.createAndroid720pStrategy(profile.videoBitRate, profile.audioBitRate, profile.audioChannels), listener
+                    MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
             )
         } catch (r: RuntimeException) {
             Crashlytics.log("MediaTranscoder-Error ${r.message}")
@@ -119,17 +119,19 @@ class VideosManagerImpl : VideosManager {
     private var lastVideoId: Int = 0
     @SuppressLint("CheckResult")
     override fun saveVideoToDB(context: Context, filePath: String, isFavorite: Boolean) {
+        this.context = context
         val db = AppDatabase.getAppDataBase(context = context)
         Observable.fromCallable {
             val video = SavedVideo(vidPath = filePath, isFavorite = isFavorite)
             val videoDao = db?.videoDao()
-
-            println("video ID: $lastVideoId")
             with(videoDao) {
                 this?.saveVideo(video)
             }
         }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    loadFromDB(context)
+                }
                 .onErrorReturn {
                     it.printStackTrace()
                 }
@@ -139,29 +141,25 @@ class VideosManagerImpl : VideosManager {
                 })
     }
 
+
     @SuppressLint("CheckResult")
     override fun loadFromDB(context: Context) {
+        this.context = context
         val listOfVideos = mutableListOf<SavedVideo>()
         val db = AppDatabase.getAppDataBase(context = context)
         Observable.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
-            println("LOADING")
             it.forEach {
                 listOfVideos.add(0, it)
             }
         }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doFinally {
-                    when (listOfVideos.size) {
-                        0 -> {
-                        }
+                    when (listOfVideos.isNullOrEmpty()) {
+                        true -> {}
                         else -> {
                             lastVideoId = listOfVideos[0].id
-                            println("else? ${listOfVideos.size}")
-                            listOfVideos.forEach {
-                                println("vidID :::::  ${it.isFavorite}")
-                            }
                             transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
                         }
                     }

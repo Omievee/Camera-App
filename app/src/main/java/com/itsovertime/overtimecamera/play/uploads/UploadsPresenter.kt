@@ -13,12 +13,9 @@ class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager) {
 
     fun onResume() {
         view.swipe2RefreshIsTrue()
-        retrieveVideos()
-    }
-
-    private fun retrieveVideos() {
         subscribeToVideosFromGallery()
     }
+
 
     private fun subscribeToVideosFromGallery() {
         managerDisposable?.dispose()

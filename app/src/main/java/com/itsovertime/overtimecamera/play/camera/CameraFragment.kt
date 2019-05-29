@@ -3,6 +3,7 @@ package com.itsovertime.overtimecamera.play.camera
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
@@ -434,7 +435,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation))
         }
 
-        val profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
+        val profile: CamcorderProfile
+        when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
+            true -> profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
+            else -> profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
+        }
+
         mediaRecorder?.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -450,6 +456,14 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
             prepare()
         }
 
+    }
+
+    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
+        super.setUserVisibleHint(isVisibleToUser)
+        if (isVisibleToUser) {
+            val a = activity;
+            if (a != null) a.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        }
     }
 
     private val cameraStateCallBack = object : CameraDevice.StateCallback() {

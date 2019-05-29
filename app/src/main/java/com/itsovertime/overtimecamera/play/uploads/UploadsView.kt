@@ -22,8 +22,10 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLa
 
 
     fun bind(video: SavedVideo) {
-        if (video.isFavorite) {
-            faveIcon.visibility = View.VISIBLE
+
+        faveIcon.visibility = when (video.isFavorite) {
+            true -> View.VISIBLE
+            else -> View.INVISIBLE
         }
 
         val uri = Uri.fromFile(File(video.vidPath))
@@ -39,6 +41,5 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLa
                 .build()
 
         thumbNail.controller = controller
-
     }
 }
