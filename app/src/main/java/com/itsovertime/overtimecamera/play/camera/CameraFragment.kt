@@ -89,7 +89,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
     var captureSession: CameraCaptureSession? = null
     lateinit var previewRequestBuilder: CaptureRequest.Builder
 
-    var isFavorite: Boolean = false
 
     override fun stopRecording() {
         stopRecordingThread()
@@ -277,8 +276,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                     startLiveView()
                 }
             R.id.favoriteIcon -> {
+                presenter.updateFavoriteField()
                 favoriteIcon.visibility = View.GONE
-                isFavorite = true
             }
         }
     }
@@ -329,7 +328,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
 
     fun startLiveView() {
         startProgressAnimation()
-        isFavorite = false
         favoriteIcon.visibility = View.GONE
         startRecording()
 //        Handler().postDelayed({

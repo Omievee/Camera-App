@@ -34,9 +34,30 @@ import java.io.IOException
 import java.lang.RuntimeException
 
 
-class VideosManagerImpl() : VideosManager {
-    override fun updateVideoFavorite(isFavorite: Boolean) {
+class VideosManagerImpl : VideosManager {
 
+
+    @SuppressLint("CheckResult")
+    override fun updateVideoFavorite(isFavorite: Boolean) {
+        val db = context?.let { AppDatabase.getAppDataBase(context = it) }
+        Observable.fromCallable {
+            val videoDao = db?.videoDao()
+            with(videoDao) {
+                println("details:::::::::::::: $isFavorite $lastVideoId")
+                this?.setVideoAsFavorite(isFave = isFavorite, lastID = lastVideoId)
+            }
+        }.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    context?.let { loadFromDB(it) }
+                }
+                .onErrorReturn {
+                    it.printStackTrace()
+                }
+                .subscribe({
+                }, {
+                    it.printStackTrace()
+                })
     }
 
     override fun uploadVideo(): Single<UploadResponse> {
@@ -49,7 +70,6 @@ class VideosManagerImpl() : VideosManager {
     override fun transcodeVideo(context: Context, videoFile: File) {
         this.context = context
         val file = Uri.fromFile(videoFile)
-        println("file?? $file")
 
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
@@ -96,15 +116,17 @@ class VideosManagerImpl() : VideosManager {
     }
 
 
+    private var lastVideoId: Int = 0
     @SuppressLint("CheckResult")
     override fun saveVideoToDB(context: Context, filePath: String, isFavorite: Boolean) {
         val db = AppDatabase.getAppDataBase(context = context)
         Observable.fromCallable {
             val video = SavedVideo(vidPath = filePath, isFavorite = isFavorite)
             val videoDao = db?.videoDao()
+
+            println("video ID: $lastVideoId")
             with(videoDao) {
                 this?.saveVideo(video)
-                println("favorite?? ${video.isFavorite}")
             }
         }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -120,7 +142,6 @@ class VideosManagerImpl() : VideosManager {
     @SuppressLint("CheckResult")
     override fun loadFromDB(context: Context) {
         val listOfVideos = mutableListOf<SavedVideo>()
-
         val db = AppDatabase.getAppDataBase(context = context)
         Observable.fromCallable {
             db?.videoDao()?.getVideos()
@@ -136,6 +157,11 @@ class VideosManagerImpl() : VideosManager {
                         0 -> {
                         }
                         else -> {
+                            lastVideoId = listOfVideos[0].id
+                            println("else? ${listOfVideos.size}")
+                            listOfVideos.forEach {
+                                println("vidID :::::  ${it.isFavorite}")
+                            }
                             transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
                         }
                     }

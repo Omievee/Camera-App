@@ -7,7 +7,7 @@ import java.io.FileOutputStream
 import java.util.*
 
 
-class CameraPresenter(private val view: CameraFragment, val manager: VideosManager) {
+class CameraPresenter( val view: CameraFragment, val manager: VideosManager) {
 
     var filePath: String? = null
 
@@ -31,6 +31,10 @@ class CameraPresenter(private val view: CameraFragment, val manager: VideosManag
         }
         manager.loadFromDB(view.context ?: return)
         view.startPreview()
+    }
+
+    fun updateFavoriteField() {
+        manager.updateVideoFavorite(true )
     }
 
 

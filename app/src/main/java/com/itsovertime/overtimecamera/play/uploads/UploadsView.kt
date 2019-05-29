@@ -23,7 +23,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLa
 
     fun bind(video: SavedVideo) {
         if (video.isFavorite) {
-
+            faveIcon.visibility = View.VISIBLE
         }
 
         val uri = Uri.fromFile(File(video.vidPath))

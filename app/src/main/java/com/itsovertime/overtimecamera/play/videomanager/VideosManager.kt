@@ -14,6 +14,6 @@ interface VideosManager {
     fun loadFromDB(context: Context)
     fun saveVideoToDB(context: Context, filePath: String, isFavorite: Boolean)
     fun uploadVideo(): Single<UploadResponse>
-    fun transcodeVideo(context:Context,videoFile: File)
+    fun transcodeVideo(context: Context, videoFile: File)
     fun updateVideoFavorite(isFavorite: Boolean)
 }
