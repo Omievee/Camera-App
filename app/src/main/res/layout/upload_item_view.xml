@@ -7,8 +7,8 @@
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/thumbNail"
-        android:layout_width="100dp"
-        android:layout_height="70dp"
+        android:layout_width="110dp"
+        android:layout_height="75dp"
         android:layout_margin="@dimen/margin_half"
         android:scaleType="fitXY"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -19,12 +19,14 @@
         android:id="@+id/medQT"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_half"
-        android:text="Med"
-        android:textAlignment="center"
+        android:layout_marginStart="@dimen/margin_standard"
+        android:layout_marginTop="@dimen/margin_standard"
+        android:text="@string/med"
+        android:textAlignment="textStart"
         android:textColor="@android:color/black"
-        app:layout_constraintEnd_toStartOf="@id/guide"
-        app:layout_constraintStart_toEndOf="@id/thumbNail"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toStartOf="@id/guide2"
+        app:layout_constraintStart_toEndOf="@id/guide"
         app:layout_constraintTop_toTopOf="parent" />
 
 
@@ -33,18 +35,33 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent=".59" />
+        app:layout_constraintGuide_percent=".3" />
+
+      <androidx.constraintlayout.widget.Guideline
+          android:id="@+id/guide2"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          app:layout_constraintGuide_percent=".6" />
+
+          <androidx.constraintlayout.widget.Guideline
+              android:id="@+id/guide3"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              app:layout_constraintGuide_percent=".9" />
 
     <TextView
         android:id="@+id/highQT"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:text="High"
-        android:textAlignment="center"
+        android:layout_marginTop="@dimen/margin_standard"
+        android:text="@string/uploads_high"
+        android:textAlignment="textStart"
         android:textColor="@android:color/black"
-        app:layout_constraintEnd_toStartOf="@id/faveIcon"
-        app:layout_constraintStart_toEndOf="@id/guide"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toStartOf="@id/guide3"
+        app:layout_constraintStart_toEndOf="@id/guide2"
         app:layout_constraintTop_toTopOf="parent" />
 
   <ProgressBar
@@ -52,10 +69,10 @@
       style="?android:attr/progressBarStyleHorizontal"
       android:layout_width="0dp"
       android:layout_height="wrap_content"
-      android:layout_marginStart="@dimen/margin_standard"
+      android:layout_margin="@dimen/margin_standard"
       app:layout_constraintBottom_toBottomOf="parent"
       app:layout_constraintEnd_toEndOf="@id/highQT"
-      app:layout_constraintStart_toEndOf="@id/guide"
+      app:layout_constraintStart_toEndOf="@id/guide2"
       app:layout_constraintTop_toBottomOf="@id/highQT" />
 
     <ProgressBar
@@ -63,22 +80,20 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_standard"
+        android:layout_margin="@dimen/margin_standard"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/guide"
-        app:layout_constraintStart_toEndOf="@id/thumbNail"
+        app:layout_constraintEnd_toStartOf="@id/guide2"
+        app:layout_constraintStart_toEndOf="@id/guide"
         app:layout_constraintTop_toBottomOf="@id/medQT" />
 
     <ImageView
         android:id="@+id/faveIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_standard"
-        android:layout_marginEnd="@dimen/margin_standard"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_margin="@dimen/margin_half"
         android:src="@drawable/fave"
         android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/highQProgressBar"
         app:layout_constraintTop_toTopOf="parent" />
 
 

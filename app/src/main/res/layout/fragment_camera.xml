@@ -19,7 +19,7 @@
     <View
         android:id="@+id/topView"
         android:layout_width="0dp"
-        android:layout_height="70dp"
+        android:layout_height="65dp"
         android:background="@android:drawable/screen_background_dark_transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,7 +27,7 @@
     <View
         android:id="@+id/bottomView"
         android:layout_width="0dp"
-        android:layout_height="90dp"
+        android:layout_height="85dp"
         android:background="@android:drawable/screen_background_dark_transparent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -38,7 +38,8 @@
         android:id="@+id/tapToSave"
         android:layout_width="65dp"
         android:layout_height="65dp"
-        android:background="@drawable/oval_background"
+        android:background="@drawable/tap"
+        android:rotation="90"
         android:textAllCaps="false"
         android:textColor="@color/OT_White"
         android:textSize="12sp"
@@ -54,7 +55,6 @@
         android:layout_width="65dp"
         android:layout_height="65dp"
         android:background="@drawable/circular_shape"
-        android:indeterminate="false"
         android:max="18"
         android:progress="0"
         android:progressDrawable="@drawable/circular_progress"
@@ -74,13 +74,29 @@
         app:layout_constraintTop_toTopOf="@id/bottomView" />
 
 
-    <Button
+    <ImageButton
         android:id="@+id/favoriteIcon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/bottomView"
+        android:background="@android:color/transparent"
+        android:rotation="90"
+        android:src="@drawable/favebutton"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/tapToSave"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/bottomView" />
+
+    <ImageButton
+        android:id="@+id/pauseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/margin_half"
+        android:background="@android:color/transparent"
+        android:rotation="90"
+        android:src="@drawable/pause"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

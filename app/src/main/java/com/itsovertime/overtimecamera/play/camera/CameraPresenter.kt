@@ -1,13 +1,16 @@
 package com.itsovertime.overtimecamera.play.camera
 
 import android.os.Environment
+import android.widget.ProgressBar
+import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
+import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
 
-class CameraPresenter( val view: CameraFragment, val manager: VideosManager) {
+class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
 
     var filePath: String? = null
 
@@ -29,12 +32,19 @@ class CameraPresenter( val view: CameraFragment, val manager: VideosManager) {
                     isFavorite = false
             )
         }
-        manager.loadFromDB(view.context ?: return)
+
         view.startPreview()
     }
 
+    fun animateProgressBar(progressBar: ProgressBar) {
+        val anim = ProgressBarAnimation(progressBar, 0, 12000)
+        anim.duration = 12000
+        progressBar.max = 12000
+        progressBar.startAnimation(anim)
+    }
+
     fun updateFavoriteField() {
-        manager.updateVideoFavorite(true )
+        manager.updateVideoFavorite(true)
     }
 
 

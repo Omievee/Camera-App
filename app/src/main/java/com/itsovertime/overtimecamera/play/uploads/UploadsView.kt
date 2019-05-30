@@ -22,11 +22,12 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLa
 
 
     fun bind(video: SavedVideo) {
-
         faveIcon.visibility = when (video.isFavorite) {
             true -> View.VISIBLE
             else -> View.INVISIBLE
         }
+
+
 
         val uri = Uri.fromFile(File(video.vidPath))
         val request = ImageRequestBuilder

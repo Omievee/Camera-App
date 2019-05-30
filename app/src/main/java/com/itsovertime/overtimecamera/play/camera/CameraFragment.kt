@@ -22,7 +22,7 @@ import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.itsovertime.overtimecamera.play.R
-import com.itsovertime.overtimecamera.play.onfavorite.onFavoriteListener
+import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.File
@@ -37,7 +37,21 @@ private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
 
-class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
+class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetector.OnDoubleTapListener {
+    val gd = GestureDetector(context, GestureDetector.SimpleOnGestureListener())
+    override fun onDoubleTap(e: MotionEvent?): Boolean {
+        this.gd.ondou(e)
+        return true
+    }
+
+    override fun onDoubleTapEvent(e: MotionEvent?): Boolean {
+        return true
+    }
+
+    override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+        return true
+    }
+
 
     @Inject
     lateinit var presenter: CameraPresenter
@@ -183,26 +197,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         super.onAttach(context)
     }
 
-    var countDown: CountDownTimer? = null
-    private fun startProgressAnimation() {
-        countDown = object : CountDownTimer(12000, 1000) {
-            override fun onFinish() {
-                progressBar.progress = 100
-            }
-
-            override fun onTick(millisUntilFinished: kotlin.Long) {
-                val time = millisUntilFinished / 1000
-                ObjectAnimator.ofInt(progressBar, "progress", time.toInt()).apply {
-                    duration = time
-                    interpolator = LinearInterpolator()
-                    start()
-                }
-                //progressBar.setProgress(time.toInt(), true)
-            }
-        }
-        (countDown as CountDownTimer).start()
-    }
-
 
     override fun startPreview() {
         try {
@@ -272,7 +266,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
             R.id.tapToSave ->
                 if (recording) {
                     clickedStop = true
-                    stopVideo()
+                    stopLiveView()
                 } else {
                     startLiveView()
                 }
@@ -294,11 +288,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         progressBar.setOnClickListener(this)
         tapToSave.setOnClickListener(this)
         favoriteIcon.setOnClickListener(this)
+
+
     }
 
     val surfaceTextureListener = object : TextureView.SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(p0: SurfaceTexture?, p1: Int, p2: Int) {
-            openCamera(p1, p2)
+            openCamera(p1, p2, CAMERA)
         }
 
         override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture, width: Int, height: Int) {}
@@ -306,11 +302,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         override fun onSurfaceTextureUpdated(surfaceTexture: SurfaceTexture) = Unit
     }
 
+    var CAMERA: Int = 0
     override fun onResume() {
         super.onResume()
         startBackgroundThread()
         if (txView.isAvailable) {
-            openCamera(txView.width, txView.height)
+            openCamera(txView.width, txView.height, CAMERA)
         } else {
             txView.surfaceTextureListener = surfaceTextureListener
         }
@@ -322,25 +319,22 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
         stopBackgroundThread()
         if (recording) {
             clickedStop = true
-            stopVideo()
+            stopLiveView()
         }
         super.onPause()
     }
 
-    fun startLiveView() {
-        startProgressAnimation()
+    private fun startLiveView() {
+        presenter.animateProgressBar(progressBar)
         favoriteIcon.visibility = View.GONE
         startRecording()
-//        Handler().postDelayed({
-//            stopVideo()
-//        }, 12000)
-
     }
 
-    fun stopVideo() {
+
+    private fun stopLiveView() {
+        progressBar.clearAnimation()
         stopRecording()
         favoriteIcon.visibility = View.VISIBLE
-//        (countDown as CountDownTimer).cancel()
     }
 
     fun showToast(message: String) {
@@ -352,13 +346,18 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
     }
 
     @SuppressLint("MissingPermission")
-    override fun openCamera(width: Int, height: Int) {
+    override fun openCamera(width: Int, height: Int, camera: Int) {
         val manager = context?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw RuntimeException("Time out waiting to lock overtimecamera opening.")
             }
-            val cameraId = manager.cameraIdList[0]
+
+            val cameraId = when (camera) {
+                0 -> manager.cameraIdList[0]
+                else -> manager.cameraIdList[1]
+            }
+
 
             val characteristics = manager.getCameraCharacteristics(cameraId)
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
@@ -435,10 +434,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
                 mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation))
         }
 
-        val profile: CamcorderProfile
-        when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
-            true -> profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
-            else -> profile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
+        val profile: CamcorderProfile = when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
+            true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
+            else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
         }
 
         mediaRecorder?.apply {
@@ -469,7 +467,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener {
     private val cameraStateCallBack = object : CameraDevice.StateCallback() {
         override fun onOpened(cameraDevice: CameraDevice) {
             cameraOpenCloseLock.release()
-            println("overtimecamera open not null")
             this@CameraFragment.cameraDevice = cameraDevice
             startPreview()
         }

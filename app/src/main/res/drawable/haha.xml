@@ -1,0 +1,45 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:viewportWidth="51"
+    android:viewportHeight="51"
+    android:width="51dp"
+    android:height="51dp">
+    <group
+        android:translateX="-583"
+        android:translateY="-72">
+        <group
+            android:translateX="583"
+            android:translateY="72">
+            <path
+                android:pathData="M51 25.5A25.5 25.5 0 0 1 0 25.5A25.5 25.5 0 0 1 51 25.5Z"
+                android:fillType="evenOdd"
+                android:fillColor="#000000"
+                android:fillAlpha="0.3" />
+            <group
+                android:translateX="14"
+                android:translateY="16">
+                <group
+                    android:translateY="9">
+                    <path
+                        android:pathData="M0.0004 0.9904C0.3554 7.6834 5.5834 13.0004 12.0004 13.0004C18.4164 13.0004 23.6444 7.6834 24.0004 0.9904L0.0004 0.9904Z"
+                        android:fillType="evenOdd"
+                        android:fillColor="#FFFFFF"
+                        android:fillAlpha="0.9" />
+                </group>
+                <path
+                    android:pathData="M19 4L17 2.9991929 15 2.00053807 17 0.999730966 19 0"
+                    android:strokeColor="#FFFFFF"
+                    android:strokeAlpha="0.9"
+                    android:strokeWidth="2"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round" />
+                <path
+                    android:pathData="M5 0L6.99946338 0.999730966 9 1.99946193 6.99946338 2.9991929 5 4"
+                    android:strokeColor="#FFFFFF"
+                    android:strokeAlpha="0.9"
+                    android:strokeWidth="2"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round" />
+            </group>
+        </group>
+    </group>
+</vector>
