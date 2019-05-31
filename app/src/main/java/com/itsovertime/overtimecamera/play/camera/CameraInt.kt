@@ -8,4 +8,7 @@ interface CameraInt {
     fun startRecording()
     fun stopRecording()
     fun closePreviewSession()
+    fun switchCameras()
+    fun setUpClicks()
+
 }

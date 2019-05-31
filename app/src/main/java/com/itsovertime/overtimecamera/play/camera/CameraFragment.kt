@@ -1,6 +1,5 @@
 package com.itsovertime.overtimecamera.play.camera
 
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
@@ -11,18 +10,15 @@ import android.hardware.camera2.*
 import android.media.CamcorderProfile
 import android.media.MediaRecorder
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.*
-import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.itsovertime.overtimecamera.play.R
-import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.File
@@ -33,29 +29,47 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
+class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
+    @SuppressLint("ClickableViewAccessibility")
 
-class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetector.OnDoubleTapListener {
-    val gd = GestureDetector(context, GestureDetector.SimpleOnGestureListener())
-    override fun onDoubleTap(e: MotionEvent?): Boolean {
-        this.gd.ondou(e)
-        return true
+    override fun setUpClicks() {
+        progressBar.setOnClickListener(this)
+        tapToSave.setOnClickListener(this)
+        favoriteIcon.setOnClickListener(this)
+        selfie.setOnClickListener(this)
+        pauseButton.setOnClickListener(this)
+        txView.setOnTouchListener(this)
+        pausedView.setOnClickListener(this)
     }
 
-    override fun onDoubleTapEvent(e: MotionEvent?): Boolean {
-        return true
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        return gestureDetector.onTouchEvent(event)
     }
-
-    override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
-        return true
-    }
-
 
     @Inject
     lateinit var presenter: CameraPresenter
 
+    private var gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+        override fun onDoubleTap(e: MotionEvent?): Boolean {
+            println("double tap $e")
+            presenter.cameraSwitch()
+            return true
+        }
+    }
+    )
+
+
+    override fun switchCameras() {
+        CAMERA = if (CAMERA == 0) {
+            1
+        } else {
+            0
+        }
+        releaseCamera()
+        engageCamera()
+    }
 
     override fun closeCamera() {
         try {
@@ -113,8 +127,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetec
                 stop()
                 reset()
             }
-            presenter.recordingStopped()
-
+            presenter.saveRecording()
         } catch (r: RuntimeException) {
             r.printStackTrace()
         } catch (e: java.lang.IllegalStateException) {
@@ -274,25 +287,36 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetec
                 presenter.updateFavoriteField()
                 favoriteIcon.visibility = View.GONE
             }
+            R.id.selfie -> presenter.cameraSwitch()
+            R.id.pauseButton -> {
+                releaseCamera()
+                pausedView.visibility = View.VISIBLE
+            }
+            R.id.pausedView -> {
+                pausedView.visibility = View.GONE
+                println("click click")
+                switchCameras()
+                startLiveView()
+
+            }
         }
     }
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_camera, container, false)
     }
 
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         txView = cameraView
-        progressBar.setOnClickListener(this)
-        tapToSave.setOnClickListener(this)
-        favoriteIcon.setOnClickListener(this)
-
-
+        presenter.setUpClicks()
     }
 
-    val surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+
+    private val surfaceTextureListener = object : TextureView.SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(p0: SurfaceTexture?, p1: Int, p2: Int) {
             openCamera(p1, p2, CAMERA)
         }
@@ -302,26 +326,33 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetec
         override fun onSurfaceTextureUpdated(surfaceTexture: SurfaceTexture) = Unit
     }
 
-    var CAMERA: Int = 0
+    private var CAMERA: Int = 0
     override fun onResume() {
         super.onResume()
+        engageCamera()
+    }
+
+    private fun engageCamera() {
         startBackgroundThread()
         if (txView.isAvailable) {
             openCamera(txView.width, txView.height, CAMERA)
         } else {
             txView.surfaceTextureListener = surfaceTextureListener
         }
-
     }
 
     override fun onPause() {
+        releaseCamera()
+        super.onPause()
+    }
+
+    fun releaseCamera() {
         closeCamera()
         stopBackgroundThread()
         if (recording) {
             clickedStop = true
             stopLiveView()
         }
-        super.onPause()
     }
 
     private fun startLiveView() {
@@ -331,10 +362,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetec
     }
 
 
-    private fun stopLiveView() {
+    fun stopLiveView() {
         progressBar.clearAnimation()
         stopRecording()
         favoriteIcon.visibility = View.VISIBLE
+
     }
 
     fun showToast(message: String) {
@@ -344,6 +376,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetec
                 Toast.LENGTH_LONG
         ).show()
     }
+
 
     @SuppressLint("MissingPermission")
     override fun openCamera(width: Int, height: Int, camera: Int) {
@@ -358,10 +391,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetec
                 else -> manager.cameraIdList[1]
             }
 
-
             val characteristics = manager.getCameraCharacteristics(cameraId)
-            val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                    ?: throw RuntimeException("Cannot get available preview/video sizes")
+            val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
             videoSize?.let {
@@ -375,7 +406,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetec
             }
             mediaRecorder = MediaRecorder()
             txView.setTransform(Matrix())
-            println("manager open start:::::::")
             manager.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
 
         } catch (e: CameraAccessException) {
@@ -438,6 +468,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetec
             true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
             else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
         }
+
 
         mediaRecorder?.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
@@ -518,4 +549,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, GestureDetec
 class Compare : Comparator<Size> {
     override fun compare(lhs: Size, rhs: Size) =
             Long.signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
+}
+
+class CustomGesture : GestureDetector.SimpleOnGestureListener() {
+
+    companion object {
+
+    }
+
+    override fun onDoubleTap(e: MotionEvent?): Boolean {
+        println("DOUBLE TAP?? ${e?.action}")
+        return true
+    }
+
 }

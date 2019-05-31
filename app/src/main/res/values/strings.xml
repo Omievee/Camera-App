@@ -6,6 +6,9 @@
     <string name="upload_queue_uploading_hd">Uploading high quality videos…</string>
     <string name="settings_view_terms"><![CDATA[Terms Of Service & Privacy Policy]]></string>
     <string name="settings_view_contact">Contact Overtime</string>
-    <string name="settings_view_logout">Logout</string><string name="uploads_high">High</string><string name="med">Med</string>
+    <string name="settings_view_logout">Logout</string>
+    <string name="uploads_high">High</string>
+    <string name="med">Med</string>
+    <string name="paused_view_message">Camera Paused \n Tap To Resume</string>
 
 </resources>

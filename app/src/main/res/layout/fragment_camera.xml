@@ -7,46 +7,81 @@
     android:background="@android:color/transparent"
     tools:context=".play.camera.CameraFragment">
 
+
+
+
     <com.itsovertime.overtimecamera.play.camera.TXView
         android:id="@+id/cameraView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:clickable="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
 
     <View
         android:id="@+id/topView"
         android:layout_width="0dp"
-        android:layout_height="65dp"
+        android:layout_height="0dp"
         android:background="@android:drawable/screen_background_dark_transparent"
+        app:layout_constraintBottom_toBottomOf="@id/topGuide"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/selfie"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="@dimen/margin_standard"
+        android:rotation="90"
+        android:src="@drawable/selfie_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+     <ImageButton
+         android:id="@+id/pauseButton"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:layout_margin="@dimen/margin_half"
+         android:background="@android:color/transparent"
+         android:rotation="90"
+         android:src="@drawable/pause"
+         android:tint="@color/OT_White"
+         app:layout_constraintBottom_toTopOf="@id/topGuide"
+         app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintTop_toTopOf="parent" />
+
     <View
         android:id="@+id/bottomView"
         android:layout_width="0dp"
-        android:layout_height="85dp"
+        android:layout_height="0dp"
         android:background="@android:drawable/screen_background_dark_transparent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-
-    <Button
-        android:id="@+id/tapToSave"
-        android:layout_width="65dp"
-        android:layout_height="65dp"
-        android:background="@drawable/tap"
-        android:rotation="90"
-        android:textAllCaps="false"
-        android:textColor="@color/OT_White"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/bottomView" />
+        app:layout_constraintTop_toTopOf="@id/bottomGuide" />
+
+
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/topGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent=".1" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/bottomGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent=".9" />
+
 
 
     <ProgressBar
@@ -87,16 +122,26 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/bottomView" />
 
-    <ImageButton
-        android:id="@+id/pauseButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/margin_half"
-        android:background="@android:color/transparent"
-        android:rotation="90"
-        android:src="@drawable/pause"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/topView" />
+   <Button
+       android:id="@+id/tapToSave"
+       android:layout_width="65dp"
+       android:layout_height="65dp"
+       android:background="@drawable/tap"
+       android:rotation="90"
+       android:textAllCaps="false"
+       android:textColor="@color/OT_White"
+       app:layout_constraintBottom_toBottomOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintTop_toTopOf="@id/bottomView" />
 
+<com.itsovertime.overtimecamera.play.camera.PausedFlashBack
+    android:id="@+id/pausedView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:visibility="visible">
+
+</com.itsovertime.overtimecamera.play.camera.PausedFlashBack>
 </androidx.constraintlayout.widget.ConstraintLayout>

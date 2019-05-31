@@ -6,5 +6,6 @@
     <color name="background_gray">#F5F5F5</color>
     <color name="OT_Orange">#E57607</color>
     <color name="OT_White">#FFFF</color>
+    <color name="OT_DarkGray">#323232</color>
 
 </resources>
