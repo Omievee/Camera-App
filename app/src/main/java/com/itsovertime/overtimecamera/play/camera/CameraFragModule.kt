@@ -7,6 +7,7 @@ import dagger.Provides
 
 @Module
 class CameraFragModule {
+
     @Provides
     @FragmentScope
     fun providePresenter(fragment: CameraFragment, manager: VideosManager): CameraPresenter =
@@ -15,5 +16,3 @@ class CameraFragModule {
 
 
 
-
-//TODO: Fix adapter being updated.... See why wont save local... Clipping Recyclerview children...

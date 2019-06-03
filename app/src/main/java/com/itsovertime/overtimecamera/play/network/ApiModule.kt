@@ -4,12 +4,9 @@ import android.app.Application
 import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.utils.Constants
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Rfc3339DateJsonAdapter
 import dagger.Module
 import dagger.Provides
 import okhttp3.Cache
-import okhttp3.CookieJar
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -26,20 +23,20 @@ class ApiModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
-        cookieJar: CookieJar,
-        loggingInterceptor: HttpLoggingInterceptor,
-        authenticatedRequestInterceptor: Interceptor,
         cache: Cache
     ): OkHttpClient.Builder {
         val httpClient = OkHttpClient.Builder()
-        httpClient.connectTimeout(40, TimeUnit.SECONDS)
-        httpClient.readTimeout(40, TimeUnit.SECONDS)
-        httpClient.cookieJar(cookieJar)
-        httpClient.addInterceptor(authenticatedRequestInterceptor)
-        httpClient.addInterceptor(loggingInterceptor)
+        if (BuildConfig.DEBUG) {
+            val logging = HttpLoggingInterceptor()
+            logging.level = HttpLoggingInterceptor.Level.BODY
+            httpClient.addInterceptor(logging)
+        }
+
+        httpClient.connectTimeout(30, TimeUnit.SECONDS)
+        httpClient.readTimeout(30, TimeUnit.SECONDS)
+        httpClient.cache(cache)
         return httpClient
     }
-
 
     @Provides
     @Singleton
@@ -52,11 +49,13 @@ class ApiModule {
 
     @Provides
     @Singleton
-    fun provideMoshi(): Moshi.Builder {
-        lateinit var moshi2: Moshi
-        return Moshi.Builder()
-            .add(Date::class.java, Rfc3339DateJsonAdapter())
+    fun provideMoshi(): Moshi {
+        var m: Moshi = Moshi.Builder()
+            .add(Date::class.java, com.squareup.moshi.adapters.Rfc3339DateJsonAdapter())
+            .build()
+        return m
     }
+
 
     @Provides
     @Singleton
@@ -68,12 +67,12 @@ class ApiModule {
     @Singleton
     fun provideApi(client: OkHttpClient.Builder, moshi: Moshi): Api {
         return Retrofit.Builder()
-            .baseUrl(Constants.OT_BASE_URL)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .client(client.build())
-            .build()
-            .create(Api::class.java)
+                .baseUrl(Constants.videoUploadUrl)
+                .addConverterFactory(MoshiConverterFactory.create(moshi))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .client(client.build())
+                .build()
+                .create(Api::class.java)
     }
 
 

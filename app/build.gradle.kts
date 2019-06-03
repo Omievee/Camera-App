@@ -85,6 +85,11 @@ dependencies {
     implementation("com.crashlytics.sdk.android:crashlytics:2.10.1@aar") {
         isTransitive = true
     }
+    //WorkManager
+    // Kotlin + coroutines
+    implementation("androidx.work:work-runtime-ktx:2.0.1")
+    // optional - RxJava2 support
+    implementation("androidx.work:work-rxjava2:2.0.1")
     //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")

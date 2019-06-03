@@ -13,7 +13,8 @@ interface VideosManager {
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
     fun loadFromDB(context: Context)
     fun saveVideoToDB(context: Context, filePath: String, isFavorite: Boolean)
-    fun uploadVideo(): Single<UploadResponse>
+    fun uploadVideo()
     fun transcodeVideo(context: Context, videoFile: File)
     fun updateVideoFavorite(isFavorite: Boolean)
+    fun updateVideoFunny(isFunny:Boolean)
 }

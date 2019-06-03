@@ -17,7 +17,6 @@ class SplashActivity : AppCompatActivity() {
 
 
     fun launchActivity() {
-
         //TODO: logic for checking user / login....
         Handler().postDelayed({
 

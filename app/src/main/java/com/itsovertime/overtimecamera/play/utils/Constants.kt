@@ -4,7 +4,6 @@ class Constants {
 
     companion object {
         //BaseURL
-        const val OT_BASE_URL = ""
-
+        const val videoUploadUrl = "https://admin.itsovertime.com/videos/"
     }
 }

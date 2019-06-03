@@ -469,7 +469,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
         }
 
-
         mediaRecorder?.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -484,7 +483,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             setCaptureRate(120.0)
             prepare()
         }
-
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
