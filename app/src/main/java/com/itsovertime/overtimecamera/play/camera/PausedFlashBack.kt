@@ -6,7 +6,8 @@ import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.itsovertime.overtimecamera.play.R
 
-class PausedFlashBack(context: Context, attributeSet: AttributeSet? = null) : ConstraintLayout(context, attributeSet) {
+class PausedFlashBack(context: Context, attributeSet: AttributeSet? = null) : ConstraintLayout(context, attributeSet){
+
 
 
     init {

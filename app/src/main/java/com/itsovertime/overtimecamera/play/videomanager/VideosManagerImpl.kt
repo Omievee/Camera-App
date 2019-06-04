@@ -34,17 +34,37 @@ import androidx.work.*
 import com.crashlytics.android.Crashlytics
 import com.google.common.util.concurrent.ListenableFuture
 import com.itsovertime.overtimecamera.play.network.Api
+import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import io.reactivex.disposables.Disposable
 import java.io.IOException
 import java.lang.RuntimeException
 
 
-class VideosManagerImpl(val api: Api) : VideosManager {
-    override fun updateVideoFunny(isFunny: Boolean) {
+class VideosManagerImpl(val manager:UploadsManager) : VideosManager {
 
+
+    @SuppressLint("CheckResult")
+    override fun updateVideoFunny(isFunny: Boolean) {
+        val db = context?.let { AppDatabase.getAppDataBase(context = it) }
+        Observable.fromCallable {
+            val videoDao = db?.videoDao()
+            with(videoDao) {
+                this?.setVideoAsFunny(isFunny = isFunny, lastID = lastVideoId)
+            }
+        }.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    context?.let { loadFromDB(it) }
+                }
+                .onErrorReturn {
+                    it.printStackTrace()
+                }
+                .subscribe({
+                }, {
+                    it.printStackTrace()
+                })
     }
 
-    var uploadResponse: UploadResponse? = null
 
     @SuppressLint("CheckResult")
     override fun updateVideoFavorite(isFavorite: Boolean) {
@@ -55,21 +75,17 @@ class VideosManagerImpl(val api: Api) : VideosManager {
                 this?.setVideoAsFavorite(isFave = isFavorite, lastID = lastVideoId)
             }
         }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-                context?.let { loadFromDB(it) }
-            }
-            .onErrorReturn {
-                it.printStackTrace()
-            }
-            .subscribe({
-            }, {
-                it.printStackTrace()
-            })
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    context?.let { loadFromDB(it) }
+                }
+                .onErrorReturn {
+                    it.printStackTrace()
+                }
     }
 
-    override fun uploadVideo(){
-        //TODO
+    override fun uploadVideo() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     var context: Context? = null
@@ -94,14 +110,13 @@ class VideosManagerImpl(val api: Api) : VideosManager {
             }
 
             override fun onTranscodeCompleted() {
-                //begin upload
                 println("complete :::")
             }
         }
         try {
             MediaTranscoder.getInstance().transcodeVideo(
-                fileDescriptor, compressedFile(videoFile).absolutePath,
-                MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
+                    fileDescriptor, compressedFile(videoFile).absolutePath,
+                    MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
             )
         } catch (r: RuntimeException) {
             Crashlytics.log("MediaTranscoder-Error ${r.message}")
@@ -136,17 +151,17 @@ class VideosManagerImpl(val api: Api) : VideosManager {
                 this?.saveVideo(video)
             }
         }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-                loadFromDB(context)
-            }
-            .onErrorReturn {
-                it.printStackTrace()
-            }
-            .subscribe({
-            }, {
-                it.printStackTrace()
-            })
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    loadFromDB(context)
+                }
+                .onErrorReturn {
+                    it.printStackTrace()
+                }
+                .subscribe({
+                }, {
+                    it.printStackTrace()
+                })
     }
 
 
@@ -162,34 +177,34 @@ class VideosManagerImpl(val api: Api) : VideosManager {
                 listOfVideos.add(0, it)
             }
         }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-                when (listOfVideos.isNullOrEmpty()) {
-                    true -> {
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    when (listOfVideos.isNullOrEmpty()) {
+                        true -> {
+                        }
+                        else -> {
+                            println("HAHA ? : ${listOfVideos[0].isFunny}")
+                            lastVideoId = listOfVideos[0].id
+                            transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
+                        }
                     }
-                    else -> {
-                        lastVideoId = listOfVideos[0].id
-                        transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
-                    }
-                }
 
-            }
-            .subscribe({
-                subject.onNext(listOfVideos)
-            },
-                {
-                    it.printStackTrace()
                 }
-            )
+                .subscribe({
+                    subject.onNext(listOfVideos)
+                },
+                        {
+                            it.printStackTrace()
+                        }
+                )
     }
 
     override fun subscribeToVideoGallery(): Observable<List<SavedVideo>> {
         return subject
-            .subscribeOn(Schedulers.single())
-            .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.single())
+                .observeOn(AndroidSchedulers.mainThread())
     }
 }
-
 
 class VideoUploadWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
     override fun doWork(): Result {

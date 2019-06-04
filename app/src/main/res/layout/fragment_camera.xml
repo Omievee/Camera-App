@@ -8,8 +8,6 @@
     tools:context=".play.camera.CameraFragment">
 
 
-
-
     <com.itsovertime.overtimecamera.play.camera.TXView
         android:id="@+id/cameraView"
         android:layout_width="wrap_content"
@@ -19,7 +17,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
 
 
     <View
@@ -42,19 +39,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-     <ImageButton
-         android:id="@+id/pauseButton"
-         android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         android:layout_margin="@dimen/margin_half"
-         android:background="@android:color/transparent"
-         android:rotation="90"
-         android:src="@drawable/pause"
-         android:tint="@color/OT_White"
-         app:layout_constraintBottom_toTopOf="@id/topGuide"
-         app:layout_constraintEnd_toEndOf="parent"
-         app:layout_constraintStart_toStartOf="parent"
-         app:layout_constraintTop_toTopOf="parent" />
+    <ImageButton
+        android:id="@+id/pauseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/margin_half"
+        android:background="@android:color/transparent"
+        android:rotation="90"
+        android:src="@drawable/pause"
+        android:tint="@color/OT_White"
+        app:layout_constraintBottom_toTopOf="@id/topGuide"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <View
         android:id="@+id/bottomView"
@@ -65,7 +62,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/bottomGuide" />
-
 
 
     <androidx.constraintlayout.widget.Guideline
@@ -81,7 +77,6 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent=".9" />
-
 
 
     <ProgressBar
@@ -122,26 +117,39 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/bottomView" />
 
-   <Button
-       android:id="@+id/tapToSave"
-       android:layout_width="65dp"
-       android:layout_height="65dp"
-       android:background="@drawable/tap"
-       android:rotation="90"
-       android:textAllCaps="false"
-       android:textColor="@color/OT_White"
-       app:layout_constraintBottom_toBottomOf="parent"
-       app:layout_constraintEnd_toEndOf="parent"
-       app:layout_constraintStart_toStartOf="parent"
-       app:layout_constraintTop_toTopOf="@id/bottomView" />
+    <ImageButton
+        android:id="@+id/hahaIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:rotation="90"
+        android:src="@drawable/haha"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/tapToSave"
+        app:layout_constraintTop_toTopOf="@id/bottomView" />
 
-<com.itsovertime.overtimecamera.play.camera.PausedFlashBack
-    android:id="@+id/pausedView"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clickable="true"
-    android:focusable="true"
-    android:visibility="visible">
+    <ImageButton
+        android:id="@+id/tapToSave"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:background="@drawable/tap"
+        android:rotation="90"
+        android:textAllCaps="false"
+        android:textColor="@color/OT_White"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/bottomView" />
 
-</com.itsovertime.overtimecamera.play.camera.PausedFlashBack>
+    <com.itsovertime.overtimecamera.play.camera.PausedFlashBack
+        android:id="@+id/pausedView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/OT_DarkGray"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+    </com.itsovertime.overtimecamera.play.camera.PausedFlashBack>
 </androidx.constraintlayout.widget.ConstraintLayout>

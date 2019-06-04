@@ -6,7 +6,7 @@ interface CameraInt {
     fun startPreview()
     fun updatePreview()
     fun startRecording()
-    fun stopRecording()
+    fun stopRecording(isPaused:Boolean)
     fun closePreviewSession()
     fun switchCameras()
     fun setUpClicks()

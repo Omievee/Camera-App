@@ -28,10 +28,6 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
-    fun recordingStopped() {
-        view.stopLiveView()
-    }
-
     fun saveRecording() {
         filePath?.let {
             manager.saveVideoToDB(
@@ -45,16 +41,10 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
 
     @SuppressLint("CheckResult")
     fun animateProgressBar(progressBar: ProgressBar) {
-        Observable.fromCallable {
-        }.doFinally {
-            val anim = ProgressBarAnimation(progressBar, 0, 12000)
-            anim.duration = 12000
-            progressBar.max = 12000
-            progressBar.startAnimation(anim)
-        }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-
+//        val anim = ProgressBarAnimation(progressBar, 0, 12000)
+//        anim.duration = 12000
+//        progressBar.max = 12000
+//        progressBar.startAnimation(anim)
     }
 
     fun updateFavoriteField() {
@@ -69,5 +59,13 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
         view.setUpClicks()
     }
 
+    fun updateFunnyField() {
+        manager.updateVideoFunny(isFunny = true)
+    }
 
 }
+
+
+//TODO: Loading State Between Camera Engage & Release
+//TODO  SElfie Cam has no live cam & options
+//

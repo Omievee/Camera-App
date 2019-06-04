@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
@@ -17,6 +18,7 @@ import android.util.Size
 import android.util.SparseIntArray
 import android.view.*
 import android.widget.Toast
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import com.itsovertime.overtimecamera.play.R
 import dagger.android.support.AndroidSupportInjection
@@ -41,6 +43,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         pauseButton.setOnClickListener(this)
         txView.setOnTouchListener(this)
         pausedView.setOnClickListener(this)
+        hahaIcon.setOnClickListener(this)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -119,7 +122,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     lateinit var previewRequestBuilder: CaptureRequest.Builder
 
 
-    override fun stopRecording() {
+    override fun stopRecording(isPaused: Boolean) {
         stopRecordingThread()
         recording = false
         try {
@@ -127,7 +130,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 stop()
                 reset()
             }
-            presenter.saveRecording()
+            if (!isPaused) {
+                presenter.saveRecording()
+                startLiveView()
+            }
+
         } catch (r: RuntimeException) {
             r.printStackTrace()
         } catch (e: java.lang.IllegalStateException) {
@@ -279,7 +286,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             R.id.tapToSave ->
                 if (recording) {
                     clickedStop = true
-                    stopLiveView()
+                    stopLiveView(false)
                 } else {
                     startLiveView()
                 }
@@ -288,16 +295,20 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 favoriteIcon.visibility = View.GONE
             }
             R.id.selfie -> presenter.cameraSwitch()
+
             R.id.pauseButton -> {
                 releaseCamera()
                 pausedView.visibility = View.VISIBLE
             }
             R.id.pausedView -> {
+                println("clicck?")
                 pausedView.visibility = View.GONE
-                println("click click")
-                switchCameras()
+                engageCamera()
                 startLiveView()
-
+            }
+            R.id.hahaIcon -> {
+                presenter.updateFunnyField()
+                hahaIcon.background = ResourcesCompat.getDrawable(resources, R.drawable.funny_active, null)
             }
         }
     }
@@ -351,22 +362,23 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         stopBackgroundThread()
         if (recording) {
             clickedStop = true
-            stopLiveView()
+            stopLiveView(true)
         }
     }
 
     private fun startLiveView() {
         presenter.animateProgressBar(progressBar)
         favoriteIcon.visibility = View.GONE
+        hahaIcon.visibility = View.GONE
         startRecording()
     }
 
 
-    fun stopLiveView() {
+    fun stopLiveView(isPaused: Boolean) {
         progressBar.clearAnimation()
-        stopRecording()
+        stopRecording(isPaused)
         favoriteIcon.visibility = View.VISIBLE
-
+        hahaIcon.visibility = View.VISIBLE
     }
 
     fun showToast(message: String) {
@@ -392,7 +404,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }
 
             val characteristics = manager.getCameraCharacteristics(cameraId)
-            val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: throw RuntimeException("Cannot get available preview/video sizes")
+            val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                    ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
             videoSize?.let {
@@ -404,6 +417,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             } else {
                 txView.setAspectRatio(previewSize?.height ?: 0, previewSize?.width ?: 0)
             }
+
             mediaRecorder = MediaRecorder()
             txView.setTransform(Matrix())
             manager.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
@@ -549,15 +563,3 @@ class Compare : Comparator<Size> {
             Long.signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
 }
 
-class CustomGesture : GestureDetector.SimpleOnGestureListener() {
-
-    companion object {
-
-    }
-
-    override fun onDoubleTap(e: MotionEvent?): Boolean {
-        println("DOUBLE TAP?? ${e?.action}")
-        return true
-    }
-
-}
