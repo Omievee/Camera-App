@@ -2,7 +2,6 @@ package com.itsovertime.overtimecamera.play.camera
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
@@ -19,11 +18,10 @@ import android.view.*
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
 import com.itsovertime.overtimecamera.play.R
-import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_camera.*
+import kotlinx.android.synthetic.main.upload_item_view.*
 import java.io.File
 import java.io.IOException
 import java.lang.Long
@@ -35,14 +33,8 @@ import javax.inject.Inject
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
 
-
-    override fun displayUploadsFragment() {
-        val manager = childFragmentManager
-        val transaction = manager?.beginTransaction()
-        transaction?.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        transaction?.setCustomAnimations(R.anim.slide_up, R.anim.slide_out)
-        transaction?.replace(R.id.fragContainer, UploadsFragment.newInstance("", ""))?.addToBackStack("uploads").commit()
-    }
+    @Inject
+    lateinit var presenter: CameraPresenter
 
     @SuppressLint("ClickableViewAccessibility")
     override fun setUpClicks() {
@@ -62,8 +54,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         return gestureDetector.onTouchEvent(event)
     }
 
-    @Inject
-    lateinit var presenter: CameraPresenter
 
     private var gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onDoubleTap(e: MotionEvent?): Boolean {
@@ -83,6 +73,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
         releaseCamera()
         engageCamera()
+
+        when (CAMERA) {
+            1 -> {
+                favoriteIcon.visibility = View.INVISIBLE
+                hahaIcon.visibility = View.INVISIBLE
+            }
+            0 -> {
+                favoriteIcon.visibility = View.VISIBLE
+                hahaIcon.visibility = View.VISIBLE
+            }
+        }
     }
 
     override fun closeCamera() {
@@ -251,7 +252,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                         }
 
                         override fun onConfigureFailed(session: CameraCaptureSession) {
-                            //  showToast(getString(com.overtimetechnical.R.string.camera_fail))
                         }
                     }, backgroundHandler
             )
@@ -303,7 +303,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 }
             R.id.favoriteIcon -> {
                 presenter.updateFavoriteField()
-                favoriteIcon.visibility = View.GONE
+                favoriteIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.fave, null))
             }
             R.id.selfie -> presenter.cameraSwitch()
 
@@ -319,18 +319,18 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }
             R.id.hahaIcon -> {
                 presenter.updateFunnyField()
-                hahaIcon.background = ResourcesCompat.getDrawable(resources, R.drawable.funny_active, null)
+                hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.funny_active, null))
             }
             R.id.uploadButton -> {
-                println("upload clicked ")
+                releaseCamera()
                 callback?.onUploadsButtonClicked()
             }
         }
     }
 
-   internal var callback: UploadsButtonClick? = null
+    internal var callback: UploadsButtonClick? = null
 
-    fun setUploadsClickListener(listener:UploadsButtonClick){
+    fun setUploadsClickListener(listener: UploadsButtonClick) {
         this.callback = listener
     }
 
@@ -365,6 +365,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     fun engageCamera() {
+        progress.visibility = View.VISIBLE
         startBackgroundThread()
         txView?.let {
             if (it.isAvailable) {
@@ -375,7 +376,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 it?.surfaceTextureListener = surfaceTextureListener
             }
         }
-        println("Txt? $txView")
 
     }
 
@@ -394,7 +394,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun startLiveView() {
-        presenter.animateProgressBar(progressBar)
+        //  presenter.animateProgressBar(progressBar)
+
         favoriteIcon.visibility = View.INVISIBLE
         hahaIcon.visibility = View.INVISIBLE
         startRecording()
@@ -428,6 +429,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             val cameraId = when (camera) {
                 0 -> manager.cameraIdList[0]
                 else -> manager.cameraIdList[1]
+
             }
 
             val characteristics = manager.getCameraCharacteristics(cameraId)
@@ -528,10 +530,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
-        if (isVisibleToUser) {
-            val a = activity;
-            if (a != null) a.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        if (isVisibleToUser && view != null) {
+            engageCamera()
+            startLiveView()
         }
+
+
     }
 
     private val cameraStateCallBack = object : CameraDevice.StateCallback() {
@@ -585,7 +589,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     interface UploadsButtonClick {
         fun onUploadsButtonClicked()
     }
-
 }
 
 class Compare : Comparator<Size> {

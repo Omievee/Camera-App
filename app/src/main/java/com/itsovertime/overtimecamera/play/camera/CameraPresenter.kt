@@ -41,10 +41,10 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
 
     @SuppressLint("CheckResult")
     fun animateProgressBar(progressBar: ProgressBar) {
-//        val anim = ProgressBarAnimation(progressBar, 0, 12000)
-//        anim.duration = 12000
-//        progressBar.max = 12000
-//        progressBar.startAnimation(anim)
+        val anim = ProgressBarAnimation(progressBar, 0, 12000)
+        anim.duration = 12000
+        progressBar.max = 12000
+        progressBar.startAnimation(anim)
     }
 
     fun updateFavoriteField() {
@@ -61,10 +61,6 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
 
     fun updateFunnyField() {
         manager.updateVideoFunny(isFunny = true)
-    }
-
-    fun displayUploads() {
-        view.displayUploadsFragment()
     }
 
 }

@@ -10,5 +10,4 @@ interface CameraInt {
     fun closePreviewSession()
     fun switchCameras()
     fun setUpClicks()
-    fun displayUploadsFragment()
 }

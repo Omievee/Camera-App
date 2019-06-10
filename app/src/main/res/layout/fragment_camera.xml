@@ -158,11 +158,12 @@
         android:visibility="gone" />
 
 
-       <FrameLayout
-           android:id="@+id/fragContainer"
-           android:layout_width="match_parent"
-           android:layout_height="match_parent">
+     <include
+         android:id="@+id/progress"
+         layout="@layout/camera_loading"
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
+         android:visibility="gone" />
 
-        </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

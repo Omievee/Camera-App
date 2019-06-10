@@ -83,9 +83,7 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                 it.printStackTrace()
             }
             .subscribe {
-                println("Context from fave..$context")
                 context?.let {
-                    println("load>>>>>>>>")
                     loadFromDB(it)
                 }
             }
