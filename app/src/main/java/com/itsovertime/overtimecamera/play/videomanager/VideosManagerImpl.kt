@@ -52,36 +52,43 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                 this?.setVideoAsFunny(isFunny = isFunny, lastID = lastVideoId)
             }
         }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally {
-                    context?.let { loadFromDB(it) }
-                }
-                .onErrorReturn {
-                    it.printStackTrace()
-                }
-                .subscribe({
-                }, {
-                    it.printStackTrace()
-                })
+            .observeOn(AndroidSchedulers.mainThread())
+            .doFinally {
+                context?.let { loadFromDB(it) }
+            }
+            .onErrorReturn {
+                it.printStackTrace()
+            }
+            .subscribe({
+            }, {
+                it.printStackTrace()
+            })
     }
 
 
     @SuppressLint("CheckResult")
     override fun updateVideoFavorite(isFavorite: Boolean) {
+        println("Update::: $isFavorite")
         val db = context?.let { AppDatabase.getAppDataBase(context = it) }
+        println("DB? $db")
         Observable.fromCallable {
             val videoDao = db?.videoDao()
+            println("Callable?? $lastVideoId + $isFavorite")
             with(videoDao) {
                 this?.setVideoAsFavorite(isFave = isFavorite, lastID = lastVideoId)
             }
         }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally {
-                    context?.let { loadFromDB(it) }
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorReturn {
+                it.printStackTrace()
+            }
+            .subscribe {
+                println("Context from fave..$context")
+                context?.let {
+                    println("load>>>>>>>>")
+                    loadFromDB(it)
                 }
-                .onErrorReturn {
-                    it.printStackTrace()
-                }
+            }
     }
 
     override fun uploadVideo() {
@@ -100,7 +107,6 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
 
         val listener = object : MediaTranscoder.Listener {
             override fun onTranscodeProgress(progress: Double) {
-                println("progress ::: $progress")
             }
 
             override fun onTranscodeCanceled() {}
@@ -113,10 +119,11 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                 println("complete :::")
             }
         }
+
         try {
             MediaTranscoder.getInstance().transcodeVideo(
-                    fileDescriptor, compressedFile(videoFile).absolutePath,
-                    MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
+                fileDescriptor, compressedFile(videoFile).absolutePath,
+                MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
             )
         } catch (r: RuntimeException) {
             Crashlytics.log("MediaTranscoder-Error ${r.message}")
@@ -151,17 +158,17 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                 this?.saveVideo(video)
             }
         }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally {
-                    loadFromDB(context)
-                }
-                .onErrorReturn {
-                    it.printStackTrace()
-                }
-                .subscribe({
-                }, {
-                    it.printStackTrace()
-                })
+            .observeOn(AndroidSchedulers.mainThread())
+            .doFinally {
+                loadFromDB(context)
+            }
+            .onErrorReturn {
+                it.printStackTrace()
+            }
+            .subscribe({
+            }, {
+                it.printStackTrace()
+            })
     }
 
 
@@ -177,32 +184,32 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                 listOfVideos.add(0, it)
             }
         }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally {
-                    when (listOfVideos.isNullOrEmpty()) {
-                        true -> {
-                        }
-                        else -> {
-                            println("HAHA ? : ${listOfVideos[0].isFunny}")
-                            lastVideoId = listOfVideos[0].id
-                            transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
-                        }
+            .observeOn(AndroidSchedulers.mainThread())
+            .doFinally {
+                when (listOfVideos.isNullOrEmpty()) {
+                    true -> {
                     }
-
+                    else -> {
+                        println("lastVideoID::::: ?: $lastVideoId")
+                        lastVideoId = listOfVideos[0].id
+                        transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
+                    }
                 }
-                .subscribe({
-                    subject.onNext(listOfVideos)
-                },
-                        {
-                            it.printStackTrace()
-                        }
-                )
+
+            }
+            .subscribe({
+                subject.onNext(listOfVideos)
+            },
+                {
+                    it.printStackTrace()
+                }
+            )
     }
 
     override fun subscribeToVideoGallery(): Observable<List<SavedVideo>> {
         return subject
-                .subscribeOn(Schedulers.single())
-                .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(Schedulers.single())
+            .observeOn(AndroidSchedulers.mainThread())
     }
 }
 
