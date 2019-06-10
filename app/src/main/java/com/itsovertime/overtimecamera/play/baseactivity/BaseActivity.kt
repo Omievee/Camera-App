@@ -15,11 +15,17 @@ import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.fragment_uploads.*
 import javax.inject.Inject
 
-class BaseActivity : OTActivity(), BaseActivityInt {
+class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick {
+    override fun onUploadsButtonClicked() {
+        viewPager.currentItem = 1
+    }
+
+
     override fun setUpAdapter() {
-        val viewPager = findViewById<ViewPager>(R.id.mainViewPager)
+        val viewPager = findViewById<ViewPager>(R.id.viewPager)
         viewPager.adapter = CustomPageAdapter(supportFragmentManager)
     }
 
@@ -72,11 +78,10 @@ class BaseActivity : OTActivity(), BaseActivityInt {
         AndroidInjection.inject(this)
         setContentView(R.layout.activity_main)
 
-
         presenter.onCreate()
-
         // detectOrientation()
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -126,13 +131,13 @@ class BaseActivity : OTActivity(), BaseActivityInt {
     fun showWarnings() {
         rotateView.visibility = View.VISIBLE
         rotateWarning.visibility = View.VISIBLE
-        mainViewPager.visibility = View.GONE
+        viewPager.visibility = View.GONE
     }
 
     fun hideWarnings() {
         rotateView.visibility = View.GONE
         rotateWarning.visibility = View.GONE
-        mainViewPager.visibility = View.VISIBLE
+        viewPager.visibility = View.VISIBLE
     }
 
     override fun onPause() {
@@ -146,6 +151,8 @@ class BaseActivity : OTActivity(), BaseActivityInt {
                 is UploadsFragment -> {
                     if (it.childFragmentManager.backStackEntryCount > 0) {
                         it.childFragmentManager.popBackStack()
+                    } else if (it.childFragmentManager.backStackEntryCount == 0 && viewPager.currentItem == 1) {
+                        viewPager.currentItem = 0
                     } else {
                         finishAffinity()
                     }
@@ -153,6 +160,15 @@ class BaseActivity : OTActivity(), BaseActivityInt {
             }
         }
     }
+
+    override fun onAttachFragment(fragment: Fragment?) {
+        super.onAttachFragment(fragment)
+        if (fragment is CameraFragment) {
+            fragment.setUploadsClickListener(this)
+        }
+    }
+
+
 }
 
 class CustomPageAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
@@ -162,8 +178,11 @@ class CustomPageAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter
 
     override fun getItem(position: Int): Fragment? {
         return when (position) {
-            0 -> CameraFragment()
-        //    1 -> UploadsFragment.newInstance("", "")
+            0 -> {
+                CameraFragment()
+
+            }
+            1 -> UploadsFragment.newInstance("", "")
             else -> null
         }
     }
@@ -172,7 +191,7 @@ class CustomPageAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter
 //        return "Page $position"
 ////    }
     companion object {
-        private const val TABS = 1
+        private const val TABS = 2
     }
 
 }

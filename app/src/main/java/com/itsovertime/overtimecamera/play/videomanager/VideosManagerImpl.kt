@@ -40,7 +40,7 @@ import java.io.IOException
 import java.lang.RuntimeException
 
 
-class VideosManagerImpl(val manager:UploadsManager) : VideosManager {
+class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
 
 
     @SuppressLint("CheckResult")
@@ -85,7 +85,7 @@ class VideosManagerImpl(val manager:UploadsManager) : VideosManager {
     }
 
     override fun uploadVideo() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
     }
 
     var context: Context? = null
@@ -206,8 +206,3 @@ class VideosManagerImpl(val manager:UploadsManager) : VideosManager {
     }
 }
 
-class VideoUploadWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
-    override fun doWork(): Result {
-        return Result.failure()
-    }
-}

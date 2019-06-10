@@ -63,9 +63,12 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
         manager.updateVideoFunny(isFunny = true)
     }
 
-}
+    fun displayUploads() {
+        view.displayUploadsFragment()
+    }
 
+}
 
 //TODO: Loading State Between Camera Engage & Release
 //TODO  SElfie Cam has no live cam & options
-//
+//TODO:

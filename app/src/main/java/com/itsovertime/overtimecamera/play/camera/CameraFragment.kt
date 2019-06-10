@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
@@ -20,7 +19,9 @@ import android.view.*
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentTransaction
 import com.itsovertime.overtimecamera.play.R
+import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.File
@@ -33,17 +34,27 @@ import javax.inject.Inject
 
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
-    @SuppressLint("ClickableViewAccessibility")
 
+
+    override fun displayUploadsFragment() {
+        val manager = childFragmentManager
+        val transaction = manager?.beginTransaction()
+        transaction?.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        transaction?.setCustomAnimations(R.anim.slide_up, R.anim.slide_out)
+        transaction?.replace(R.id.fragContainer, UploadsFragment.newInstance("", ""))?.addToBackStack("uploads").commit()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
     override fun setUpClicks() {
         progressBar.setOnClickListener(this)
         tapToSave.setOnClickListener(this)
         favoriteIcon.setOnClickListener(this)
         selfie.setOnClickListener(this)
         pauseButton.setOnClickListener(this)
-        txView.setOnTouchListener(this)
+        txView?.setOnTouchListener(this)
         pausedView.setOnClickListener(this)
         hahaIcon.setOnClickListener(this)
+        uploadButton.setOnClickListener(this)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -117,7 +128,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var sensorOrientation = 0
     var videoFile: File? = null
     var mediaRecorder: MediaRecorder? = null
-    lateinit var txView: TXView
+    var txView: TXView? = null
     var captureSession: CameraCaptureSession? = null
     lateinit var previewRequestBuilder: CaptureRequest.Builder
 
@@ -146,14 +157,14 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun startRecording() {
         println("pre try:::::::")
         recording = true
-        if (cameraDevice == null || !txView.isAvailable) {
+        if (cameraDevice == null || !txView?.isAvailable!!) {
             return
         }
         try {
             closePreviewSession()
             setUpMediaRecorder()
-            val texture = txView.surfaceTexture.apply {
-                setDefaultBufferSize(previewSize?.width ?: 0, previewSize?.height ?: 0)
+            val texture = txView?.surfaceTexture.apply {
+                this?.setDefaultBufferSize(previewSize?.width ?: 0, previewSize?.height ?: 0)
             }
 
             val previewSurface = Surface(texture)
@@ -221,8 +232,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun startPreview() {
         try {
             closePreviewSession()
-            val texture = txView.surfaceTexture
-            texture.setDefaultBufferSize(previewSize?.width ?: 0, previewSize?.height ?: 0)
+            val texture = txView?.surfaceTexture
+            texture?.setDefaultBufferSize(previewSize?.width ?: 0, previewSize?.height ?: 0)
             cameraDevice?.let {
                 previewRequestBuilder = it.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
             }
@@ -310,7 +321,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 presenter.updateFunnyField()
                 hahaIcon.background = ResourcesCompat.getDrawable(resources, R.drawable.funny_active, null)
             }
+            R.id.uploadButton -> {
+                println("upload clicked ")
+                callback?.onUploadsButtonClicked()
+            }
         }
+    }
+
+   internal var callback: UploadsButtonClick? = null
+
+    fun setUploadsClickListener(listener:UploadsButtonClick){
+        this.callback = listener
     }
 
 
@@ -343,13 +364,19 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         engageCamera()
     }
 
-    private fun engageCamera() {
+    fun engageCamera() {
         startBackgroundThread()
-        if (txView.isAvailable) {
-            openCamera(txView.width, txView.height, CAMERA)
-        } else {
-            txView.surfaceTextureListener = surfaceTextureListener
+        txView?.let {
+            if (it.isAvailable) {
+                println("available")
+                openCamera(it?.width, it?.height, CAMERA)
+            } else {
+                println("else")
+                it?.surfaceTextureListener = surfaceTextureListener
+            }
         }
+        println("Txt? $txView")
+
     }
 
     override fun onPause() {
@@ -368,8 +395,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     private fun startLiveView() {
         presenter.animateProgressBar(progressBar)
-        favoriteIcon.visibility = View.GONE
-        hahaIcon.visibility = View.GONE
+        favoriteIcon.visibility = View.INVISIBLE
+        hahaIcon.visibility = View.INVISIBLE
         startRecording()
     }
 
@@ -413,13 +440,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }
 
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                txView.setAspectRatio(previewSize?.width ?: 0, previewSize?.height ?: 0)
+                txView?.setAspectRatio(previewSize?.width ?: 0, previewSize?.height ?: 0)
             } else {
-                txView.setAspectRatio(previewSize?.height ?: 0, previewSize?.width ?: 0)
+                txView?.setAspectRatio(previewSize?.height ?: 0, previewSize?.width ?: 0)
             }
 
             mediaRecorder = MediaRecorder()
-            txView.setTransform(Matrix())
+            txView?.setTransform(Matrix())
             manager.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
 
         } catch (e: CameraAccessException) {
@@ -555,6 +582,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
+    interface UploadsButtonClick {
+        fun onUploadsButtonClicked()
+    }
 
 }
 
