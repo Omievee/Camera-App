@@ -2,10 +2,12 @@ package com.itsovertime.overtimecamera.play.videomanager
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
+import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -18,17 +20,60 @@ import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 
 class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
-    override fun trimVideo(file:File) {
+
+    override fun trimVideo(startTime: Int, endTime: Int, file: File) {
         val ffmpeg = FFmpeg.getInstance(context)
         try {
+            ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
+                override fun onStart() {
+                    super.onStart()
+                }
+
+                override fun onFinish() {
+                    super.onFinish()
+                }
+
+                override fun onSuccess() {
+                    super.onSuccess()
+                }
+
+                override fun onFailure() {
+                    super.onFailure()
+                }
+
+
+            })
+//            val complexCommand = arrayOf(
+//                "-ss",
+//                "" + startMs / 1000,
+//                "-y",
+//                "-i",
+//                yourRealPath,
+//                "-t",
+//                "" + (endMs - startMs) / 1000,
+//                "-vcodec",
+//                "mpeg4",
+//                "-b:v",
+//                "2097152",
+//                "-b:a",
+//                "48000",
+//                "-ac",
+//                "2",
+//                "-ar",
+//                "22050",
+//                filePath
+//            )
+
 
         } catch (e: FFmpegNotSupportedException) {
 
         }
     }
+
     @SuppressLint("CheckResult")
     override fun updateVideoFunny(isFunny: Boolean) {
         val db = context?.let { AppDatabase.getAppDataBase(context = it) }
@@ -171,10 +216,13 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                     }
                     else -> {
                         lastVideoId = listOfVideos[0].id
-                        transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
+                        if (determineVideoLength(recentFile = File(listOfVideos[0].vidPath)) > 18) {
+                            trimVideo(0, 18, File(listOfVideos[0].vidPath))
+                        } else {
+                            transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
+                        }
                     }
                 }
-
             }
             .subscribe({
                 subject.onNext(listOfVideos)
@@ -183,6 +231,15 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                     it.printStackTrace()
                 }
             )
+    }
+
+    private fun determineVideoLength(recentFile: File): Long {
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(context, Uri.fromFile(recentFile))
+        val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        retriever.release()
+
+        return TimeUnit.MILLISECONDS.toSeconds(time.toLong()) % 60
     }
 
     override fun subscribeToVideoGallery(): Observable<List<SavedVideo>> {

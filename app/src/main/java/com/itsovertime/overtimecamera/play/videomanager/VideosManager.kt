@@ -16,6 +16,6 @@ interface VideosManager {
     fun uploadVideo()
     fun transcodeVideo(context: Context, videoFile: File)
     fun updateVideoFavorite(isFavorite: Boolean)
-    fun updateVideoFunny(isFunny:Boolean)
-    fun trimVideo(file:File)
+    fun updateVideoFunny(isFunny: Boolean)
+    fun trimVideo(startTime: Int, endTime: Int, file: File)
 }
