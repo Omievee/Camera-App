@@ -85,14 +85,14 @@ dependencies {
     kapt("android.arch.persistence.room:compiler:1.1.1")
     //transcoder
     implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
+    //FFMPJEG - trimming
+    implementation ("com.writingminds:FFmpegAndroid:0.3.2")
     //Fabric
     implementation("com.crashlytics.sdk.android:crashlytics:2.10.1@aar") {
         isTransitive = true
     }
     //WorkManager
-    // Kotlin + coroutines
     implementation("androidx.work:work-runtime-ktx:2.0.1")
-    // optional - RxJava2 support
     implementation("androidx.work:work-rxjava2:2.0.1")
     //Testing
     testImplementation("junit:junit:4.12")

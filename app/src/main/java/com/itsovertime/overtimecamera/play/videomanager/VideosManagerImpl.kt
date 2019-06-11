@@ -1,48 +1,34 @@
 package com.itsovertime.overtimecamera.play.videomanager
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.content.Context
-import android.os.ParcelFileDescriptor
+import android.net.Uri
+import android.os.Environment
+import com.crashlytics.android.Crashlytics
+import com.github.hiteshsondhi88.libffmpeg.FFmpeg
+import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
+import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import com.itsovertime.overtimecamera.play.db.AppDatabase
-import com.itsovertime.overtimecamera.play.network.UploadResponse
-import io.reactivex.Single
-import java.io.File
-import java.util.*
-import android.widget.Toast
-import android.R.attr.data
-import android.util.Log
 import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
-import java.io.FileNotFoundException
-import java.util.concurrent.Future
-import android.R.attr.data
-import android.content.ContentResolver
-import android.net.Uri
-import java.lang.Exception
-import android.R.attr.data
-import android.media.CamcorderProfile
-import android.media.CameraProfile
-import android.os.Environment
-import androidx.lifecycle.LiveData
-import androidx.work.*
-import com.crashlytics.android.Crashlytics
-import com.google.common.util.concurrent.ListenableFuture
-import com.itsovertime.overtimecamera.play.network.Api
-import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
-import io.reactivex.disposables.Disposable
+import java.io.File
 import java.io.IOException
-import java.lang.RuntimeException
 
 
 class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
+    override fun trimVideo(file:File) {
+        val ffmpeg = FFmpeg.getInstance(context)
+        try {
 
+        } catch (e: FFmpegNotSupportedException) {
 
+        }
+    }
     @SuppressLint("CheckResult")
     override fun updateVideoFunny(isFunny: Boolean) {
         val db = context?.let { AppDatabase.getAppDataBase(context = it) }
@@ -65,15 +51,11 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
             })
     }
 
-
     @SuppressLint("CheckResult")
     override fun updateVideoFavorite(isFavorite: Boolean) {
-        println("Update::: $isFavorite")
         val db = context?.let { AppDatabase.getAppDataBase(context = it) }
-        println("DB? $db")
         Observable.fromCallable {
             val videoDao = db?.videoDao()
-            println("Callable?? $lastVideoId + $isFavorite")
             with(videoDao) {
                 this?.setVideoAsFavorite(isFave = isFavorite, lastID = lastVideoId)
             }
@@ -188,7 +170,6 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                     true -> {
                     }
                     else -> {
-                        println("lastVideoID::::: ?: $lastVideoId")
                         lastVideoId = listOfVideos[0].id
                         transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
                     }

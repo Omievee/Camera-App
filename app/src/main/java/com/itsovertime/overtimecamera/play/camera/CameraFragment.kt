@@ -364,13 +364,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         builder?.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
     }
 
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_camera, container, false)
     }
 
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         txView = cameraView
@@ -426,14 +424,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @SuppressLint("CheckResult")
     private fun startLiveView() {
         Observable.fromCallable {
-            presenter.animateProgressBar(progressBar)
-
+            //  presenter.animateProgressBar(progressBar)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
+            .doFinally {
                 favoriteIcon.visibility = View.INVISIBLE
                 hahaIcon.visibility = View.INVISIBLE
                 startRecording()
+            }
+            .subscribe({
+
             }, {
                 it.printStackTrace()
             })
@@ -573,6 +573,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
+
         if (isVisibleToUser && view != null) {
             engageCamera()
             startLiveView()
