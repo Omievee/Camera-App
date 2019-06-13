@@ -54,20 +54,21 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
     private fun executeFFMPEG(file: File) {
         val mediaStorageDir = File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTimeTrimmed")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-
             println("Failed....")
         }
 
-        val f = File(mediaStorageDir.path + File.separator + "${file.name}.trim.mp4")
+        val trimmedFile = File(mediaStorageDir.path + File.separator + "${file.name}.trim.mp4")
         val complexCommand = arrayOf(
             "-sseof",
-            "-20",
+            "-18",
             "-y",
             "-i",
             file.absolutePath,
             "-vcodec",
-            "mpeg4",
-            f.absolutePath
+            "h264",
+            "-c",
+            "copy",
+            trimmedFile.absolutePath
         )
         try {
 
@@ -85,6 +86,7 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                 override fun onFinish() {
                     super.onFinish()
                     println("finished::::::")
+                    context?.let { transcodeVideo(it, trimmedFile) }
                 }
 
                 override fun onSuccess(message: String?) {
