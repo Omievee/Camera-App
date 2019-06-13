@@ -52,12 +52,6 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
     }
 
     private fun executeFFMPEG(file: File) {
-        val mediaStorageDir = File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTimeTrimmed")
-        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-            println("Failed....")
-        }
-
-        val trimmedFile = File(mediaStorageDir.path + File.separator + "${file.name}.trim.mp4")
         val complexCommand = arrayOf(
             "-sseof",
             "-18",
@@ -68,7 +62,7 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
             "h264",
             "-c",
             "copy",
-            trimmedFile.absolutePath
+            fileForTrimmedVideo(file.name).absolutePath
         )
         try {
 
@@ -86,7 +80,7 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                 override fun onFinish() {
                     super.onFinish()
                     println("finished::::::")
-                    context?.let { transcodeVideo(it, trimmedFile) }
+                    context?.let { transcodeVideo(it, file) }
                 }
 
                 override fun onSuccess(message: String?) {
@@ -106,6 +100,22 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
             Crashlytics.log("FFMPEG -- ${e.message}")
         }
 
+    }
+
+    private fun fileForTrimmedVideo(fileName: String): File {
+        val mediaStorageDir = File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTimeTrimmed")
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+            println("Failed....")
+        }
+        return File(mediaStorageDir.path + File.separator + "$fileName.trim.mp4")
+    }
+
+    private fun compressedFile(file: File): File {
+        val mediaStorageDir = File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+            Crashlytics.log("Compress File Error")
+        }
+        return File(mediaStorageDir.path + File.separator + file.name)
     }
 
     @SuppressLint("CheckResult")
@@ -194,14 +204,6 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
             Crashlytics.log("MediaTranscoder-Error ${ia.message}")
             ia.printStackTrace()
         }
-    }
-
-    private fun compressedFile(file: File): File {
-        val mediaStorageDir = File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
-        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-            Crashlytics.log("Compress File Error")
-        }
-        return File(mediaStorageDir.path + File.separator + file.name)
     }
 
 
