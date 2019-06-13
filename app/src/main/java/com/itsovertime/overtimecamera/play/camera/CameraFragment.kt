@@ -93,7 +93,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 pausedView.visibility = View.VISIBLE
             }
             R.id.pausedView -> {
-                println("clicck?")
                 pausedView.visibility = View.GONE
                 engageCamera()
                 startLiveView()
@@ -196,7 +195,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-
+                    println("View Gone")
                     progress.visibility = View.GONE
                     val texture = txView?.surfaceTexture.apply {
                         this?.setDefaultBufferSize(
@@ -206,7 +205,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     }
 
                     val previewSurface = Surface(texture)
-                    val recorderSurface = mediaRecorder?.surface
+                    val recorderSurface = it?.surface
                     val surfaces = ArrayList<Surface>().apply {
                         add(previewSurface)
                         recorderSurface?.let { add(it) }
@@ -216,7 +215,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                         recorderSurface?.let {
                             this?.addTarget(it)
                         }
-                    }!!
+                    } ?: return@subscribe
 
                     cameraDevice?.createCaptureSession(
                         surfaces, object : CameraCaptureSession.StateCallback() {
@@ -243,7 +242,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                 }
 
                                 activity?.run {
-                                    mediaRecorder?.start()
+
+                                    it?.start()
                                 }
                             }
 
@@ -329,7 +329,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 }, backgroundHandler
             )
 
-            println("stop? $clickedStop")
             if (!clickedStop) {
                 startLiveView()
             }
@@ -390,6 +389,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun onResume() {
         super.onResume()
         engageCamera()
+        clickedStop = false
     }
 
     fun engageCamera() {
@@ -423,21 +423,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     @SuppressLint("CheckResult")
     private fun startLiveView() {
-        Observable.fromCallable {
-            //  presenter.animateProgressBar(progressBar)
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-                favoriteIcon.visibility = View.INVISIBLE
-                hahaIcon.visibility = View.INVISIBLE
-                startRecording()
-            }
-            .subscribe({
-
-            }, {
-                it.printStackTrace()
-            })
-
+        presenter.animateProgressBar(progressBar)
+        favoriteIcon.visibility = View.INVISIBLE
+        hahaIcon.visibility = View.INVISIBLE
+        startRecording()
     }
 
 
@@ -567,7 +556,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
             setCaptureRate(120.0)
             prepare()
+            println("prepare?? ")
         }
+        println("mediaRecorder:::: $mediaRecorder")
         return mediaRecorder
     }
 
@@ -576,7 +567,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
         if (isVisibleToUser && view != null) {
             engageCamera()
-            startLiveView()
+            //  startLiveView()
         }
     }
 
@@ -584,6 +575,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         override fun onOpened(cameraDevice: CameraDevice) {
             cameraOpenCloseLock.release()
             this@CameraFragment.cameraDevice = cameraDevice
+            println("Preview....")
             startPreview()
         }
 

@@ -67,30 +67,16 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
         try {
 
             ffmpeg?.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
-                override fun onStart() {
-                    super.onStart()
-                    println("started::::::")
-                }
-
-                override fun onProgress(message: String?) {
-                    super.onProgress(message)
-                    println("progress $message::::::")
-                }
-
                 override fun onFinish() {
                     super.onFinish()
                     println("finished::::::")
                     context?.let { transcodeVideo(it, file) }
                 }
 
-                override fun onSuccess(message: String?) {
-                    super.onSuccess(message)
-                    println("successful execute:::::: $message")
-                }
-
                 override fun onFailure(message: String?) {
                     super.onFailure(message)
                     println("failed to execute:::::: $message")
+                    Crashlytics.log("Failed to execute ffmpeg -- $message")
                 }
             })
 
@@ -99,7 +85,6 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
             e.printStackTrace()
             Crashlytics.log("FFMPEG -- ${e.message}")
         }
-
     }
 
     private fun fileForTrimmedVideo(fileName: String): File {
