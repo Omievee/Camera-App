@@ -6,8 +6,10 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
 import com.crashlytics.android.Crashlytics
+import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler
+import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -25,53 +27,83 @@ import java.util.concurrent.TimeUnit
 
 class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
 
-    override fun trimVideo(startTime: Int, endTime: Int, file: File) {
-        val ffmpeg = FFmpeg.getInstance(context)
+    override fun trimVideo(file: File) {
+
+    }
+
+    lateinit var ffmpeg: FFmpeg
+    private fun loadFFMPEG(context: Context) {
+        ffmpeg = FFmpeg.getInstance(context)
         try {
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
-                override fun onStart() {
-                    super.onStart()
-                }
-
-                override fun onFinish() {
-                    super.onFinish()
-                }
-
                 override fun onSuccess() {
                     super.onSuccess()
                 }
 
                 override fun onFailure() {
                     super.onFailure()
+                    Crashlytics.log("FFMPEG -- LOAD FAILURE")
+                }
+            })
+        } catch (e: FFmpegNotSupportedException) {
+            e.printStackTrace()
+            Crashlytics.log("FFMPEG not supported -- ${e.message}")
+        }
+    }
+
+    private fun executeFFMPEG(file: File) {
+        val mediaStorageDir = File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTimeTrimmed")
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+
+            println("Failed....")
+        }
+
+        val f = File(mediaStorageDir.path + File.separator + "${file.name}.trim.mp4")
+        val complexCommand = arrayOf(
+            "-sseof",
+            "-20",
+            "-y",
+            "-i",
+            file.absolutePath,
+            "-vcodec",
+            "mpeg4",
+            f.absolutePath
+        )
+        try {
+
+            ffmpeg?.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
+                override fun onStart() {
+                    super.onStart()
+                    println("started::::::")
                 }
 
+                override fun onProgress(message: String?) {
+                    super.onProgress(message)
+                    println("progress $message::::::")
+                }
 
+                override fun onFinish() {
+                    super.onFinish()
+                    println("finished::::::")
+                }
+
+                override fun onSuccess(message: String?) {
+                    super.onSuccess(message)
+                    println("successful execute:::::: $message")
+                }
+
+                override fun onFailure(message: String?) {
+                    super.onFailure(message)
+                    println("failed to execute:::::: $message")
+                }
             })
-//            val complexCommand = arrayOf(
-//                "-ss",
-//                "" + startMs / 1000,
-//                "-y",
-//                "-i",
-//                yourRealPath,
-//                "-t",
-//                "" + (endMs - startMs) / 1000,
-//                "-vcodec",
-//                "mpeg4",
-//                "-b:v",
-//                "2097152",
-//                "-b:a",
-//                "48000",
-//                "-ac",
-//                "2",
-//                "-ar",
-//                "22050",
-//                filePath
-//            )
 
 
-        } catch (e: FFmpegNotSupportedException) {
-
+        } catch (e: FFmpegCommandAlreadyRunningException) {
+            e.printStackTrace()
+            Crashlytics.log("FFMPEG -- ${e.message}")
         }
+
     }
 
     @SuppressLint("CheckResult")
@@ -197,8 +229,10 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
     }
 
 
+    var isFirstRun: Boolean = false
     @SuppressLint("CheckResult")
     override fun loadFromDB(context: Context) {
+        isFirstRun = true
         this.context = context
         val listOfVideos = mutableListOf<SavedVideo>()
         val db = AppDatabase.getAppDataBase(context = context)
@@ -211,16 +245,23 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
+                when (isFirstRun) {
+                    true -> {
+                        loadFFMPEG(context)
+                        isFirstRun = false
+                    }
+                }
                 when (listOfVideos.isNullOrEmpty()) {
                     true -> {
                     }
                     else -> {
                         lastVideoId = listOfVideos[0].id
-                        if (determineVideoLength(recentFile = File(listOfVideos[0].vidPath)) > 18) {
-                            trimVideo(0, 18, File(listOfVideos[0].vidPath))
-                        } else {
-                            transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
-                        }
+                        executeFFMPEG(File(listOfVideos[0].vidPath))
+//                        if (determineVideoLength(recentFile = File(listOfVideos[0].vidPath)) > 18) {
+//                            trimVideo(File(listOfVideos[0].vidPath))
+//                        } else {
+//                            transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
+//                        }
                     }
                 }
             }
