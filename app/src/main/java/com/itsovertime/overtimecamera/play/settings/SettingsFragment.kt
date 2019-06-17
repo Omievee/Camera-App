@@ -26,6 +26,7 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
     lateinit var presenter: SettingsPresenter
 
     override fun onLogOut() {
+
     }
 
     override fun onTermsClicked(urlIntent:Intent) {
@@ -106,7 +107,6 @@ class SettingsViewData(
 data class SettingsPresentation(
         val type: Settings,
         val title: String
-
 ) : ItemSame<SettingsPresentation> {
     override fun sameAs(same: SettingsPresentation): Boolean {
         return equals(same)

@@ -28,7 +28,7 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
-    fun saveRecording() {
+    fun saveRecordingToDataBase() {
         println("Saving............")
         filePath?.let {
             manager.saveVideoToDB(
