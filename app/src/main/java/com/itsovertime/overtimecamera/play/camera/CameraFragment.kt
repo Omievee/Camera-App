@@ -196,7 +196,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError {
-
+                    it.printStackTrace()
                 }
                 .doFinally {
                     progress.visibility = View.GONE

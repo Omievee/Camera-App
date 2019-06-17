@@ -66,10 +66,10 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
         )
         try {
 
-            ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
+            ffmpeg?.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                 override fun onFinish() {
                     super.onFinish()
-                    context?.let { transcodeVideo(it, file) }
+                   context?.let { transcodeVideo(it, file) }
                 }
 
                 override fun onFailure(message: String?) {

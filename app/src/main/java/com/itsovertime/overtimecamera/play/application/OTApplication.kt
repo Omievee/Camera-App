@@ -6,6 +6,7 @@ import com.crashlytics.android.Crashlytics
 import com.facebook.drawee.backends.pipeline.BuildConfig
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.itsovertime.overtimecamera.play.di.DaggerAppComponent
+import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasActivityInjector
@@ -25,6 +26,7 @@ class OTApplication : Application(), HasActivityInjector {
         }
         Fresco.initialize(this)
         inject()
+        UserPreference.load(this)
     }
 
     fun inject() {
