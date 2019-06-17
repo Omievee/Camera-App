@@ -15,7 +15,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="52f1d9bd-0055-4940-a89e-73e6fb3fcc73" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/userpreference/UserPreference.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/executionHistory/executionHistory.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/executionHistory/executionHistory.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/fileHashes/fileHashes.bin" afterDir="false" />
@@ -27,9 +26,7 @@
       <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/taskHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/taskHistory.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/application/OTApplication.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/application/OTApplication.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/utils/Constants.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/utils/Constants.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManagerImpl.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManagerImpl.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraFragment.kt" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -68,12 +65,12 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraFragment.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="186">
-              <caret line="201" column="51" lean-forward="true" selection-start-line="201" selection-start-column="51" selection-end-line="201" selection-end-column="51" />
+            <state relative-caret-position="412">
+              <caret line="307" column="38" selection-start-line="307" selection-start-column="38" selection-end-line="307" selection-end-column="38" />
               <folding>
-                <marker date="1560803354930" expanded="true" signature="4381:4809" ph="..." />
-                <marker date="1560803354930" expanded="true" signature="4383:4552" ph="..." />
-                <marker date="1560803354930" expanded="true" signature="4810:5403" ph="..." />
+                <marker date="1560805824035" expanded="true" signature="4381:4809" ph="..." />
+                <marker date="1560805824035" expanded="true" signature="4383:4552" ph="..." />
+                <marker date="1560805824035" expanded="true" signature="4810:5403" ph="..." />
               </folding>
             </state>
           </provider>
@@ -184,13 +181,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>CameraPreview</find>
-      <find>HandlerThread</find>
-      <find>captureSession</find>
-      <find>closePreviewSession</find>
-      <find>closeCamera</find>
-      <find>startPreview</find>
-      <find>iew.Gone</find>
       <find>view gone</find>
       <find>callable</find>
       <find>t</find>
@@ -205,7 +195,6 @@
       <find>progress.visibility = View.GONE</find>
       <find>progress.visibility = View.VISIBLE</find>
       <find>hidview</find>
-      <find>taptosav</find>
       <find>closepr</find>
       <find>create capt</find>
       <find>complete</find>
@@ -214,6 +203,14 @@
       <find>mediarecorder?.apply {</find>
       <find>loadffmp</find>
       <find>onpaus</find>
+      <find>hidevi</find>
+      <find>startre</find>
+      <find>hahaIcon.visibility = View.VISIBLE</find>
+      <find>favoriteIcon.visibility = View.INV</find>
+      <find>hidvi</find>
+      <find>favoriteIcon.visibility = View.INVISIBLE</find>
+      <find>favoriteIcon.visibility = View.</find>
+      <find>taptosav</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -534,7 +531,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1680" y="0" width="1920" height="1080" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info id="Captures" order="0" side_tool="true" weight="0.25" />
       <window_info content_ui="combo" id="Project" order="1" sideWeight="0.6627907" visible="true" weight="0.14909478" />
@@ -547,9 +543,9 @@
       <window_info id="Resources Explorer" order="8" />
       <window_info anchor="bottom" id="Version Control" order="0" weight="0.32967034" />
       <window_info anchor="bottom" id="TODO" order="1" weight="0.32967034" />
-      <window_info anchor="bottom" id="Terminal" order="2" sideWeight="0.70713526" visible="true" weight="0.41558442" />
+      <window_info anchor="bottom" id="Terminal" order="2" sideWeight="0.70713526" weight="0.41558442" />
       <window_info anchor="bottom" id="Event Log" order="3" sideWeight="0.5026624" side_tool="true" weight="0.8431568" />
-      <window_info anchor="bottom" id="Logcat" order="4" sideWeight="0.63045794" weight="0.1968032" />
+      <window_info anchor="bottom" id="Logcat" order="4" sideWeight="0.63045794" visible="true" weight="0.25974026" />
       <window_info anchor="bottom" id="Android Profiler" order="5" weight="0.32967034" />
       <window_info anchor="bottom" id="Build" order="6" sideWeight="0.49733758" weight="0.02997003" />
       <window_info anchor="bottom" id="Debug" order="7" weight="0.4984552" />
@@ -954,12 +950,12 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraFragment.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="186">
-          <caret line="201" column="51" lean-forward="true" selection-start-line="201" selection-start-column="51" selection-end-line="201" selection-end-column="51" />
+        <state relative-caret-position="412">
+          <caret line="307" column="38" selection-start-line="307" selection-start-column="38" selection-end-line="307" selection-end-column="38" />
           <folding>
-            <marker date="1560803354930" expanded="true" signature="4381:4809" ph="..." />
-            <marker date="1560803354930" expanded="true" signature="4383:4552" ph="..." />
-            <marker date="1560803354930" expanded="true" signature="4810:5403" ph="..." />
+            <marker date="1560805824035" expanded="true" signature="4381:4809" ph="..." />
+            <marker date="1560805824035" expanded="true" signature="4383:4552" ph="..." />
+            <marker date="1560805824035" expanded="true" signature="4810:5403" ph="..." />
           </folding>
         </state>
       </provider>

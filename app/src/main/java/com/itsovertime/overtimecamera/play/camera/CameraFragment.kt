@@ -190,9 +190,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         try {
             closePreviewSession()
             Single.fromCallable {
-                println("callable...")
                 setUpMediaRecorder()
-
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError {
@@ -200,9 +198,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 }
                 .doFinally {
                     progress.visibility = View.GONE
+                    hideViews()
                 }
                 .subscribe({ it ->
-                    println("Subscribe..")
                     val texture = txView?.surfaceTexture.apply {
                         this?.setDefaultBufferSize(
                             previewSize?.width ?: 0, previewSize?.height
@@ -299,15 +297,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
-//    fun hideViews() {
-//        val timer = Timer()
-//        val timerTask = object : TimerTask() {
-//            override fun run() {
-//
-//            }
-//        }
-//        timer.schedule(timerTask, 30);
-//    }
+    fun hideViews() {
+
+        val timer = Timer()
+        val timerTask = object : TimerTask() {
+            override fun run() {
+                favoriteIcon.visibility = View.INVISIBLE
+                hahaIcon.visibility = View.INVISIBLE
+            }
+        }
+        timer.schedule(timerTask, 8000)
+    }
 
     override fun onAttach(context: Context?) {
         AndroidSupportInjection.inject(this)
@@ -426,7 +426,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         engageCamera()
         clickedStop = false
         progress.visibility = View.VISIBLE
-
     }
 
     fun releaseCamera() {
@@ -441,8 +440,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @SuppressLint("CheckResult")
     private fun startLiveView() {
         presenter.animateProgressBar(progressBar)
-        favoriteIcon.visibility = View.INVISIBLE
-        hahaIcon.visibility = View.INVISIBLE
         startRecording()
 
     }
@@ -451,6 +448,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     fun stopLiveView(isPaused: Boolean) {
         progressBar.clearAnimation()
         stopRecording(isPaused)
+
         favoriteIcon.visibility = View.VISIBLE
         hahaIcon.visibility = View.VISIBLE
         hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.haha, null))
@@ -548,12 +546,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         val videoTimeStamp = System.currentTimeMillis().toString()
         videoFile = presenter.getVideoFilePath(videoTimeStamp)
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
-        when (sensorOrientation) {
-            SENSOR_ORIENTATION_DEFAULT_DEGREES ->
-                mediaRecorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
-            SENSOR_ORIENTATION_INVERSE_DEGREES ->
-                mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
-        }
+//        when (sensorOrientation) {
+//            SENSOR_ORIENTATION_DEFAULT_DEGREES ->
+//                mediaRecorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
+//            SENSOR_ORIENTATION_INVERSE_DEGREES ->
+//                mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
+//        }
 
         val profile: CamcorderProfile = when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
             true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
