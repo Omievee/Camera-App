@@ -196,10 +196,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 .doOnError {
                     it.printStackTrace()
                 }
-                .doFinally {
-                    progress.visibility = View.GONE
-                    hideViews()
-                }
                 .subscribe({ it ->
                     val texture = txView?.surfaceTexture.apply {
                         this?.setDefaultBufferSize(
@@ -245,6 +241,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                 }
 
                                 activity?.run {
+                                    println("Do finally.....")
+                                    progress.visibility = View.GONE
+                                    hideViews()
                                     it?.start()
                                 }
                             }
@@ -264,31 +263,29 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
-
     @SuppressLint("CheckResult")
     override fun stopRecording(isPaused: Boolean) {
         stopRecordingThread()
         recording = false
         try {
-
             Observable.fromCallable {
                 mediaRecorder?.apply {
                     stop()
                     reset()
                 }
-
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    println("??? $isPaused")
+                .doFinally {
+                    println("stopped recording ::: $isPaused")
                     if (!isPaused) {
                         presenter.saveRecordingToDataBase()
                         startLiveView()
                     }
-                }) {
-                    it.printStackTrace()
                 }
-
+                .subscribe({
+                }, {
+                    it.printStackTrace()
+                })
 
         } catch (r: RuntimeException) {
             r.printStackTrace()
@@ -297,8 +294,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
-    fun hideViews() {
-
+    private fun hideViews() {
         val timer = Timer()
         val timerTask = object : TimerTask() {
             override fun run() {
@@ -306,7 +302,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 hahaIcon.visibility = View.INVISIBLE
             }
         }
-        timer.schedule(timerTask, 8000)
+        timer.schedule(timerTask, 12000)
     }
 
     override fun onAttach(context: Context?) {
@@ -439,7 +435,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     @SuppressLint("CheckResult")
     private fun startLiveView() {
-        presenter.animateProgressBar(progressBar)
+        //  presenter.animateProgressBar(progressBar)
         startRecording()
 
     }
@@ -448,7 +444,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     fun stopLiveView(isPaused: Boolean) {
         progressBar.clearAnimation()
         stopRecording(isPaused)
-
         favoriteIcon.visibility = View.VISIBLE
         hahaIcon.visibility = View.VISIBLE
         hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.haha, null))
@@ -546,12 +541,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         val videoTimeStamp = System.currentTimeMillis().toString()
         videoFile = presenter.getVideoFilePath(videoTimeStamp)
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
-//        when (sensorOrientation) {
-//            SENSOR_ORIENTATION_DEFAULT_DEGREES ->
-//                mediaRecorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
-//            SENSOR_ORIENTATION_INVERSE_DEGREES ->
-//                mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
-//        }
+        when (sensorOrientation) {
+            SENSOR_ORIENTATION_DEFAULT_DEGREES ->
+                mediaRecorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
+            SENSOR_ORIENTATION_INVERSE_DEGREES ->
+                mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
+        }
 
         val profile: CamcorderProfile = when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
             true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)

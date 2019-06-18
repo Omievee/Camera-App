@@ -11,10 +11,9 @@ import java.util.*
 interface VideosManager {
 
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
-    fun loadFromDB(context: Context)
-    fun saveVideoToDB(context: Context, filePath: String, isFavorite: Boolean)
-    fun uploadVideo()
-    fun transcodeVideo(context: Context, videoFile: File)
+    fun loadFromDB()
+    fun saveVideoToDB(filePath: String, isFavorite: Boolean)
+    fun transcodeVideo(videoFile: File)
     fun updateVideoFavorite(isFavorite: Boolean)
     fun updateVideoFunny(isFunny: Boolean)
     fun trimVideo(file: File)

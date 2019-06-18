@@ -16,8 +16,8 @@ data class SavedVideo(
     val id: Int = 0,
     @ColumnInfo(name = "vidPath")
     val vidPath: String?,
-    @ColumnInfo(name = "isFavorite")
-    val isFavorite: Boolean = false,
-    @ColumnInfo(name = "isFunny")
-    val isFunny: Boolean = false
+    @ColumnInfo(name = "is_favorite")
+    val is_favorite: Boolean = false,
+    @ColumnInfo(name = "is_funny")
+    val is_funny: Boolean = false
 ) : Parcelable

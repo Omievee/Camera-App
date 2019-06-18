@@ -8,7 +8,7 @@ class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager) {
     var managerDisposable: Disposable? = null
 
     fun onCreate() {
-        manager.loadFromDB(view.context ?: return)
+        manager.loadFromDB()
     }
 
     fun onResume() {

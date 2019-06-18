@@ -1,7 +1,6 @@
 package com.itsovertime.overtimecamera.play.videomanager
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
@@ -11,6 +10,7 @@ import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
+import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
@@ -25,14 +25,17 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 
-class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
+class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
+
+//    @Inject
+//    lateinit var manager: UploadsManager
 
     override fun trimVideo(file: File) {
 
     }
 
     lateinit var ffmpeg: FFmpeg
-    private fun loadFFMPEG(context: Context) {
+    private fun loadFFMPEG() {
         ffmpeg = FFmpeg.getInstance(context)
         try {
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
@@ -69,12 +72,11 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
             ffmpeg?.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                 override fun onFinish() {
                     super.onFinish()
-                   context?.let { transcodeVideo(it, file) }
+                    transcodeVideo(file)
                 }
 
                 override fun onFailure(message: String?) {
                     super.onFailure(message)
-                    println("failed to execute:::::: $message")
                     Crashlytics.log("Failed to execute ffmpeg -- $message")
                 }
             })
@@ -108,12 +110,13 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
         Observable.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
-                this?.setVideoAsFunny(isFunny = isFunny, lastID = lastVideoId)
+                this?.setVideoAsFunny(is_funny = isFunny, lastID = lastVideoId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
-                context?.let { loadFromDB(it) }
+                loadFromDB()
+
             }
             .onErrorReturn {
                 it.printStackTrace()
@@ -130,7 +133,7 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
         Observable.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
-                this?.setVideoAsFavorite(isFave = isFavorite, lastID = lastVideoId)
+                this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = lastVideoId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -138,21 +141,15 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
                 it.printStackTrace()
             }
             .subscribe {
-                context?.let {
-                    loadFromDB(it)
-                }
+                loadFromDB()
             }
     }
 
-    override fun uploadVideo() {
 
-    }
-
-    var context: Context? = null
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
 
-    override fun transcodeVideo(context: Context, videoFile: File) {
-        this.context = context
+    override fun transcodeVideo(videoFile: File) {
+
         val file = Uri.fromFile(videoFile)
 
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
@@ -164,12 +161,13 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
 
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
-                transcodeVideo(context, videoFile)
+                transcodeVideo(videoFile)
                 exception?.printStackTrace()
             }
 
             override fun onTranscodeCompleted() {
                 println("complete :::")
+                manager?.onUpdateQue(listOfVideos)
             }
         }
 
@@ -193,11 +191,11 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
 
     private var lastVideoId: Int = 0
     @SuppressLint("CheckResult")
-    override fun saveVideoToDB(context: Context, filePath: String, isFavorite: Boolean) {
-        this.context = context
+    override fun saveVideoToDB(filePath: String, isFavorite: Boolean) {
+
         val db = AppDatabase.getAppDataBase(context = context)
         Observable.fromCallable {
-            val video = SavedVideo(vidPath = filePath, isFavorite = isFavorite)
+            val video = SavedVideo(vidPath = filePath, is_favorite = isFavorite)
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.saveVideo(video)
@@ -205,7 +203,7 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
-                loadFromDB(context)
+                loadFromDB()
             }
             .onErrorReturn {
                 it.printStackTrace()
@@ -216,13 +214,14 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
             })
     }
 
-
+    var listOfVideos = mutableListOf<SavedVideo>()
     var isFirstRun: Boolean = false
+
     @SuppressLint("CheckResult")
-    override fun loadFromDB(context: Context) {
+    override fun loadFromDB() {
         isFirstRun = true
-        this.context = context
-        val listOfVideos = mutableListOf<SavedVideo>()
+
+
         val db = AppDatabase.getAppDataBase(context = context)
         Observable.fromCallable {
             db?.videoDao()?.getVideos()
@@ -235,7 +234,7 @@ class VideosManagerImpl(val manager: UploadsManager) : VideosManager {
             .doFinally {
                 when (isFirstRun) {
                     true -> {
-                        loadFFMPEG(context)
+                        loadFFMPEG()
                         isFirstRun = false
                     }
                 }

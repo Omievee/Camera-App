@@ -1,11 +1,12 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
+import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.network.Api
 
 class UploadsManagerImpl(val api: Api) : UploadsManager {
 
-    override fun onUpdateQue() {
-
+    override fun onUpdateQue(videoList: MutableList<SavedVideo>) {
+        println("Video list size ::: ${videoList.size}")
     }
 
     override fun onUploadFavoriteMedQualityVideo() {

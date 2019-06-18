@@ -22,7 +22,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLa
 
 
     fun bind(video: SavedVideo) {
-        faveIcon.visibility = when (video.isFavorite) {
+        faveIcon.visibility = when (video.is_favorite) {
             true -> View.VISIBLE
             else -> View.INVISIBLE
         }

@@ -11,6 +11,4 @@ object UserPreference {
         sPrefs = context.getSharedPreferences(Constants.PREFS_FILE, Context.MODE_PRIVATE)
     }
 
-
-
 }

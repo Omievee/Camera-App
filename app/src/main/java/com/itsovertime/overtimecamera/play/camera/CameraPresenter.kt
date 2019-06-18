@@ -32,12 +32,11 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
         println("Saving............")
         filePath?.let {
             manager.saveVideoToDB(
-                    view.context ?: return,
-                    filePath = it,
-                    isFavorite = false
+                filePath = it,
+                isFavorite = false
             )
         }
-       view.startPreview()
+        view.startPreview()
     }
 
     @SuppressLint("CheckResult")
