@@ -116,7 +116,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
                 loadFromDB()
-
             }
             .onErrorReturn {
                 it.printStackTrace()

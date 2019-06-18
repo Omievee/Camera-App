@@ -1,5 +1,7 @@
 package com.itsovertime.overtimecamera.play.wifimanager
 
-class WifiManagerImpl : WifiManager {
+import com.itsovertime.overtimecamera.play.application.OTApplication
+
+class WifiManagerImpl(val context: OTApplication) : WifiManager {
 
 }

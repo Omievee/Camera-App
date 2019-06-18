@@ -24,14 +24,14 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideUploadManager(api: Api): UploadsManager {
-        return UploadsManagerImpl(api)
+    fun provideUploadManager(context: OTApplication, api: Api, wifiManager:WifiManager): UploadsManager {
+        return UploadsManagerImpl(context, api, wifiManager)
     }
 
 
     @Provides
     @Singleton
-    fun provideWifiManager(): WifiManager {
-        return WifiManagerImpl()
+    fun provideWifiManager(context: OTApplication): WifiManager {
+        return WifiManagerImpl(context)
     }
 }

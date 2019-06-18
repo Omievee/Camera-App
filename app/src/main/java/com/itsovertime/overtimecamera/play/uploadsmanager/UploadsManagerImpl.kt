@@ -1,9 +1,11 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
+import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.network.Api
+import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 
-class UploadsManagerImpl(val api: Api) : UploadsManager {
+class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManager: WifiManager) : UploadsManager {
 
     override fun onUpdateQue(videoList: MutableList<SavedVideo>) {
         println("Video list size ::: ${videoList.size}")

@@ -434,7 +434,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     var paused: Boolean = false
 
-    fun releaseCamera() {
+    private fun releaseCamera() {
         closeCamera()
         stopBackgroundThread()
         if (recording) {
@@ -445,13 +445,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     @SuppressLint("CheckResult")
     private fun startLiveView() {
-        //  presenter.animateProgressBar(progressBar)
+        //presenter.animateProgressBar(progressBar)
         startRecording()
 
     }
 
 
-    fun stopLiveView(isPaused: Boolean) {
+    private fun stopLiveView(isPaused: Boolean) {
         progressBar.clearAnimation()
         stopRecording(isPaused)
 
