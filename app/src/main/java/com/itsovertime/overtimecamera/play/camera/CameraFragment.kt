@@ -91,10 +91,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             R.id.selfie -> presenter.cameraSwitch()
 
             R.id.pauseButton -> {
+                paused = true
                 releaseCamera()
                 pausedView.visibility = View.VISIBLE
             }
             R.id.pausedView -> {
+                paused = false
                 pausedView.visibility = View.GONE
                 engageCamera()
                 startLiveView()
@@ -196,6 +198,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 .doOnError {
                     it.printStackTrace()
                 }
+                .doFinally {
+                    progress.visibility = View.GONE
+                }
                 .subscribe({ it ->
                     val texture = txView?.surfaceTexture.apply {
                         this?.setDefaultBufferSize(
@@ -240,10 +245,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                     println("state : ${ise.printStackTrace()}")
                                 }
 
+
                                 activity?.run {
-                                    println("Do finally.....")
-                                    progress.visibility = View.GONE
-                                    hideViews()
                                     it?.start()
                                 }
                             }
@@ -273,6 +276,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     stop()
                     reset()
                 }
+
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doFinally {
@@ -295,6 +299,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun hideViews() {
+        favoriteIcon.visibility = View.VISIBLE
+        hahaIcon.visibility = View.VISIBLE
         val timer = Timer()
         val timerTask = object : TimerTask() {
             override fun run() {
@@ -302,14 +308,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 hahaIcon.visibility = View.INVISIBLE
             }
         }
-        timer.schedule(timerTask, 12000)
+        timer.schedule(timerTask, 5000)
     }
 
     override fun onAttach(context: Context?) {
         AndroidSupportInjection.inject(this)
         super.onAttach(context)
     }
-
 
     override fun startPreview() {
         try {
@@ -419,17 +424,22 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun onResume() {
         super.onResume()
-        engageCamera()
+        if (!paused) {
+            engageCamera()
+            progress.visibility = View.VISIBLE
+        }
         clickedStop = false
-        progress.visibility = View.VISIBLE
+
     }
+
+    var paused: Boolean = false
 
     fun releaseCamera() {
         closeCamera()
         stopBackgroundThread()
         if (recording) {
             clickedStop = true
-            stopLiveView(true)
+            stopLiveView(paused)
         }
     }
 
@@ -444,8 +454,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     fun stopLiveView(isPaused: Boolean) {
         progressBar.clearAnimation()
         stopRecording(isPaused)
-        favoriteIcon.visibility = View.VISIBLE
-        hahaIcon.visibility = View.VISIBLE
+
+        hideViews()
         hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.haha, null))
         favoriteIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.favebutton, null))
     }
