@@ -63,6 +63,13 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
         manager.updateVideoFunny(isFunny = true)
     }
 
+    fun deletePreviousFile() {
+        val previousFile = File(filePath)
+        if (previousFile.exists()) {
+            previousFile.delete()
+        }
+    }
+
 }
 
 //TODO: Loading State Between Camera Engage & Release

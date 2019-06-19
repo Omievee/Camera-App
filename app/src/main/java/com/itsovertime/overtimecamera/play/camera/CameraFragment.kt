@@ -106,6 +106,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.funny_active, null))
             }
             R.id.uploadButton -> {
+                paused = true
                 releaseCamera()
                 callback?.onUploadsButtonClicked()
             }
@@ -225,7 +226,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     cameraDevice?.createCaptureSession(
                         surfaces, object : CameraCaptureSession.StateCallback() {
                             override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                                println("create capture....")
                                 captureSession = cameraCaptureSession
                                 previewRequestBuilder.set(
                                     CaptureRequest.CONTROL_MODE,
@@ -276,15 +276,18 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     stop()
                     reset()
                 }
-
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doFinally {
                     println("stopped recording ::: $isPaused")
-                    if (!isPaused) {
-                        presenter.saveRecordingToDataBase()
-                        startLiveView()
+                    when (isPaused) {
+                        false -> {
+                            presenter.saveRecordingToDataBase()
+                            startLiveView()
+                        }
+                        else -> presenter.deletePreviousFile()
                     }
+
                 }
                 .subscribe({
                 }, {
@@ -304,8 +307,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         val timer = Timer()
         val timerTask = object : TimerTask() {
             override fun run() {
-                favoriteIcon.visibility = View.INVISIBLE
-                hahaIcon.visibility = View.INVISIBLE
+                favoriteIcon?.let {
+                    it.visibility = View.INVISIBLE
+                }
+                hahaIcon?.let {
+                    it.visibility = View.INVISIBLE
+                }
             }
         }
         timer.schedule(timerTask, 5000)
@@ -429,7 +436,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             progress.visibility = View.VISIBLE
         }
         clickedStop = false
-
     }
 
     var paused: Boolean = false
@@ -447,14 +453,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     private fun startLiveView() {
         //presenter.animateProgressBar(progressBar)
         startRecording()
-
     }
 
 
     private fun stopLiveView(isPaused: Boolean) {
         progressBar.clearAnimation()
         stopRecording(isPaused)
-
         hideViews()
         hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.haha, null))
         favoriteIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.favebutton, null))

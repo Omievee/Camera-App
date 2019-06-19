@@ -34,9 +34,9 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     }
 
-    lateinit var ffmpeg: FFmpeg
+    var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
     private fun loadFFMPEG() {
-        ffmpeg = FFmpeg.getInstance(context)
+
         try {
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
                 override fun onSuccess() {
@@ -104,9 +104,10 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         return File(mediaStorageDir.path + File.separator + file.name)
     }
 
+    var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
     override fun updateVideoFunny(isFunny: Boolean) {
-        val db = context?.let { AppDatabase.getAppDataBase(context = it) }
+
         Observable.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
@@ -128,7 +129,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     @SuppressLint("CheckResult")
     override fun updateVideoFavorite(isFavorite: Boolean) {
-        val db = context?.let { AppDatabase.getAppDataBase(context = it) }
         Observable.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
@@ -148,7 +148,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
 
     override fun transcodeVideo(videoFile: File) {
-
         val file = Uri.fromFile(videoFile)
 
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
@@ -191,8 +190,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     private var lastVideoId: Int = 0
     @SuppressLint("CheckResult")
     override fun saveVideoToDB(filePath: String, isFavorite: Boolean) {
-
-        val db = AppDatabase.getAppDataBase(context = context)
         Observable.fromCallable {
             val video = SavedVideo(vidPath = filePath, is_favorite = isFavorite)
             val videoDao = db?.videoDao()
@@ -220,8 +217,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     override fun loadFromDB() {
         isFirstRun = true
 
-
-        val db = AppDatabase.getAppDataBase(context = context)
         Observable.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
@@ -250,6 +245,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 //                        }
                     }
                 }
+
             }
             .subscribe({
                 subject.onNext(listOfVideos)
