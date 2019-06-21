@@ -206,18 +206,15 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     private var lastVideoId: Int = 0
     @SuppressLint("CheckResult")
     override fun saveVideoToDB(filePath: String, isFavorite: Boolean) {
-        println("Pre Manager Save........")
         Observable.fromCallable {
             val video = SavedVideo(vidPath = filePath, is_favorite = isFavorite)
             val videoDao = db?.videoDao()
             with(videoDao) {
-                println("saving video to DB..........")
                 this?.saveVideo(video)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
-                println("doFinally loadFromDb() ......")
                 loadFromDB()
             }
             .onErrorReturn {
@@ -234,14 +231,14 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
+        listOfVideos.clear()
         Observable.fromCallable {
-            println("db.getVideos ......")
             db?.videoDao()?.getVideos()
         }.map {
-            println("adding items to list... ${it.size}")
             it.forEach {
                 listOfVideos.add(0, it)
             }
+
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
@@ -255,13 +252,14 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     true -> {
                     }
                     else -> {
+
                         lastVideoId = listOfVideos[0].id
                         executeFFMPEG(File(listOfVideos[0].vidPath))
                     }
                 }
-
             }
             .subscribe({
+
                 subject.onNext(listOfVideos)
             },
                 {

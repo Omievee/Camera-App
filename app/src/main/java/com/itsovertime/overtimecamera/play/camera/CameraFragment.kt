@@ -189,7 +189,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
         try {
             closePreviewSession()
-            println("preCallable")
             Single.fromCallable {
                 setUpMediaRecorder()
             }.subscribeOn(Schedulers.io())
@@ -248,7 +247,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                     println("state : ${ise.printStackTrace()}")
                                 }
 
-                                println("preStart")
                                 activity?.run {
                                     println("run")
                                     it?.start()
@@ -283,7 +281,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doFinally {
-                    println("stopped recording ::: $isPaused")
                     when (isPaused) {
                         false -> {
                             presenter.saveRecordingToDataBase()
@@ -373,7 +370,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         try {
             setUpCaptureRequestBuilder(previewRequestBuilder)
             HandlerThread("CameraPreview").start()
-            println("pre rec thread")
             captureSession?.setRepeatingRequest(
                 previewRequestBuilder.build(),
                 null, backgroundHandler
@@ -568,10 +564,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
             else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
         }
-        println("preSetUpMediaRecorder")
 
         mediaRecorder?.apply {
-
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
@@ -584,7 +578,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             setOutputFile(videoFile?.absolutePath)
 
         }
-        println("recorder set up.. returning.....")
         return mediaRecorder
     }
 

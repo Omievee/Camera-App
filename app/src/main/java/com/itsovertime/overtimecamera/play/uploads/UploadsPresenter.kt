@@ -22,7 +22,6 @@ class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager) {
         managerDisposable = manager
             .subscribeToVideoGallery()
             .map {
-                println("size of videos from presenter... ${it.size}")
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
             }.subscribe({
