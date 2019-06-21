@@ -15,7 +15,6 @@ import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_uploads.*
 import javax.inject.Inject
 
 
@@ -27,7 +26,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun setUpAdapter() {
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
-        viewPager.adapter = CustomPageAdapter(supportFragmentManager)
+        viewPager.adapter = CustomViewPageAdapter(supportFragmentManager, true)
     }
 
     override fun displayDeniedPermissionsView() {
@@ -37,12 +36,12 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     var orientation: OrientationEventListener? = null
     val PERMISSIONS_CODE = 0
     private val APP_PERMISSIONS = arrayOf(
-        Manifest.permission.CAMERA,
-        Manifest.permission.RECORD_AUDIO,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
     )
 
 
@@ -52,22 +51,22 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun displayAlert() {
         AlertDialog.Builder(this, R.style.CUSTOM_ALERT)
-            .setTitle("Permissions Request")
-            .setMessage("Allow overtimecamera..")
-            .setPositiveButton("Continue") { _, _ ->
-                displaySystemPermissionsDialog()
-            }
-            .setNegativeButton("Not Now") { _, _ ->
-                presenter.permissionsDenied()
-            }
-            .setCancelable(false)
-            .show()
+                .setTitle("Permissions Request")
+                .setMessage("Allow overtimecamera..")
+                .setPositiveButton("Continue") { _, _ ->
+                    displaySystemPermissionsDialog()
+                }
+                .setNegativeButton("Not Now") { _, _ ->
+                    presenter.permissionsDenied()
+                }
+                .setCancelable(false)
+                .show()
     }
 
     private fun displaySystemPermissionsDialog() {
         requestPermissions(
-            APP_PERMISSIONS,
-            PERMISSIONS_CODE
+                APP_PERMISSIONS,
+                PERMISSIONS_CODE
         )
     }
 
@@ -175,30 +174,33 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
 }
 
-class CustomPageAdapter(fragmentManager: FragmentManager) : FragmentPagerAdapter(fragmentManager) {
+class CustomViewPageAdapter(fragmentManager: FragmentManager, private val isMainViewPager: Boolean) : FragmentPagerAdapter(fragmentManager) {
+    private var TABS: Int = 0
     override fun getCount(): Int {
+        TABS = when (isMainViewPager) {
+            true -> 2
+            false -> 4
+        }
         return TABS
     }
 
     override fun getItem(position: Int): Fragment? {
-        return when (position) {
-            0 -> {
-                CameraFragment()
+        when (isMainViewPager) {
+            true -> {
+                return when (position) {
+                    0 -> CameraFragment()
+                    1 -> UploadsFragment.newInstance("", "")
+                    else -> null
+                }
             }
-            1 -> UploadsFragment.newInstance("", "")
-            else -> null
+            false -> {
+                return null
+            }
         }
     }
 
     //    override fun getPageTitle(position: Int): CharSequence? {
 //        return "Page $position"
 ////    }
-    companion object {
-        private const val TABS = 2
-    }
 
-}
-
-interface notifyCamera {
-    fun onViewPagerBack()
 }

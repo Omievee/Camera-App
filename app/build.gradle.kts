@@ -39,7 +39,7 @@ android {
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.21")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.31")
     implementation("com.android.support:appcompat-v7:28.0.0")
     implementation("com.android.support:design:28.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
@@ -86,7 +86,7 @@ dependencies {
     //transcoder
     implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
     //FFMPJEG - trimming
-    implementation ("com.writingminds:FFmpegAndroid:0.3.2")
+    implementation("com.writingminds:FFmpegAndroid:0.3.2")
     //Fabric
     implementation("com.crashlytics.sdk.android:crashlytics:2.10.1@aar") {
         isTransitive = true

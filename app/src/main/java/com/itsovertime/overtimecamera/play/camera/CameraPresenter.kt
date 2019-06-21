@@ -64,14 +64,15 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
     }
 
     fun deletePreviousFile() {
-        val previousFile = File(filePath)
+        println("Exists?.... $filePath")
+        val previousFile = File(filePath ?: return)
         if (previousFile.exists()) {
             previousFile.delete()
         }
+        filePath = null
     }
 
 }
 
-//TODO: Loading State Between Camera Engage & Release
-//TODO  SElfie Cam has no live cam & options
+//TODO  Selfie Cam has no live cam & options
 //TODO:

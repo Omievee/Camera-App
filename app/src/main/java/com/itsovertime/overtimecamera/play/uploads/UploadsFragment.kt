@@ -54,9 +54,10 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefre
     private var param1: String? = null
 
     override fun updateAdapter(videos: List<SavedVideo>) {
+        println("list size... ${videos.size}")
         val adapter = UploadsAdapter(videos)
         uploadsRecycler.adapter = adapter
-        adapter.notifyDataSetChanged()
+        //adapter.notifyDataSetChanged()
     }
 
     private var param2: String? = null

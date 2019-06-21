@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
 
-//    @Inject
-//    lateinit var manager: UploadsManager
 
     override fun trimVideo(file: File) {
 
@@ -54,17 +52,36 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         }
     }
 
+    var seekToEndOf = "-sseof"
+    var last12Or18Seconds = "-18"
+    var videoCodec = "-vcodec"
+    var codecValue = "h264"
+    var commandYOverwrite = "-y"
+    var readInput = "-i"
+    var commandCCopy = "-c"
+    var copyVideo = "copy"
+
     private fun executeFFMPEG(file: File) {
         val complexCommand = arrayOf(
-            "-sseof",
-            "-18",
-            "-y",
-            "-i",
+            //seek to end of video
+            seekToEndOf,
+            //given amount of time from Event - 12s or 18s
+            last12Or18Seconds,
+            // Y command overwrites files w/ out permission
+            commandYOverwrite,
+            // I command reads from designated input file
+            readInput,
+            // file input
             file.absolutePath,
-            "-vcodec",
-            "h264",
-            "-c",
-            "copy",
+            // video codec to write to
+            videoCodec,
+            // value of codec - H264
+            codecValue,
+            // C command dictates what to do w/ file
+            commandCCopy,
+            // copy the file to given location
+            copyVideo,
+            // new file that was copied from old
             fileForTrimmedVideo(file.name).absolutePath
         )
         try {
@@ -144,7 +161,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             }
     }
 
-
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
 
     override fun transcodeVideo(videoFile: File) {
@@ -159,13 +175,13 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
-                transcodeVideo(videoFile)
+//                transcodeVideo(videoFile)
                 exception?.printStackTrace()
             }
 
             override fun onTranscodeCompleted() {
                 println("complete :::")
-                manager?.onUpdateQue(listOfVideos)
+//                manager?.onUpdateQue(listOfVideos)
             }
         }
 
@@ -190,15 +206,18 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     private var lastVideoId: Int = 0
     @SuppressLint("CheckResult")
     override fun saveVideoToDB(filePath: String, isFavorite: Boolean) {
+        println("Pre Manager Save........")
         Observable.fromCallable {
             val video = SavedVideo(vidPath = filePath, is_favorite = isFavorite)
             val videoDao = db?.videoDao()
             with(videoDao) {
+                println("saving video to DB..........")
                 this?.saveVideo(video)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
+                println("doFinally loadFromDb() ......")
                 loadFromDB()
             }
             .onErrorReturn {
@@ -211,15 +230,15 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     }
 
     var listOfVideos = mutableListOf<SavedVideo>()
-    var isFirstRun: Boolean = false
+    var isFirstRun: Boolean = true
 
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
-        isFirstRun = true
-
         Observable.fromCallable {
+            println("db.getVideos ......")
             db?.videoDao()?.getVideos()
         }.map {
+            println("adding items to list... ${it.size}")
             it.forEach {
                 listOfVideos.add(0, it)
             }
@@ -238,11 +257,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     else -> {
                         lastVideoId = listOfVideos[0].id
                         executeFFMPEG(File(listOfVideos[0].vidPath))
-//                        if (determineVideoLength(recentFile = File(listOfVideos[0].vidPath)) > 18) {
-//                            trimVideo(File(listOfVideos[0].vidPath))
-//                        } else {
-//                            transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
-//                        }
                     }
                 }
 
@@ -272,3 +286,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     }
 }
 
+//                        if (determineVideoLength(recentFile = File(listOfVideos[0].vidPath)) > 18) {
+//                            trimVideo(File(listOfVideos[0].vidPath))
+//                        } else {
+//                            transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
+//                        }
