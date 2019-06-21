@@ -62,6 +62,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     var copyVideo = "copy"
 
     private fun executeFFMPEG(file: File) {
+
+        val newFile = fileForTrimmedVideo(file.name)
         val complexCommand = arrayOf(
             //seek to end of video
             seekToEndOf,
@@ -82,14 +84,19 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             // copy the file to given location
             copyVideo,
             // new file that was copied from old
-            fileForTrimmedVideo(file.name).absolutePath
+            newFile.absolutePath
         )
-        try {
 
+        try {
             ffmpeg?.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                 override fun onFinish() {
                     super.onFinish()
-                    transcodeVideo(file)
+                }
+
+                override fun onSuccess(message: String?) {
+                    super.onSuccess(message)
+                    println("Success $message")
+                    transcodeVideo(newFile)
                 }
 
                 override fun onFailure(message: String?) {
@@ -176,7 +183,9 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
 //                transcodeVideo(videoFile)
-                exception?.printStackTrace()
+                //failed
+
+                println("FAILED ${exception?.printStackTrace()}")
             }
 
             override fun onTranscodeCompleted() {
@@ -252,14 +261,12 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     true -> {
                     }
                     else -> {
-
                         lastVideoId = listOfVideos[0].id
                         executeFFMPEG(File(listOfVideos[0].vidPath))
                     }
                 }
             }
             .subscribe({
-
                 subject.onNext(listOfVideos)
             },
                 {
