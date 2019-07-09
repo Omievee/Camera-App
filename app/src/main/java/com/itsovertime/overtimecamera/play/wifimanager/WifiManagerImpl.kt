@@ -1,7 +1,36 @@
 package com.itsovertime.overtimecamera.play.wifimanager
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import com.itsovertime.overtimecamera.play.application.OTApplication
 
 class WifiManagerImpl(val context: OTApplication) : WifiManager {
+
+    override fun onDetectWifi(): Boolean {
+        return when (activeNetwork?.type) {
+            ConnectivityManager.TYPE_WIFI -> true
+            else -> false
+        }
+    }
+
+    override fun onDetectNetworkReliability() {
+
+    }
+
+    private var cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private var activeNetwork: NetworkInfo? = cm.activeNetworkInfo
+
+    override fun onDetectNetworkStatus(): Boolean {
+        return activeNetwork?.isConnected ?: false
+    }
+
+    override fun onNoNetworkDetected() {
+
+    }
+
+    override fun onWeakNetworkConnection() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
 }

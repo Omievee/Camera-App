@@ -5,13 +5,7 @@ import android.os.Environment
 import android.widget.ProgressBar
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.File
-import java.io.FileOutputStream
-import java.util.*
 
 
 class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
@@ -31,7 +25,7 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
     fun saveRecordingToDataBase() {
         println("Saving............")
         filePath?.let {
-            manager.saveVideoToDB(
+            manager.saveHighQualityVideoToDB(
                 filePath = it,
                 isFavorite = false
             )
@@ -64,7 +58,6 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
     }
 
     fun deletePreviousFile() {
-        println("Exists?.... $filePath")
         val previousFile = File(filePath ?: return)
         if (previousFile.exists()) {
             previousFile.delete()

@@ -7,8 +7,31 @@ import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 
 class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManager: WifiManager) : UploadsManager {
 
-    override fun onUpdateQue(videoList: MutableList<SavedVideo>) {
-        println("Video list size ::: ${videoList.size}")
+
+    private var favoriteVideos = mutableListOf<SavedVideo>()
+    private var standardVideos = mutableListOf<SavedVideo>()
+
+    override fun onReadyVideosForUpload(videoList: MutableList<SavedVideo>) {
+
+        videoList.forEach {
+            when (it.is_favorite) {
+                true -> favoriteVideos.add(it)
+                else -> standardVideos.add(it)
+            }
+    //            println("~~~~~~~~~~~~~~~~~~~~~~ ")
+    //            println("trimmed ?? : ${it?.trimmedVidPath}")
+    //            println("medium ?? : ${it?.mediumVidPath}")
+    //            println("main ?? : ${it?.vidPath}")
+    //            println("~~~~~~~~~~~~~~~~~~~~~~ ")
+        }
+
+        when (wifiManager.onDetectNetworkStatus()) {
+            true -> {
+                onUploadFavoriteMedQualityVideo()
+            }
+            else -> wifiManager.onNoNetworkDetected()
+        }
+
     }
 
     override fun onUploadFavoriteMedQualityVideo() {

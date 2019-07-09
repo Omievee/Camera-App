@@ -161,7 +161,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 favoriteIcon.visibility = View.VISIBLE
                 hahaIcon.visibility = View.VISIBLE
                 progress.visibility = View.GONE
-
             }
         }
     }
@@ -576,7 +575,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             setAudioEncoder(MediaRecorder.AudioEncoder.HE_AAC)
             setAudioEncodingBitRate(profile.audioBitRate)
             setOutputFile(videoFile?.absolutePath)
-
         }
         return mediaRecorder
     }

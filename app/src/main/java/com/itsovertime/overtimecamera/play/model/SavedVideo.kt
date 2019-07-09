@@ -16,6 +16,10 @@ data class SavedVideo(
     val id: Int = 0,
     @ColumnInfo(name = "vidPath")
     val vidPath: String?,
+    @ColumnInfo(name = "mediumVidPath")
+    val mediumVidPath: String? = null,
+    @ColumnInfo(name = "trimmedVidPath")
+    val trimmedVidPath: String? = null,
     @ColumnInfo(name = "is_favorite")
     val is_favorite: Boolean = false,
     @ColumnInfo(name = "is_funny")

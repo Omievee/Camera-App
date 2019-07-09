@@ -1,9 +1,9 @@
 package com.itsovertime.overtimecamera.play.videomanager
 
 import android.annotation.SuppressLint
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
+import android.widget.Toast
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
@@ -22,19 +22,12 @@ import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
 
-
-    override fun trimVideo(file: File) {
-
-    }
-
     var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
     private fun loadFFMPEG() {
-
         try {
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
                 override fun onSuccess() {
@@ -48,6 +41,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             })
         } catch (e: FFmpegNotSupportedException) {
             e.printStackTrace()
+
             Crashlytics.log("FFMPEG not supported -- ${e.message}")
         }
     }
@@ -61,9 +55,9 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     var commandCCopy = "-c"
     var copyVideo = "copy"
 
-    private fun executeFFMPEG(file: File) {
-
-        val newFile = fileForTrimmedVideo(file.name)
+    private fun executeFFMPEG(savedVideo: SavedVideo) {
+        println("execute started...")
+        val newFile = fileForTrimmedVideo(File(savedVideo.vidPath).name)
         val complexCommand = arrayOf(
             //seek to end of video
             seekToEndOf,
@@ -74,7 +68,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             // I command reads from designated input file
             readInput,
             // file input
-            file.absolutePath,
+            File(savedVideo.vidPath).absolutePath,
             // video codec to write to
             videoCodec,
             // value of codec - H264
@@ -88,11 +82,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         )
 
         try {
-            ffmpeg?.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
-                override fun onFinish() {
-                    super.onFinish()
-                }
 
+            ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                 override fun onSuccess(message: String?) {
                     super.onSuccess(message)
                     println("Success $message")
@@ -107,9 +98,27 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
 
         } catch (e: FFmpegCommandAlreadyRunningException) {
-            e.printStackTrace()
             Crashlytics.log("FFMPEG -- ${e.message}")
         }
+    }
+
+    @SuppressLint("CheckResult")
+    private fun updateMediumFilePath(absolutePath: String) {
+        Observable.fromCallable {
+            val videoDao = db?.videoDao()
+            with(videoDao) {
+                this?.updateMediumQualityPath(absolutePath, lastVideoId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorReturn {
+                it.printStackTrace()
+            }
+            .subscribe({
+            }, {
+                it.printStackTrace()
+            })
+
     }
 
     private fun fileForTrimmedVideo(fileName: String): File {
@@ -117,7 +126,26 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             println("Failed....")
         }
-        return File(mediaStorageDir.path + File.separator + "$fileName.trim.mp4")
+        updateTrimmedVidPathInDB(File(mediaStorageDir.path + File.separator + "trim.$fileName").absolutePath)
+        return File(mediaStorageDir.path + File.separator + "trim.$fileName")
+    }
+
+    @SuppressLint("CheckResult")
+    private fun updateTrimmedVidPathInDB(path: String) {
+        Observable.fromCallable {
+            val videoDao = db?.videoDao()
+            with(videoDao) {
+                this?.updateTrimVideoPath(path, lastVideoId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorReturn {
+                it.printStackTrace()
+            }
+            .subscribe({
+            }, {
+                it.printStackTrace()
+            })
     }
 
     private fun compressedFile(file: File): File {
@@ -125,13 +153,13 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             Crashlytics.log("Compress File Error")
         }
+        updateMediumFilePath(File(mediaStorageDir.path + File.separator + file.name).absolutePath)
         return File(mediaStorageDir.path + File.separator + file.name)
     }
 
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
     override fun updateVideoFunny(isFunny: Boolean) {
-
         Observable.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
@@ -172,7 +200,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     override fun transcodeVideo(videoFile: File) {
         val file = Uri.fromFile(videoFile)
-
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
 
@@ -182,15 +209,13 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
-//                transcodeVideo(videoFile)
-                //failed
-
+                Toast.makeText(context, "Failed to transcode:: $exception", Toast.LENGTH_SHORT).show()
                 println("FAILED ${exception?.printStackTrace()}")
             }
 
             override fun onTranscodeCompleted() {
                 println("complete :::")
-//                manager?.onUpdateQue(listOfVideos)
+                manager.onReadyVideosForUpload(listOfVideos)
             }
         }
 
@@ -214,7 +239,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     private var lastVideoId: Int = 0
     @SuppressLint("CheckResult")
-    override fun saveVideoToDB(filePath: String, isFavorite: Boolean) {
+    override fun saveHighQualityVideoToDB(filePath: String, isFavorite: Boolean) {
         Observable.fromCallable {
             val video = SavedVideo(vidPath = filePath, is_favorite = isFavorite)
             val videoDao = db?.videoDao()
@@ -237,8 +262,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     var listOfVideos = mutableListOf<SavedVideo>()
     var isFirstRun: Boolean = true
-
     @SuppressLint("CheckResult")
+
     override fun loadFromDB() {
         listOfVideos.clear()
         Observable.fromCallable {
@@ -247,7 +272,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             it.forEach {
                 listOfVideos.add(0, it)
             }
-
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
@@ -262,7 +286,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     }
                     else -> {
                         lastVideoId = listOfVideos[0].id
-                        executeFFMPEG(File(listOfVideos[0].vidPath))
+                        executeFFMPEG(listOfVideos[0])
                     }
                 }
             }
@@ -275,14 +299,14 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             )
     }
 
-    private fun determineVideoLength(recentFile: File): Long {
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(context, Uri.fromFile(recentFile))
-        val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        retriever.release()
-
-        return TimeUnit.MILLISECONDS.toSeconds(time.toLong()) % 60
-    }
+//    private fun determineVideoLength(recentFile: File): Long {
+//        val retriever = MediaMetadataRetriever()
+//        retriever.setDataSource(context, Uri.fromFile(recentFile))
+//        val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+//        retriever.release()
+//
+//        return TimeUnit.MILLISECONDS.toSeconds(time.toLong()) % 60
+//    }
 
     override fun subscribeToVideoGallery(): Observable<List<SavedVideo>> {
         return subject
@@ -290,9 +314,3 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             .observeOn(AndroidSchedulers.mainThread())
     }
 }
-
-//                        if (determineVideoLength(recentFile = File(listOfVideos[0].vidPath)) > 18) {
-//                            trimVideo(File(listOfVideos[0].vidPath))
-//                        } else {
-//                            transcodeVideo(context = context, videoFile = File(listOfVideos[0].vidPath))
-//                        }

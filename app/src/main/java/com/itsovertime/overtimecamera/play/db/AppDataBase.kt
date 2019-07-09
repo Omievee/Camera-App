@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 
-@Database(entities = [SavedVideo::class], version = 1)
+@Database(entities = [SavedVideo::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun videoDao(): VideoObjectDAO

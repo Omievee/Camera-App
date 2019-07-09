@@ -12,9 +12,8 @@ interface VideosManager {
 
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
     fun loadFromDB()
-    fun saveVideoToDB(filePath: String, isFavorite: Boolean)
+    fun saveHighQualityVideoToDB(filePath: String, isFavorite: Boolean)
     fun transcodeVideo(videoFile: File)
     fun updateVideoFavorite(isFavorite: Boolean)
     fun updateVideoFunny(isFunny: Boolean)
-    fun trimVideo(file: File)
 }
