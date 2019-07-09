@@ -35,7 +35,7 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
     }
 
     override fun onUploadFavoriteMedQualityVideo() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
     }
 
     override fun onUploadFavoriteHighQualityVideo() {

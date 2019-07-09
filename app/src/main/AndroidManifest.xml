@@ -12,7 +12,9 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-feature android:name="android.hardware.camera" android:required="true"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
 
     <application
@@ -36,7 +38,12 @@
         </activity>
         <meta-data
                 android:name="io.fabric.ApiKey"
-                android:value="cbe7680d1c986532833d98dc1134f52925897f2e" />
+                android:value="cbe7680d1c986532833d98dc1134f52925897f2e"/>
+        <service
+                android:name=".network.NetworkSchedulerService"
+                android:exported="true"
+                android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+
 </manifest>

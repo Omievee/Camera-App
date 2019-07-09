@@ -27,6 +27,8 @@ class OTApplication : Application(), HasActivityInjector {
     @Inject
     lateinit var activityDispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
 
+
+
     override fun onCreate() {
         super.onCreate()
         if (!BuildConfig.DEBUG) {
@@ -36,27 +38,8 @@ class OTApplication : Application(), HasActivityInjector {
         inject()
         UserPreference.load(this)
 
-        registerReceiver(
-            NetworkStatusReceiver(), IntentFilter(
-                ConnectivityManager.CONNECTIVITY_ACTION
-            )
-        )
-
-        scheduleJob()
     }
 
-    private fun scheduleJob() {
-        val myJob = JobInfo.Builder(0, ComponentName(this, NetworkSchedulerService::class.java))
-            .setRequiresCharging(false)
-            .setMinimumLatency(1000)
-            .setOverrideDeadline(2000)
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setPersisted(true)
-            .build()
-
-        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-        jobScheduler.schedule(myJob)
-    }
 
     fun inject() {
         DaggerAppComponent
@@ -65,6 +48,7 @@ class OTApplication : Application(), HasActivityInjector {
             .build()
             .inject(this)
     }
+
 
     override fun activityInjector(): AndroidInjector<Activity> {
         return activityDispatchingAndroidInjector
