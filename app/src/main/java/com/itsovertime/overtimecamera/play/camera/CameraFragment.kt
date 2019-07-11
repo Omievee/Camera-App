@@ -71,7 +71,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @Inject
     lateinit var presenter: CameraPresenter
 
-
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.tapToSave -> {

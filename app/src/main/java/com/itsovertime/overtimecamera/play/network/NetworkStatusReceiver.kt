@@ -4,12 +4,15 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import com.itsovertime.overtimecamera.play.network.NetworkStatusReceiver.ConnectivityReceiverListener
+import com.itsovertime.overtimecamera.play.baseactivity.OTActivity
+import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
+import javax.inject.Inject
 
 
-class NetworkStatusReceiver(context: Context) : BroadcastReceiver() {
+class NetworkStatusReceiver(val context: Context) : BroadcastReceiver() {
 
     private var listener: ConnectivityReceiverListener? = null
+
 
     init {
         if (context is ConnectivityReceiverListener) {
@@ -18,10 +21,7 @@ class NetworkStatusReceiver(context: Context) : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        println("receive... $listener")
-        isConnected(context ?: return)
-
-
+        println("onReceive...")
         listener?.onNetworkConnectionChanged(isConnected(context ?: return))
     }
 
@@ -29,14 +29,11 @@ class NetworkStatusReceiver(context: Context) : BroadcastReceiver() {
         fun onNetworkConnectionChanged(isConnected: Boolean)
     }
 
-    fun connectivityReceiver(listener: ConnectivityReceiverListener) {
-        this.listener = listener
-    }
 
-    fun isConnected(context: Context): Boolean {
+    private fun isConnected(context: Context): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = cm.activeNetworkInfo
+
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting
     }
-
 }

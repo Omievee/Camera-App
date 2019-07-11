@@ -1,10 +1,12 @@
 plugins {
     id("com.android.application")
     id("io.fabric")
+    id("com.google.gms.google-services")
     kotlin("android")
     kotlin("kapt")
     kotlin("android.extensions")
 }
+
 
 
 android {
@@ -35,11 +37,12 @@ android {
     androidExtensions {
         isExperimental = true
     }
+
 }
 
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.31")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.41")
     implementation("com.android.support:appcompat-v7:28.0.0")
     implementation("com.android.support:design:28.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
@@ -91,6 +94,11 @@ dependencies {
     implementation("com.crashlytics.sdk.android:crashlytics:2.10.1@aar") {
         isTransitive = true
     }
+    //FireBase
+    implementation("com.google.firebase:firebase-core:16.0.0")
+    //MixPanel
+    implementation("com.mixpanel.android:mixpanel-android:5.+")
+    implementation("com.google.firebase:firebase-messaging:17.3.4")
     //WorkManager
     implementation("androidx.work:work-runtime-ktx:2.0.1")
     implementation("androidx.work:work-rxjava2:2.0.1")

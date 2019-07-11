@@ -15,7 +15,6 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
     fun getVideoFilePath(photoFileName: String): File {
         val mediaStorageDir = File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime1080")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-            println("Failed....")
         }
 
         filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"

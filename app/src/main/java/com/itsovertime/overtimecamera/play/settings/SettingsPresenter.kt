@@ -9,7 +9,7 @@ class SettingsPresenter(val view: SettingsFragment) {
     fun clickedContactUs() {
         val emailIntent = Intent(Intent.ACTION_SEND)
         emailIntent.type = "message/rfc822"
-        emailIntent.putExtra(Intent.EXTRA_EMAIL, arrayOf("hello@itsovertime.com"))
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, arrayOf("hi@itsovertime.com"))
         view.onContactUs(emailIntent)
     }
 

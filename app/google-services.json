@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "864927693224",
+    "firebase_url": "https://overtimecamera.firebaseio.com",
+    "project_id": "overtimecamera",
+    "storage_bucket": "overtimecamera.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:864927693224:android:fb70655f38dbf18d",
+        "android_client_info": {
+          "package_name": "com.itsovertime.overtimecamera.play"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "864927693224-6tdn2c9pss4u21fjfscamsrml0bnj855.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.itsovertime.overtimecamera.play",
+            "certificate_hash": "6a87d864d9f217dd58603c0a1f43911965123a70"
+          }
+        },
+        {
+          "client_id": "864927693224-logp6bsd9eehcndc7d901b2p9765142l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLwxQvtnrRHKRxfC0RzgbbwIpqaW3cDjc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "864927693224-logp6bsd9eehcndc7d901b2p9765142l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

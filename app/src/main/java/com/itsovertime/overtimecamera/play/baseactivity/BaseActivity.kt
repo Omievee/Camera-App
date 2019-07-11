@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.OrientationEventListener
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -18,13 +19,20 @@ import androidx.viewpager.widget.ViewPager
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
+import com.itsovertime.overtimecamera.play.network.NetworkStatusReceiver
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_main.*
 import javax.inject.Inject
 
 
-class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick {
+class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
+    NetworkSchedulerService.connection {
+    override fun notifyOfConnection(isConnected: Boolean) {
+        println("is ..... $isConnected")
+    }
+
+
     override fun onUploadsButtonClicked() {
         viewPager.currentItem = 1
     }
@@ -86,7 +94,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         setContentView(R.layout.activity_main)
         presenter.onCreate()
         scheduleJob()
-        // detectOrientation()
+        detectOrientation()
     }
 
     private fun scheduleJob() {
@@ -97,7 +105,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
             .setPersisted(true)
             .build()
-        println("My JOb:::: $myJob")
+
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
         jobScheduler.schedule(myJob)
     }
@@ -215,17 +223,18 @@ class CustomViewPageAdapter(fragmentManager: FragmentManager, private val isMain
         return TABS
     }
 
+    //Onboarding viewpager while false
     override fun getItem(position: Int): Fragment? {
-        when (isMainViewPager) {
+        return when (isMainViewPager) {
             true -> {
-                return when (position) {
+                when (position) {
                     0 -> CameraFragment()
                     1 -> UploadsFragment.newInstance("", "")
                     else -> null
                 }
             }
             false -> {
-                return null
+                null
             }
         }
     }

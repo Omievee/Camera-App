@@ -26,11 +26,10 @@ class WifiManagerImpl(val context: OTApplication) : WifiManager {
     }
 
     override fun onNoNetworkDetected() {
-
+        println("WORKS")
     }
 
     override fun onWeakNetworkConnection() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
 }
