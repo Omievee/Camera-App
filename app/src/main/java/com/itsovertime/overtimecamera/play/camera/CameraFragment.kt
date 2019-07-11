@@ -25,6 +25,7 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_camera.*
+import kotlinx.android.synthetic.main.upload_button_view.*
 import java.io.File
 import java.io.IOException
 import java.lang.Long
@@ -35,6 +36,9 @@ import javax.inject.Inject
 
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
+    override fun updateUploadsIconCount(count: String) {
+        counterText.text = count
+    }
 
     private val SENSOR_ORIENTATION_DEFAULT_DEGREES = 90
     private val SENSOR_ORIENTATION_INVERSE_DEGREES = 270
@@ -96,7 +100,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 paused = false
                 pausedView.visibility = View.GONE
                 engageCamera()
-
             }
             R.id.hahaIcon -> {
                 presenter.updateFunnyField()
@@ -392,6 +395,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         super.onViewCreated(view, savedInstanceState)
         txView = cameraView
         presenter.setUpClicks()
+        presenter.checkGallerySize()
     }
 
 

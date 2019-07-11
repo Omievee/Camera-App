@@ -3,8 +3,8 @@ package com.itsovertime.overtimecamera.play.application
 import android.app.Activity
 import android.app.Application
 import com.crashlytics.android.Crashlytics
-import com.facebook.drawee.backends.pipeline.BuildConfig
 import com.facebook.drawee.backends.pipeline.Fresco
+import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.di.DaggerAppComponent
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjector
@@ -19,16 +19,15 @@ class OTApplication : Application(), HasActivityInjector {
     @Inject
     lateinit var activityDispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
 
-
-
     override fun onCreate() {
         super.onCreate()
-        Fabric.with(this, Crashlytics())
+        if (!BuildConfig.DEBUG) {
+            Fabric.with(this, Crashlytics())
+        }
         Fresco.initialize(this)
-        inject()
         UserPreference.load(this)
+        inject()
     }
-
 
     fun inject() {
         DaggerAppComponent
@@ -38,10 +37,7 @@ class OTApplication : Application(), HasActivityInjector {
             .inject(this)
     }
 
-
     override fun activityInjector(): AndroidInjector<Activity> {
         return activityDispatchingAndroidInjector
     }
-
-
 }

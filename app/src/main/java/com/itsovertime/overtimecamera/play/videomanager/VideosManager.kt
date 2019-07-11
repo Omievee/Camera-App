@@ -11,6 +11,7 @@ import java.util.*
 interface VideosManager {
 
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
+    fun subscribeToVideoGallerySize() :Observable<Int>
     fun loadFromDB()
     fun saveHighQualityVideoToDB(filePath: String, isFavorite: Boolean)
     fun transcodeVideo(videoFile: File)

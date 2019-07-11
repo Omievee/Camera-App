@@ -197,6 +197,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     }
 
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
+    private val total: BehaviorSubject<Int> = BehaviorSubject.create()
 
     override fun transcodeVideo(videoFile: File) {
         val file = Uri.fromFile(videoFile)
@@ -292,6 +293,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             }
             .subscribe({
                 subject.onNext(listOfVideos)
+                total.onNext(listOfVideos.size)
             },
                 {
                     it.printStackTrace()
@@ -299,18 +301,17 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             )
     }
 
-//    private fun determineVideoLength(recentFile: File): Long {
-//        val retriever = MediaMetadataRetriever()
-//        retriever.setDataSource(context, Uri.fromFile(recentFile))
-//        val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-//        retriever.release()
-//
-//        return TimeUnit.MILLISECONDS.toSeconds(time.toLong()) % 60
-//    }
 
     override fun subscribeToVideoGallery(): Observable<List<SavedVideo>> {
         return subject
             .subscribeOn(Schedulers.single())
             .observeOn(AndroidSchedulers.mainThread())
     }
+
+    override fun subscribeToVideoGallerySize(): Observable<Int> {
+        return total
+            .subscribeOn(Schedulers.single())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
 }

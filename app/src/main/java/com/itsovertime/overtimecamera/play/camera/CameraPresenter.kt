@@ -5,12 +5,15 @@ import android.os.Environment
 import android.widget.ProgressBar
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
+import io.reactivex.disposables.Disposable
 import java.io.File
 
 
 class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
 
     var filePath: String? = null
+
+    var totalDisposable: Disposable? = null
 
     fun getVideoFilePath(photoFileName: String): File {
         val mediaStorageDir = File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime1080")
@@ -30,6 +33,10 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
             )
         }
         view.startPreview()
+    }
+
+    fun onCreate() {
+        checkGallerySize()
     }
 
     @SuppressLint("CheckResult")
@@ -62,6 +69,22 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
             previousFile.delete()
         }
         filePath = null
+    }
+
+
+    fun checkGallerySize() {
+        totalDisposable?.dispose()
+        totalDisposable = manager
+            .subscribeToVideoGallerySize()
+            .subscribe({
+                view.updateUploadsIconCount(it.toString())
+            }, {
+
+            })
+    }
+
+    fun onDestroy() {
+        totalDisposable?.dispose()
     }
 
 }
