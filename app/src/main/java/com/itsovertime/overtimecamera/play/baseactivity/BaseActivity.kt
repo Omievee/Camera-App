@@ -30,8 +30,8 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onUploadsButtonClicked() {
         viewPager.currentItem = 1
+        wakeLock?.release()
     }
-
 
     override fun setUpAdapter() {
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
@@ -43,8 +43,8 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     var orientation: OrientationEventListener? = null
-    val PERMISSIONS_CODE = 0
-    private val APP_PERMISSIONS = arrayOf(
+    private val permissionsCode = 0
+    private val requiredAppPermissions = arrayOf(
         Manifest.permission.CAMERA,
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -74,17 +74,16 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     private fun displaySystemPermissionsDialog() {
         requestPermissions(
-            APP_PERMISSIONS,
-            PERMISSIONS_CODE
+            requiredAppPermissions,
+            permissionsCode
         )
     }
 
 
-    private var wl: PowerManager.WakeLock? = null
+    private var wakeLock: PowerManager.WakeLock? = null
     private fun keepScreenUnlocked() {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
-
+        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
     }
 
     @Inject
@@ -102,6 +101,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
 
     private fun scheduleJob() {
+
         val myJob = JobInfo.Builder(0, ComponentName(this, NetworkSchedulerService::class.java))
             .setRequiresCharging(false)
             .setMinimumLatency(1000)
@@ -125,8 +125,8 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun onDestroy() {
-        wl?.release()
         super.onDestroy()
+        wakeLock?.release()
     }
 
 
@@ -137,10 +137,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                 it.enable()
             }
         }
-        wl?.acquire(5 * 60 * 1000L /*5 minutes*/)
-//        if (viewPager.currentItem == 1) {
-//            viewPager.currentItem = 0
-//        }
+        wakeLockAcquire()
     }
 
     private fun detectOrientation() {
@@ -170,7 +167,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSIONS_CODE) {
+        if (requestCode == permissionsCode) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 presenter.setUpAdapter()
             } else {
@@ -191,11 +188,17 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         viewPager.visibility = View.VISIBLE
     }
 
+
     override fun onPause() {
         orientation?.disable()
-        wl?.release()
+        wakeLock?.release()
         super.onPause()
+    }
 
+    private fun wakeLockAcquire() {
+        if (wakeLock?.isHeld == false) {
+            wakeLock?.acquire(5 * 60 * 1000L /*5 minutes*/)
+        }
     }
 
     override fun onBackPressed() {
@@ -205,6 +208,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                     if (it.childFragmentManager.backStackEntryCount > 0) {
                         it.childFragmentManager.popBackStack()
                     } else if (it.childFragmentManager.backStackEntryCount == 0 && viewPager.currentItem == 1) {
+                        wakeLockAcquire()
                         viewPager.currentItem = 0
                     } else {
                         finishAffinity()

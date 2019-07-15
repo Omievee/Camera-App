@@ -252,6 +252,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                     println("state : ${ise.printStackTrace()}")
                                 }
                             }
+
                             override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
                                 showToast("Failed $cameraCaptureSession")
                             }
