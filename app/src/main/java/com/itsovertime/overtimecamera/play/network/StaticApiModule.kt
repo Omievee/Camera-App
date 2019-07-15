@@ -32,7 +32,7 @@ class StaticApiModule {
             logging.level = HttpLoggingInterceptor.Level.BODY
             httpClient.addInterceptor(logging)
         }
-
+        httpClient.addInterceptor(AuthenticatedNetworkInterceptor())
         httpClient.connectTimeout(30, TimeUnit.SECONDS)
         httpClient.readTimeout(30, TimeUnit.SECONDS)
         httpClient.cache(cache)
@@ -66,6 +66,12 @@ class StaticApiModule {
     @Singleton
     fun provideCache(application: OTApplication): Cache {
         return Cache(application.cacheDir, 10 * 1024 * 1024)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthenticatedRequestInterceptor(): AuthenticatedNetworkInterceptor {
+        return AuthenticatedNetworkInterceptor()
     }
 
 }

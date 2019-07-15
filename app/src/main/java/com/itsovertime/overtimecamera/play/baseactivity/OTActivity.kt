@@ -28,9 +28,6 @@ abstract class OTActivity : DaggerAppCompatActivity(), HasSupportFragmentInjecto
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-
-        println("intent?? ${intent?.getBooleanExtra("connected", false)}")
-
     }
 
 }

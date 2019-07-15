@@ -8,9 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.PowerManager
 import android.view.OrientationEventListener
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -19,18 +19,13 @@ import androidx.viewpager.widget.ViewPager
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
-import com.itsovertime.overtimecamera.play.network.NetworkStatusReceiver
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_main.*
 import javax.inject.Inject
 
 
-class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
-    NetworkSchedulerService.connection {
-    override fun notifyOfConnection(isConnected: Boolean) {
-        println("is ..... $isConnected")
-    }
+class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick {
 
 
     override fun onUploadsButtonClicked() {
@@ -64,7 +59,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun displayAlert() {
-        AlertDialog.Builder(this, R.style.CUSTOM_ALERT)
+        AlertDialog.Builder(this, com.itsovertime.overtimecamera.play.R.style.CUSTOM_ALERT)
             .setTitle("Permissions Request")
             .setMessage("Allow overtimecamera..")
             .setPositiveButton("Continue") { _, _ ->
@@ -85,6 +80,13 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
 
+    private var wl: PowerManager.WakeLock? = null
+    private fun keepScreenUnlocked() {
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
+
+    }
+
     @Inject
     lateinit var presenter: BaseActivityPresenter
 
@@ -94,8 +96,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         setContentView(R.layout.activity_main)
         presenter.onCreate()
         scheduleJob()
-        detectOrientation()
+        //detectOrientation()
+        keepScreenUnlocked()
     }
+
 
     private fun scheduleJob() {
         val myJob = JobInfo.Builder(0, ComponentName(this, NetworkSchedulerService::class.java))
@@ -120,6 +124,11 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         super.onStop()
     }
 
+    override fun onDestroy() {
+        wl?.release()
+        super.onDestroy()
+    }
+
 
     override fun onResume() {
         super.onResume()
@@ -128,9 +137,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                 it.enable()
             }
         }
-        if (viewPager.currentItem == 1) {
-            viewPager.currentItem = 0
-        }
+        wl?.acquire(5 * 60 * 1000L /*5 minutes*/)
+//        if (viewPager.currentItem == 1) {
+//            viewPager.currentItem = 0
+//        }
     }
 
     private fun detectOrientation() {
@@ -182,8 +192,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun onPause() {
-        super.onPause()
         orientation?.disable()
+        wl?.release()
+        super.onPause()
+
     }
 
     override fun onBackPressed() {

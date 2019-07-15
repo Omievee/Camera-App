@@ -21,9 +21,7 @@ class OTApplication : Application(), HasActivityInjector {
 
     override fun onCreate() {
         super.onCreate()
-        if (!BuildConfig.DEBUG) {
-            Fabric.with(this, Crashlytics())
-        }
+        Fabric.with(this, Crashlytics())
         Fresco.initialize(this)
         UserPreference.load(this)
         inject()
