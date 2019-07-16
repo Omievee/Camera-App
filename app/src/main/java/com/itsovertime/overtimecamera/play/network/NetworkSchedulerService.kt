@@ -37,6 +37,6 @@ class NetworkSchedulerService : JobService(), NetworkStatusReceiver.Connectivity
     }
 
     override fun onNetworkConnectionChanged(networkInfo: NetworkInfo?) {
-        listener.onReceiveNetworkInfoFromBroadcast( networkInfo)
+        listener.onReceiveNetworkInfoFromBroadcast(networkInfo)
     }
 }
