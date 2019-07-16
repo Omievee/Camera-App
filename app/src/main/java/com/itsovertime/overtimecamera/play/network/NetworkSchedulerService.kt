@@ -5,6 +5,7 @@ import android.app.job.JobService
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.widget.Toast
 import com.itsovertime.overtimecamera.play.baseactivity.OTActivity
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
@@ -22,7 +23,6 @@ class NetworkSchedulerService : JobService(), NetworkStatusReceiver.Connectivity
         receiver = NetworkStatusReceiver(this)
     }
 
-
     @Inject
     lateinit var listener: WifiManager
 
@@ -36,11 +36,7 @@ class NetworkSchedulerService : JobService(), NetworkStatusReceiver.Connectivity
         return true
     }
 
-    override fun onNetworkConnectionChanged(wifiAvailable: Boolean) {
-        if (wifiAvailable) listener.onDetectWifi() else listener.onNoNetworkDetected()
-    }
-
-    interface connection {
-        fun notifyOfConnection(isConnected: Boolean)
+    override fun onNetworkConnectionChanged(networkInfo: NetworkInfo?) {
+        listener.onReceiveNetworkInfoFromBroadcast( networkInfo)
     }
 }

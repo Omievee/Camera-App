@@ -20,7 +20,6 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLa
         View.inflate(context, R.layout.upload_item_view, this)
     }
 
-
     fun bind(video: SavedVideo) {
         faveIcon.visibility = when (video.is_favorite) {
             true -> View.VISIBLE
@@ -29,15 +28,15 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLa
 
         val uri = Uri.fromFile(File(video.vidPath))
         val request = ImageRequestBuilder
-                .newBuilderWithSource(uri)
-                .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
-                .setProgressiveRenderingEnabled(true)
-                .build()
+            .newBuilderWithSource(uri)
+            .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+            .setProgressiveRenderingEnabled(true)
+            .build()
 
         val controller = Fresco.newDraweeControllerBuilder()
-                .setUri(uri)
-                .setImageRequest(request)
-                .build()
+            .setUri(uri)
+            .setImageRequest(request)
+            .build()
 
         thumbNail.controller = controller
     }

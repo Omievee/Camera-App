@@ -33,8 +33,8 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideWifiManager(context: OTApplication, manager: UploadsManager): WifiManager {
-        return WifiManagerImpl(context, manager)
+    fun provideWifiManager(context: OTApplication): WifiManager {
+        return WifiManagerImpl(context)
     }
 
     @Provides

@@ -21,6 +21,9 @@ private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
 class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
+    override fun displayWifiReady() {
+
+    }
 
     override fun onRefresh() {
         presenter.onResume()
@@ -37,7 +40,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefre
     override fun displaySettings() {
         val manager = childFragmentManager
         val transaction = manager?.beginTransaction()
-        transaction?.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        transaction?.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
         transaction?.setCustomAnimations(R.anim.slide_up, R.anim.slide_out)
         transaction?.replace(R.id.fragContainer, SettingsFragment.newInstance("", ""))?.addToBackStack("settings")
             .commit()

@@ -4,12 +4,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
+import android.net.NetworkInfo
 
 
 class NetworkStatusReceiver(val context: Context) : BroadcastReceiver() {
 
     private var listener: ConnectivityReceiverListener? = null
-
 
     init {
         if (context is ConnectivityReceiverListener) {
@@ -22,17 +22,14 @@ class NetworkStatusReceiver(val context: Context) : BroadcastReceiver() {
     }
 
     interface ConnectivityReceiverListener {
-        fun onNetworkConnectionChanged(isConnected: Boolean)
+        fun onNetworkConnectionChanged(isConnected: NetworkInfo?)
     }
 
 
-    private fun checkForWifi(context: Context): Boolean {
+    private fun checkForWifi(context: Context): NetworkInfo? {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = cm.activeNetworkInfo
-        println("Network Type:::::: ${activeNetwork?.type}")
-        return when (activeNetwork?.type) {
-            ConnectivityManager.TYPE_WIFI -> true
-            else -> false
-        }
+
+        return activeNetwork
     }
 }

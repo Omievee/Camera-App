@@ -8,4 +8,5 @@ interface UploadsInt {
     fun displaySettings()
     fun swipe2RefreshIsTrue()
     fun swipe2RefreshIsFalse()
+    fun displayWifiReady()
 }

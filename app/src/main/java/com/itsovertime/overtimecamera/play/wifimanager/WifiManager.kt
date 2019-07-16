@@ -1,14 +1,14 @@
 package com.itsovertime.overtimecamera.play.wifimanager
 
+import android.net.NetworkInfo
+import io.reactivex.Observable
+
 interface WifiManager {
 
 
-    fun onDetectNetworkStatus() : Boolean
     fun onNoNetworkDetected()
     fun onWeakNetworkConnection()
     fun onDetectNetworkReliability()
-    fun onDetectWifi() : Boolean
-
-
-
+    fun onReceiveNetworkInfoFromBroadcast(networkInfo: NetworkInfo?)
+    fun subscribeToNetworkUpdates(): Observable<NETWORK_TYPE>
 }

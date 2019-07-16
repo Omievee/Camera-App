@@ -190,9 +190,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
 
     override fun onPause() {
+        super.onPause()
         orientation?.disable()
         wakeLock?.release()
-        super.onPause()
     }
 
     private fun wakeLockAcquire() {

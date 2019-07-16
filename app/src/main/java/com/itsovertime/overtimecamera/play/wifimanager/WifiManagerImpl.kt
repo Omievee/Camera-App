@@ -1,36 +1,69 @@
 package com.itsovertime.overtimecamera.play.wifimanager
 
-import android.content.Context
-import android.net.ConnectivityManager
 import android.net.NetworkInfo
+import android.telephony.TelephonyManager
 import com.itsovertime.overtimecamera.play.application.OTApplication
-import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.BehaviorSubject
 
-class WifiManagerImpl(val context: OTApplication, val manager:UploadsManager) : WifiManager {
+class WifiManagerImpl(val context: OTApplication) : WifiManager {
+    override fun subscribeToNetworkUpdates(): Observable<NETWORK_TYPE> {
+        return subject
+            .subscribeOn(Schedulers.single())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
 
-    override fun onDetectWifi(): Boolean {
-        return when (activeNetwork?.type) {
-            ConnectivityManager.TYPE_WIFI -> true
-            else -> false
+
+    private val subject: BehaviorSubject<NETWORK_TYPE> = BehaviorSubject.create()
+    override fun onReceiveNetworkInfoFromBroadcast(networkInfo: NetworkInfo?) {
+//        println("Network Info From Broadcast:::: ${networkInfo}")
+        when (networkInfo) {
+            null -> onNoNetworkDetected()
+            else -> determineNetworkType(networkInfo)
         }
+        println("~~~~~~~~~~~~~~~~~~~~~~~~~")
+        println("Network subtype::::: ${networkInfo?.subtype}")
+        println("Network subtypeName::::: ${networkInfo?.subtypeName}")
+        println("Network extraInfo::::: ${networkInfo?.extraInfo}")
+        println("Network detailed state::::: ${networkInfo?.detailedState}")
+        println("Network isConnected::::: ${networkInfo?.isConnected}")
+        println("~~~~~~~~~~~~~~~~~~~~~~~~~")
+    }
+
+    private var networkType: NETWORK_TYPE? = null
+    private fun determineNetworkType(networkInfo: NetworkInfo) {
+        networkType = if (networkInfo.isConnected && networkInfo.subtype == 0) {
+            NETWORK_TYPE.WIFI
+        } else if (networkInfo.isConnected && networkInfo.subtype == TelephonyManager.NETWORK_TYPE_LTE) {
+            NETWORK_TYPE.MOBILE_LTE
+        } else if (networkInfo.isConnected && networkInfo.subtype == TelephonyManager.NETWORK_TYPE_EDGE) {
+            NETWORK_TYPE.MOBILE_EDGE
+        } else {
+            NETWORK_TYPE.UNKNOWN
+        }
+
+
+        subject.onNext(networkType ?: return)
+
     }
 
     override fun onDetectNetworkReliability() {
 
     }
 
-    private var cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    private var activeNetwork: NetworkInfo? = cm.activeNetworkInfo
-
-    override fun onDetectNetworkStatus(): Boolean {
-        return activeNetwork?.isConnected ?: false
-    }
-
     override fun onNoNetworkDetected() {
-        println("WORKS")
+        networkType = NETWORK_TYPE.UNKNOWN
+        subject.onNext(networkType!!)
     }
 
     override fun onWeakNetworkConnection() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
     }
+
+}
+
+enum class NETWORK_TYPE {
+    WIFI, MOBILE_LTE, MOBILE_EDGE, UNKNOWN
 }
