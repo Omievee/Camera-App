@@ -2,6 +2,8 @@ package com.itsovertime.overtimecamera.play.di
 
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.network.Api
+import com.itsovertime.overtimecamera.play.network.JobBindingModule
+import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.network.StaticApiModule
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManagerImpl
@@ -13,7 +15,7 @@ import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
 
-@Module(includes = [StaticApiModule::class])
+@Module(includes = [StaticApiModule::class, JobBindingModule::class])
 class AppModule {
 
     @Provides
@@ -21,6 +23,7 @@ class AppModule {
     fun provideVideosManager(context: OTApplication, manager: UploadsManager): VideosManager {
         return VideosManagerImpl(context, manager)
     }
+
 
     @Provides
     @Singleton
@@ -30,7 +33,15 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideWifiManager(context: OTApplication): WifiManager {
-        return WifiManagerImpl(context)
+    fun provideWifiManager(context: OTApplication, manager: UploadsManager): WifiManager {
+        return WifiManagerImpl(context, manager)
     }
+
+    @Provides
+    @Singleton
+    fun provideJobBinding(): NetworkSchedulerService {
+        return NetworkSchedulerService()
+    }
+
+
 }

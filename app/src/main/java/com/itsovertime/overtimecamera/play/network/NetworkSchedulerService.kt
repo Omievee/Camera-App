@@ -8,6 +8,7 @@ import android.net.ConnectivityManager
 import android.widget.Toast
 import com.itsovertime.overtimecamera.play.baseactivity.OTActivity
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
+import dagger.android.AndroidInjection
 import javax.inject.Inject
 
 
@@ -17,16 +18,13 @@ class NetworkSchedulerService : JobService(), NetworkStatusReceiver.Connectivity
 
     override fun onCreate() {
         super.onCreate()
+        AndroidInjection.inject(this)
         receiver = NetworkStatusReceiver(this)
     }
 
-    private var listener: connection?=null
 
-    init {
-//        if (context is connection) {
-//            listener = application
-//        }
-    }
+    @Inject
+    lateinit var listener: WifiManager
 
     override fun onStopJob(params: JobParameters?): Boolean {
         unregisterReceiver(receiver);
@@ -38,9 +36,8 @@ class NetworkSchedulerService : JobService(), NetworkStatusReceiver.Connectivity
         return true
     }
 
-    override fun onNetworkConnectionChanged(isConnected: Boolean) {
-        val message = if (isConnected) "Good! Connected to Internet" else "Sorry! Not connected to internet"
-        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+    override fun onNetworkConnectionChanged(wifiAvailable: Boolean) {
+        if (wifiAvailable) listener.onDetectWifi() else listener.onNoNetworkDetected()
     }
 
     interface connection {

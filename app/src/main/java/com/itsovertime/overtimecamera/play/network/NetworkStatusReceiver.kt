@@ -4,9 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import com.itsovertime.overtimecamera.play.baseactivity.OTActivity
-import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
-import javax.inject.Inject
 
 
 class NetworkStatusReceiver(val context: Context) : BroadcastReceiver() {
@@ -21,8 +18,7 @@ class NetworkStatusReceiver(val context: Context) : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        println("onReceive...")
-        listener?.onNetworkConnectionChanged(isConnected(context ?: return))
+        listener?.onNetworkConnectionChanged(checkForWifi(context ?: return))
     }
 
     interface ConnectivityReceiverListener {
@@ -30,10 +26,13 @@ class NetworkStatusReceiver(val context: Context) : BroadcastReceiver() {
     }
 
 
-    private fun isConnected(context: Context): Boolean {
+    private fun checkForWifi(context: Context): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = cm.activeNetworkInfo
-
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting
+        println("Network Type:::::: ${activeNetwork?.type}")
+        return when (activeNetwork?.type) {
+            ConnectivityManager.TYPE_WIFI -> true
+            else -> false
+        }
     }
 }

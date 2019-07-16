@@ -412,7 +412,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     private var CAMERA: Int = 0
 
 
-    fun engageCamera() {
+    private fun engageCamera() {
         startBackgroundThread()
         txView?.let {
             if (it.isAvailable) {
@@ -421,7 +421,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 it.surfaceTextureListener = surfaceTextureListener
             }
         }
-
     }
 
     override fun onPause() {
@@ -519,7 +518,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
-    fun startBackgroundThread() {
+    private fun startBackgroundThread() {
         backgroundThread = HandlerThread("CameraBackground")
         backgroundThread?.start()
         backgroundHandler = Handler(backgroundThread?.looper)
@@ -532,7 +531,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     var recordHandler: Handler? = null
-    fun stopRecordingThread() {
+    private fun stopRecordingThread() {
         recordThread?.quitSafely()
         try {
             recordThread?.join()
@@ -543,7 +542,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
-    fun stopBackgroundThread() {
+    private fun stopBackgroundThread() {
         backgroundThread?.quitSafely()
         try {
             backgroundThread?.join()
@@ -570,9 +569,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
             else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
         }
-        println("APPLY>>>>>")
+
         mediaRecorder?.apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.HE_AAC)
@@ -584,9 +583,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             setVideoFrameRate(profile.videoFrameRate)
             prepare()
         }
-
-
-        println("mediaRecorder??.... $mediaRecorder")
         return mediaRecorder
     }
 

@@ -4,8 +4,9 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import com.itsovertime.overtimecamera.play.application.OTApplication
+import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 
-class WifiManagerImpl(val context: OTApplication) : WifiManager {
+class WifiManagerImpl(val context: OTApplication, val manager:UploadsManager) : WifiManager {
 
     override fun onDetectWifi(): Boolean {
         return when (activeNetwork?.type) {
