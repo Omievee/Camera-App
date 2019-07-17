@@ -120,12 +120,14 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun onStop() {
-        stopService(Intent(this, NetworkSchedulerService::class.java))
+        //  stopService(Intent(this, NetworkSchedulerService::class.java))
         super.onStop()
     }
 
+
     override fun onDestroy() {
         super.onDestroy()
+        stopService(Intent(this, NetworkSchedulerService::class.java))
         wakeLock?.release()
     }
 

@@ -89,7 +89,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 presenter.updateFavoriteField()
                 favoriteIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.fave, null))
             }
-            R.id.selfie -> presenter.cameraSwitch()
+            R.id.selfieButton -> presenter.cameraSwitch()
 
             R.id.pauseButton -> {
                 paused = true
@@ -124,7 +124,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         progressBar.setOnClickListener(this)
         tapToSave.setOnClickListener(this)
         favoriteIcon.setOnClickListener(this)
-        selfie.setOnClickListener(this)
+        selfieButton.setOnClickListener(this)
         pauseButton.setOnClickListener(this)
         txView?.setOnTouchListener(this)
         pausedView.setOnClickListener(this)
@@ -146,6 +146,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     )
 
     override fun switchCameras() {
+        activity?.runOnUiThread {
+            selfieButton.isEnabled = false
+        }
         CAMERA = if (CAMERA == 0) {
             1
         } else {
@@ -367,6 +370,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     override fun updatePreview() {
+        activity?.runOnUiThread {
+            selfieButton.isEnabled = true
+        }
+
         if (cameraDevice == null) return
         try {
             setUpCaptureRequestBuilder(previewRequestBuilder)
@@ -495,9 +502,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
-//            videoSize?.let {
-//                previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java), width, height, it)
-//            }
 
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 txView?.setAspectRatio(videoSize?.width ?: 0, videoSize?.height ?: 0)
