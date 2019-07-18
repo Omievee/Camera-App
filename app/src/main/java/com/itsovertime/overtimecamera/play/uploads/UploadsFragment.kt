@@ -22,8 +22,13 @@ private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
 class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
+
+    override fun displayNoNetworkConnection() {
+
+    }
+
     override fun displayWifiReady() {
-        Toast.makeText(context, "Wifi Is Ready... ", Toast.LENGTH_SHORT).show()
+
     }
 
     override fun onRefresh() {

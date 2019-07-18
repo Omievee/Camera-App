@@ -1,17 +1,29 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
-import android.net.NetworkInfo
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.network.Api
+import com.itsovertime.overtimecamera.play.network.VideoResponse
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
-import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.BehaviorSubject
+import okhttp3.MultipartBody
+import java.io.File
+
 
 class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManager: WifiManager) : UploadsManager {
+    override fun getVideoInstance(): Single<VideoResponse> {
+        val request =
+            VideoResponse(favoriteVideos[0].id, favoriteVideos[0].is_favorite, favoriteVideos[0].is_selfie, 0.0, 0.0)
+        return api
+            .getVideoInstance(request)
+            .doOnSuccess {
+                println("Successs???>>>>> $it")
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
 
     private var favoriteVideos = mutableListOf<SavedVideo>()
     private var standardVideos = mutableListOf<SavedVideo>()
@@ -23,11 +35,31 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
                 else -> standardVideos.add(it)
             }
         }
+       // getVideoInstance()
     }
 
-    override fun onUploadFavoriteMedQualityVideo() {
+
+    var medFavResponse: VideoResponse? = null
+    var videoFile: File? = null
+    var videoName: String? = null
+    override fun onUploadFavoriteMedQualityVideo(): Single<VideoResponse> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//        favoriteVideos.forEach {
+//            videoFile = File(it.mediumVidPath)
+//            videoName = it.id.toString()
+//        }
+//        val uploadFile = MultipartBody.Part.createFormData(videoName ?: "", videoFile?.name ?: "")
+//        return api
+//            .getVideoInstance()
+//            .doOnSuccess {
+//                println("Successs???>>>>> $it")
+//            }
+//            .subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+
 
     }
+
 
     override fun onUploadFavoriteHighQualityVideo() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -41,3 +73,5 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
+
+

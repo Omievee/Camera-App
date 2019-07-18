@@ -11,4 +11,5 @@ interface CameraInt {
     fun switchCameras()
     fun setUpClicks()
     fun updateUploadsIconCount(count: String)
+
 }

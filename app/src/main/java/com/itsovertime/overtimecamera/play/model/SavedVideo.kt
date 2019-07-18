@@ -23,5 +23,7 @@ data class SavedVideo(
     @ColumnInfo(name = "is_favorite")
     val is_favorite: Boolean = false,
     @ColumnInfo(name = "is_funny")
-    val is_funny: Boolean = false
+    val is_funny: Boolean = false,
+    @ColumnInfo(name = "is_selfie")
+    val is_selfie: Boolean = false
 ) : Parcelable

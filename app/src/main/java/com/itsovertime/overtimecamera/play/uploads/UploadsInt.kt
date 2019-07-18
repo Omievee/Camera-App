@@ -9,4 +9,5 @@ interface UploadsInt {
     fun swipe2RefreshIsTrue()
     fun swipe2RefreshIsFalse()
     fun displayWifiReady()
+    fun displayNoNetworkConnection()
 }

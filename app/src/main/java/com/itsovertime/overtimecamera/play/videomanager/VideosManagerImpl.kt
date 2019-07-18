@@ -217,6 +217,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             override fun onTranscodeCompleted() {
                 println("complete :::")
                 manager.onReadyVideosForUpload(listOfVideos)
+
             }
         }
 

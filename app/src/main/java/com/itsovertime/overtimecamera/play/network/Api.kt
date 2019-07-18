@@ -1,17 +1,19 @@
 package com.itsovertime.overtimecamera.play.network
 
 import io.reactivex.Single
-import retrofit2.http.Header
+import okhttp3.MultipartBody
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 
 interface Api {
 
-    companion object {
-        const val HEADER = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiOTQ4OS5BIiwicm9sZXMiOltdLCJ1c2VybmFtZSI6InByZXNlbnQtc3F1aXJyZWwifSwiaWF0IjoxNTU3NzU2NzA0fQ.bG1818-QymNw6cTssZtbYo8E6jIHLxD42WpRYbx9vng"
-    }
+    @POST("/api/writer/videos")
+    fun getVideoInstance(request: VideoResponse): Single<VideoResponse>
 
-    @POST("videos")
-    fun uploadVideo(@Header(HEADER) token: String): Single<UploadResponse>
-
+    @Multipart
+    @POST("/api/writer/videos")
+    fun uploadVideo(@Part video: MultipartBody.Part): Single<VideoResponse>
 
 }
+

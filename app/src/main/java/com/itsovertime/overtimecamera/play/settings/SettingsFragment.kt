@@ -63,7 +63,6 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
                 Settings.LOGOUT -> presenter.clickedLogOut()
             }
         }
-
     }
 
 
@@ -108,6 +107,7 @@ data class SettingsPresentation(
         val type: Settings,
         val title: String
 ) : ItemSame<SettingsPresentation> {
+
     override fun sameAs(same: SettingsPresentation): Boolean {
         return equals(same)
     }

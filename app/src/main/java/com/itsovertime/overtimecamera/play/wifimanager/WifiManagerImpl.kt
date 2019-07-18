@@ -9,6 +9,7 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 
 class WifiManagerImpl(val context: OTApplication) : WifiManager {
+
     override fun subscribeToNetworkUpdates(): Observable<NETWORK_TYPE> {
         return subject
             .subscribeOn(Schedulers.single())
@@ -18,18 +19,17 @@ class WifiManagerImpl(val context: OTApplication) : WifiManager {
 
     private val subject: BehaviorSubject<NETWORK_TYPE> = BehaviorSubject.create()
     override fun onReceiveNetworkInfoFromBroadcast(networkInfo: NetworkInfo?) {
-//        println("Network Info From Broadcast:::: ${networkInfo}")
         when (networkInfo) {
             null -> onNoNetworkDetected()
             else -> determineNetworkType(networkInfo)
         }
-        println("~~~~~~~~~~~~~~~~~~~~~~~~~")
-        println("Network subtype::::: ${networkInfo?.subtype}")
-        println("Network subtypeName::::: ${networkInfo?.subtypeName}")
-        println("Network extraInfo::::: ${networkInfo?.extraInfo}")
-        println("Network detailed state::::: ${networkInfo?.detailedState}")
-        println("Network isConnected::::: ${networkInfo?.isConnected}")
-        println("~~~~~~~~~~~~~~~~~~~~~~~~~")
+//        println("~~~~~~~~~~~~~~~~~~~~~~~~~")
+//        println("Network subtype::::: ${networkInfo?.subtype}")
+//        println("Network subtypeName::::: ${networkInfo?.subtypeName}")
+//        println("Network extraInfo::::: ${networkInfo?.extraInfo}")
+//        println("Network detailed state::::: ${networkInfo?.detailedState}")
+//        println("Network isConnected::::: ${networkInfo?.isConnected}")
+//        println("~~~~~~~~~~~~~~~~~~~~~~~~~")
     }
 
     private var networkType: NETWORK_TYPE? = null
@@ -44,9 +44,7 @@ class WifiManagerImpl(val context: OTApplication) : WifiManager {
             NETWORK_TYPE.UNKNOWN
         }
 
-
         subject.onNext(networkType ?: return)
-
     }
 
     override fun onDetectNetworkReliability() {

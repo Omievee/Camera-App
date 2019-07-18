@@ -1,17 +1,18 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
-import android.net.NetworkInfo
 import com.itsovertime.overtimecamera.play.model.SavedVideo
-import io.reactivex.Observable
+import com.itsovertime.overtimecamera.play.network.VideoResponse
+import io.reactivex.Single
 
 interface UploadsManager {
 
-    fun onUploadFavoriteMedQualityVideo()
+    fun onUploadFavoriteMedQualityVideo(): Single<VideoResponse>
     fun onUploadFavoriteHighQualityVideo()
+
     fun onUploadMediumQualityVideo()
     fun onUploadHighQualityVideo()
+
     fun onReadyVideosForUpload(videoList: MutableList<SavedVideo>)
-
-
+    fun getVideoInstance() : Single<VideoResponse>
 
 }

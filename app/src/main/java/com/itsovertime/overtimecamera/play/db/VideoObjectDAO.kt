@@ -19,6 +19,9 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET mediumVidPath = :mediumVidPath WHERE id = :lastID")
     fun updateMediumQualityPath(mediumVidPath: String, lastID: Int)
 
+    @Query("UPDATE SavedVideo SET is_selfie = :is_selfie WHERE id = :lastID")
+    fun updateVideoIsSelfie(is_selfie: Boolean, lastID: Int)
+
     @Query("UPDATE SavedVideo SET trimmedVidPath = :trimmedVidPath WHERE id = :lastID")
     fun updateTrimVideoPath(trimmedVidPath: String, lastID: Int)
 

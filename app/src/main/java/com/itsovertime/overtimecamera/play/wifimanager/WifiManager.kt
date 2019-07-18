@@ -5,10 +5,10 @@ import io.reactivex.Observable
 
 interface WifiManager {
 
-
     fun onNoNetworkDetected()
     fun onWeakNetworkConnection()
     fun onDetectNetworkReliability()
     fun onReceiveNetworkInfoFromBroadcast(networkInfo: NetworkInfo?)
     fun subscribeToNetworkUpdates(): Observable<NETWORK_TYPE>
+
 }

@@ -29,8 +29,9 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
 
-    <ImageView
+    <ImageButton
             android:id="@+id/selfieButton"
+            android:background="@android:color/transparent"
             android:layout_width="35dp"
             android:layout_height="0dp"
             android:layout_margin="@dimen/margin_standard"

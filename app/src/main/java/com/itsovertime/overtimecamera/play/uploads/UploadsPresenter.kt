@@ -1,11 +1,17 @@
 package com.itsovertime.overtimecamera.play.uploads
 
+import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import io.reactivex.disposables.Disposable
 
-class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager, val wifiManager: WifiManager) {
+class UploadsPresenter(
+    val view: UploadsFragment,
+    val manager: VideosManager,
+    val wifiManager: WifiManager,
+    val uploadManager: UploadsManager
+) {
 
     var managerDisposable: Disposable? = null
 
@@ -17,6 +23,7 @@ class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager, va
         view.swipe2RefreshIsTrue()
         subscribeToVideosFromGallery()
         subscribeToNetworkUpdates()
+
     }
 
 
@@ -33,23 +40,38 @@ class UploadsPresenter(val view: UploadsFragment, val manager: VideosManager, va
             })
     }
 
-    var networkDisposable: Disposable? = null
+    private var networkDisposable: Disposable? = null
     private fun subscribeToNetworkUpdates() {
         networkDisposable?.dispose()
         networkDisposable = wifiManager
             .subscribeToNetworkUpdates()
             .subscribe({
-                if (it == NETWORK_TYPE.WIFI){
-                    view.displayWifiReady()
+                when (it) {
+                    NETWORK_TYPE.WIFI -> view.displayWifiReady()
+//                    NETWORK_TYPE.MOBILE_LTE -> view.display
+//                    NETWORK_TYPE.MOBILE_EDGE -> view.display
+                    else -> view.displayNoNetworkConnection()
                 }
-                println("TYPE OF NETWORK.... ${it}")
+                //  getVideoInstance()
+
             }, {
-
+                it.printStackTrace()
             })
-
-
     }
 
+
+    var uploadDisposable: Disposable? = null
+    private fun getVideoInstance() {
+        uploadDisposable?.dispose()
+        uploadDisposable =
+            uploadManager
+                .getVideoInstance()
+                .subscribe({
+                    println("SUccess from presenter?? $it")
+                }, {
+
+                })
+    }
 
     fun onDestroy() {
         managerDisposable?.dispose()

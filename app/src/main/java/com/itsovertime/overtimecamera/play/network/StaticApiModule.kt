@@ -1,6 +1,5 @@
 package com.itsovertime.overtimecamera.play.network
 
-import android.app.Application
 import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.utils.Constants
@@ -54,7 +53,7 @@ class StaticApiModule {
     @Singleton
     fun provideApi(client: OkHttpClient.Builder, moshi: Moshi): Api {
         return Retrofit.Builder()
-            .baseUrl(Constants.videoUploadUrl)
+            .baseUrl(Constants.mainUploadURL)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .client(client.build())
