@@ -8,7 +8,7 @@ import com.itsovertime.overtimecamera.play.R
 import kotlinx.android.synthetic.main.item_layout_settings.view.*
 
 class SettingsView(context: Context, attributeSet: AttributeSet? = null) : ConstraintLayout(context, attributeSet),
-        View.OnClickListener {
+    View.OnClickListener {
 
     var pres: SettingsPresentation? = null
     override fun onClick(v: View?) {

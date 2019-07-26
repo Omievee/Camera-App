@@ -22,6 +22,7 @@ import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
+import java.util.*
 
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
@@ -239,11 +240,12 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     }
 
 
-    private var lastVideoId: Int = 0
+    private var lastVideoId: String = ""
     @SuppressLint("CheckResult")
     override fun saveHighQualityVideoToDB(filePath: String, isFavorite: Boolean) {
         Observable.fromCallable {
-            val video = SavedVideo(vidPath = filePath, is_favorite = isFavorite)
+            val id = UUID.randomUUID().toString()
+            val video = SavedVideo(client_id = id, vidPath = filePath, is_favorite = isFavorite)
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.saveVideo(video)
@@ -287,7 +289,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     true -> {
                     }
                     else -> {
-                        lastVideoId = listOfVideos[0].id
+                        lastVideoId = listOfVideos[0].client_id
                         executeFFMPEG(listOfVideos[0])
                     }
                 }

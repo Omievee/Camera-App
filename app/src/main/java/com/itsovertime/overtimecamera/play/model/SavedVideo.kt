@@ -11,9 +11,10 @@ import java.util.*
 @Parcelize
 @Entity(tableName = "SavedVideo")
 data class SavedVideo(
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")
-    val id: Int = 0,
+
+    @PrimaryKey
+    @ColumnInfo(name = "client_id")
+    val client_id: String,
     @ColumnInfo(name = "vidPath")
     val vidPath: String?,
     @ColumnInfo(name = "mediumVidPath")
@@ -25,5 +26,7 @@ data class SavedVideo(
     @ColumnInfo(name = "is_funny")
     val is_funny: Boolean = false,
     @ColumnInfo(name = "is_selfie")
-    val is_selfie: Boolean = false
+    val is_selfie: Boolean = false,
+    @ColumnInfo(name = "event_id")
+    val event_id: Int? = null
 ) : Parcelable

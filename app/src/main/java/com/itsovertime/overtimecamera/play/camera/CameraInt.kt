@@ -11,5 +11,7 @@ interface CameraInt {
     fun switchCameras()
     fun setUpClicks()
     fun updateUploadsIconCount(count: String)
+    fun stopProgressAnimation()
+    fun showOrHideViewsForCamera()
 
 }

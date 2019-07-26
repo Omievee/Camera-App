@@ -7,6 +7,7 @@ import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import io.reactivex.disposables.Disposable
 import java.io.File
+import java.util.*
 
 
 class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
@@ -26,6 +27,7 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
 
     fun saveRecordingToDataBase() {
         println("Saving............")
+
         filePath?.let {
             manager.saveHighQualityVideoToDB(
                 filePath = it,
@@ -85,6 +87,14 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
 
     fun onDestroy() {
         totalDisposable?.dispose()
+    }
+
+    fun clearProgressAnimation() {
+        view.stopProgressAnimation()
+    }
+
+    fun determineViewsForCameraId() {
+        view.showOrHideViewsForCamera()
     }
 
 }

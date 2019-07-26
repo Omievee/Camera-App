@@ -23,13 +23,6 @@ class WifiManagerImpl(val context: OTApplication) : WifiManager {
             null -> onNoNetworkDetected()
             else -> determineNetworkType(networkInfo)
         }
-//        println("~~~~~~~~~~~~~~~~~~~~~~~~~")
-//        println("Network subtype::::: ${networkInfo?.subtype}")
-//        println("Network subtypeName::::: ${networkInfo?.subtypeName}")
-//        println("Network extraInfo::::: ${networkInfo?.extraInfo}")
-//        println("Network detailed state::::: ${networkInfo?.detailedState}")
-//        println("Network isConnected::::: ${networkInfo?.isConnected}")
-//        println("~~~~~~~~~~~~~~~~~~~~~~~~~")
     }
 
     private var networkType: NETWORK_TYPE? = null

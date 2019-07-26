@@ -69,6 +69,8 @@ dependencies {
     //Moshi
     implementation("com.squareup.moshi:moshi:1.8.0")
     implementation("com.squareup.moshi:moshi-adapters:1.8.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.8.0")
+
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.8.0")
     //OKHTTP
     implementation("com.squareup.okhttp3:okhttp:3.14.1")

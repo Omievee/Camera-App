@@ -24,6 +24,7 @@ class UploadsPresenter(
         subscribeToVideosFromGallery()
         subscribeToNetworkUpdates()
 
+
     }
 
 
@@ -34,6 +35,10 @@ class UploadsPresenter(
             .map {
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
+                if (!it?.isNullOrEmpty()) {
+                    getVideoInstance()
+                }
+
             }.subscribe({
             }, {
                 println("throwable: ${it.printStackTrace()}")
@@ -66,6 +71,10 @@ class UploadsPresenter(
         uploadDisposable =
             uploadManager
                 .getVideoInstance()
+                .doOnError {
+
+                    println("Vid response erro:::: ${it.stackTrace}")
+                }
                 .subscribe({
                     println("SUccess from presenter?? $it")
                 }, {

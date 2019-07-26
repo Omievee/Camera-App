@@ -3,7 +3,9 @@ package com.itsovertime.overtimecamera.play.network
 import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.utils.Constants
-import com.squareup.moshi.Moshi
+import com.squareup.moshi.*
+import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import okhttp3.Cache
@@ -25,27 +27,36 @@ class StaticApiModule {
     fun provideOkHttpClient(
         cache: Cache
     ): OkHttpClient.Builder {
-        val httpClient = OkHttpClient.Builder()
-        if (BuildConfig.DEBUG) {
-            val logging = HttpLoggingInterceptor()
-            logging.level = HttpLoggingInterceptor.Level.BODY
-            httpClient.addInterceptor(logging)
+        return OkHttpClient.Builder().apply {
+            addInterceptor(AuthenticatedNetworkInterceptor())
+            if (BuildConfig.DEBUG) {
+                val logging = HttpLoggingInterceptor()
+                logging.level = HttpLoggingInterceptor.Level.BODY
+                this.addInterceptor(logging)
+            }
+            connectTimeout(30, TimeUnit.SECONDS)
+            readTimeout(30, TimeUnit.SECONDS)
+            cache(cache)
         }
-        httpClient.addInterceptor(AuthenticatedNetworkInterceptor())
-        httpClient.connectTimeout(30, TimeUnit.SECONDS)
-        httpClient.readTimeout(30, TimeUnit.SECONDS)
-        httpClient.cache(cache)
-        return httpClient
     }
 
 
     @Provides
     @Singleton
+    @FromJson
     fun provideMoshi(): Moshi {
-        var m: Moshi = Moshi.Builder()
-            .add(Date::class.java, com.squareup.moshi.adapters.Rfc3339DateJsonAdapter())
+        return Moshi.Builder().apply {
+            add(Date::class.java, Rfc3339DateJsonAdapter())
+            add(KotlinJsonAdapterFactory())
+            add(object {
+                @ToJson
+                fun toJson(uuid: UUID) = uuid.toString()
+                @FromJson
+                fun fromJson(s: String) = UUID.fromString(s)
+            })
+        }
             .build()
-        return m
+
     }
 
 
@@ -74,3 +85,19 @@ class StaticApiModule {
     }
 
 }
+
+//
+//class UUIDAdapter : JsonAdapter<UUID>() {
+//
+//    @Synchronized
+//    override fun fromJson(reader: JsonReader): UUID? {
+//        val uuid = reader.nextString()
+//        return uuid
+//    }
+//
+//
+//    override fun toJson(writer: JsonWriter, value: UUID?) {
+//        writer.value()
+//    }
+//
+//}

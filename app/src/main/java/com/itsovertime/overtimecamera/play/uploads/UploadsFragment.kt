@@ -24,11 +24,14 @@ private const val ARG_PARAM2 = "param2"
 class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     override fun displayNoNetworkConnection() {
+        uploadsIcon.visibility = View.INVISIBLE
+        uploadsMessage.text = "No active connection..."
 
     }
 
     override fun displayWifiReady() {
-
+        uploadsIcon.visibility = View.VISIBLE
+        uploadsMessage.text = context?.getString(R.string.upload_queue_uploading_hd)
     }
 
     override fun onRefresh() {
@@ -66,7 +69,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefre
         println("list size... ${videos.size}")
         val adapter = UploadsAdapter(videos)
         uploadsRecycler.adapter = adapter
-        //adapter.notifyDataSetChanged()
+        adapter.notifyDataSetChanged()
     }
 
     private var param2: String? = null

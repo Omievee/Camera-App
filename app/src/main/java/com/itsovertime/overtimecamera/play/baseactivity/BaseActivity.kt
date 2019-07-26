@@ -30,7 +30,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onUploadsButtonClicked() {
         viewPager.currentItem = 1
-        wakeLock?.release()
+//        wakeLock?.release()
     }
 
     override fun setUpAdapter() {

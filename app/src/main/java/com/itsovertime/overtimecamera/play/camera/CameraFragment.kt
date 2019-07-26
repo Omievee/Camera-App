@@ -36,6 +36,30 @@ import javax.inject.Inject
 
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
+    override fun showOrHideViewsForCamera() {
+        when (CAMERA) {
+            1 -> {
+                selfieCameraEngaged = true
+                favoriteIcon.visibility = View.INVISIBLE
+                hahaIcon.visibility = View.INVISIBLE
+                progressBar.visibility = View.GONE
+//                progress.visibility = View.GONE
+
+            }
+            0 -> {
+                selfieCameraEngaged = false
+                favoriteIcon.visibility = View.VISIBLE
+                hahaIcon.visibility = View.VISIBLE
+                progressBar.visibility = View.VISIBLE
+//                progress.visibility = View.GONE
+            }
+        }
+    }
+
+    override fun stopProgressAnimation() {
+        progressBar.clearAnimation()
+    }
+
     override fun updateUploadsIconCount(count: String) {
         counterText.text = count
     }
@@ -80,7 +104,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             R.id.tapToSave -> {
                 progress.visibility = View.VISIBLE
                 if (recording) {
-                    stopLiveView(false)
+                    stopLiveView(false, selfieCameraEngaged ?: false)
                 } else {
                     startLiveView()
                 }
@@ -89,7 +113,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 presenter.updateFavoriteField()
                 favoriteIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.fave, null))
             }
-            R.id.selfieButton -> presenter.cameraSwitch()
+            R.id.selfieButton -> {
+                presenter.cameraSwitch()
+                presenter.determineViewsForCameraId()
+                progressBar.visibility = View.GONE
+
+            }
             R.id.pauseButton -> {
                 paused = true
                 releaseCamera()
@@ -149,7 +178,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @SuppressLint("CheckResult")
     @Synchronized
     override fun switchCameras() {
-
+        println("recording?? $recording")
         activity?.runOnUiThread {
             selfieButton.isEnabled = false
         }
@@ -172,18 +201,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 })
         }
 
-        when (CAMERA) {
-            1 -> {
-                favoriteIcon.visibility = View.INVISIBLE
-                hahaIcon.visibility = View.INVISIBLE
-                progress.visibility = View.GONE
-            }
-            0 -> {
-                favoriteIcon.visibility = View.VISIBLE
-                hahaIcon.visibility = View.VISIBLE
-                progress.visibility = View.GONE
-            }
-        }
+        presenter.determineViewsForCameraId()
+
     }
 
     override fun closeCamera() {
@@ -319,9 +338,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
-    private fun hideViews() {
-        favoriteIcon.visibility = View.VISIBLE
-        hahaIcon.visibility = View.VISIBLE
+    private fun hideViews(isSelfieCamera: Boolean) {
+        if (!isSelfieCamera) {
+            favoriteIcon.visibility = View.VISIBLE
+            hahaIcon.visibility = View.VISIBLE
+        }
         val timer = Timer()
         val timerTask = object : TimerTask() {
             override fun run() {
@@ -363,8 +384,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     }
                 }, backgroundHandler
             )
+            println("CAMERA?? $CAMERA")
+            if (CAMERA == 0) {
+                startLiveView()
+            }
 
-            startLiveView()
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }
@@ -456,29 +480,40 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
+    var selfieCameraEngaged: Boolean? = false
     private var paused: Boolean = false
     private fun releaseCamera() {
-        println("made it..")
         closeCamera()
         stopBackgroundThread()
         if (recording) {
             paused = true
-            stopLiveView(paused)
+            stopLiveView(paused, selfieCameraEngaged ?: false)
+            presenter.clearProgressAnimation()
         }
     }
 
     private fun startLiveView() {
-        presenter.animateProgressBar(progressBar)
+        if (CAMERA == 0) {
+            presenter.animateProgressBar(progressBar)
+        }
         startRecording()
     }
 
 
-    private fun stopLiveView(isPaused: Boolean) {
-        progressBar.clearAnimation()
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.onDestroy()
+    }
+
+    private fun stopLiveView(isPaused: Boolean, isSelfieCamera: Boolean) {
+//
         stopRecording(isPaused)
-        hideViews()
-        hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.haha, null))
-        favoriteIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.favebutton, null))
+        hideViews(isSelfieCamera)
+        if (!isSelfieCamera) {
+            favoriteIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.favebutton, null))
+            hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.haha, null))
+        }
+
     }
 
     fun showToast(message: String) {
