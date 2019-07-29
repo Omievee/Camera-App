@@ -245,7 +245,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     override fun saveHighQualityVideoToDB(filePath: String, isFavorite: Boolean) {
         Observable.fromCallable {
             val id = UUID.randomUUID().toString()
-            val video = SavedVideo(client_id = id, vidPath = filePath, is_favorite = isFavorite)
+            val video = SavedVideo(id = id, vidPath = filePath, is_favorite = isFavorite)
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.saveVideo(video)
@@ -265,9 +265,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     }
 
     var listOfVideos = mutableListOf<SavedVideo>()
-    var isFirstRun: Boolean = true
+    private var isFirstRun: Boolean = true
     @SuppressLint("CheckResult")
-
     override fun loadFromDB() {
         listOfVideos.clear()
         Observable.fromCallable {
@@ -279,19 +278,13 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
-                when (isFirstRun) {
-                    true -> {
-                        loadFFMPEG()
-                        isFirstRun = false
-                    }
+                if (isFirstRun) {
+                    loadFFMPEG()
+                    isFirstRun = false
                 }
-                when (listOfVideos.isNullOrEmpty()) {
-                    true -> {
-                    }
-                    else -> {
-                        lastVideoId = listOfVideos[0].client_id
-                        executeFFMPEG(listOfVideos[0])
-                    }
+                if (!listOfVideos.isNullOrEmpty()) {
+                    lastVideoId = listOfVideos[0].id
+                    executeFFMPEG(listOfVideos[0])
                 }
             }
             .subscribe({

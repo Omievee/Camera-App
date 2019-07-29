@@ -46,7 +46,6 @@ class StaticApiModule {
     @FromJson
     fun provideMoshi(): Moshi {
         return Moshi.Builder().apply {
-            add(Date::class.java, Rfc3339DateJsonAdapter())
             add(KotlinJsonAdapterFactory())
             add(object {
                 @ToJson
@@ -54,8 +53,7 @@ class StaticApiModule {
                 @FromJson
                 fun fromJson(s: String) = UUID.fromString(s)
             })
-        }
-            .build()
+        }.build()
 
     }
 

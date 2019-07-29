@@ -1,5 +1,6 @@
 package com.itsovertime.overtimecamera.play.network
 
+import android.os.Parcel
 import android.os.Parcelable
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -10,16 +11,30 @@ import java.util.*
 
 @JsonClass(generateAdapter = true)
 @Parcelize
-data class Video(
+data class VideoInstanceRequest(
     @field:Json(name = "client_id")
-    val client_id: UUID,
-    val is_favorite: Boolean,
-    val is_selfie: Boolean,
-    val latitude: Double,
-    val longitude: Double
+    val client_id: UUID? = null
+//    val is_favorite: Boolean,
+//    val is_selfie: Boolean,
+//    val latitude: Double,
+//    val longitude: Double
 //    val event_id: Int,
 //    val tagged_user_ids: String,
 //    val source_high_quality_path: String
-
-
 ) : Parcelable
+
+@Parcelize
+data class VideoResponse(
+    val video: Video
+) : Parcelable {
+
+}
+
+
+@Parcelize
+data class Video(
+    val id: String
+) : Parcelable {
+
+}
+

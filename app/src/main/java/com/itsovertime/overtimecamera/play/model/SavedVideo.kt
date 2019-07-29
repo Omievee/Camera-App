@@ -11,10 +11,9 @@ import java.util.*
 @Parcelize
 @Entity(tableName = "SavedVideo")
 data class SavedVideo(
-
     @PrimaryKey
-    @ColumnInfo(name = "client_id")
-    val client_id: String,
+    @ColumnInfo(name = "id")
+    val id: String,
     @ColumnInfo(name = "vidPath")
     val vidPath: String?,
     @ColumnInfo(name = "mediumVidPath")
