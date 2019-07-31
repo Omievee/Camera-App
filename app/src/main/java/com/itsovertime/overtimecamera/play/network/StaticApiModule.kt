@@ -25,7 +25,7 @@ class StaticApiModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
-        cache: Cache
+            cache: Cache
     ): OkHttpClient.Builder {
         return OkHttpClient.Builder().apply {
             addInterceptor(AuthenticatedNetworkInterceptor())
@@ -47,9 +47,11 @@ class StaticApiModule {
     fun provideMoshi(): Moshi {
         return Moshi.Builder().apply {
             add(KotlinJsonAdapterFactory())
+            add(Date::class.java, Rfc3339DateJsonAdapter())
             add(object {
                 @ToJson
                 fun toJson(uuid: UUID) = uuid.toString()
+
                 @FromJson
                 fun fromJson(s: String) = UUID.fromString(s)
             })
@@ -62,12 +64,12 @@ class StaticApiModule {
     @Singleton
     fun provideApi(client: OkHttpClient.Builder, moshi: Moshi): Api {
         return Retrofit.Builder()
-            .baseUrl(Constants.mainUploadURL)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .client(client.build())
-            .build()
-            .create(Api::class.java)
+                .baseUrl(Constants.mainUploadURL)
+                .addConverterFactory(MoshiConverterFactory.create(moshi))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .client(client.build())
+                .build()
+                .create(Api::class.java)
     }
 
     @Provides

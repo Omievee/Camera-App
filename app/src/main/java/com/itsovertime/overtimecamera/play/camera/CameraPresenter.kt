@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Environment
 import android.widget.ProgressBar
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
+import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import io.reactivex.disposables.Disposable
@@ -99,13 +100,16 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
         view.showOrHideViewsForCamera()
     }
 
+    var ev: List<Event>? = null
     fun getEvents() {
         eventDisposable?.dispose()
-
         eventDisposable = eventsManager
                 .getEvents()
                 .subscribe({
-                    println("Event::::: $it")
+                    ev = it?.events?.filter { e ->
+                        e.city.equals("New York", true)
+                    }
+                    println("new york======= $ev")
                 }, {
 
                 })

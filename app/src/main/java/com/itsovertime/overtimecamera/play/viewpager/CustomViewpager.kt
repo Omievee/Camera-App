@@ -12,10 +12,10 @@ class CustomViewpager(context: Context, attrs: AttributeSet?=null) : ViewPager(c
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent?): Boolean {
-        if(canSwipe) {
-            return super.onTouchEvent(ev)
+        return if(canSwipe) {
+            super.onTouchEvent(ev)
         } else {
-            return false
+            false
         }
     }
 

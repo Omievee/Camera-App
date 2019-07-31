@@ -2,14 +2,12 @@ package com.itsovertime.overtimecamera.play.eventmanager
 
 import com.itsovertime.overtimecamera.play.network.Api
 import com.itsovertime.overtimecamera.play.network.EventsResponse
-import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.util.*
 
 class EventManagerImpl(val api: Api) : EventManager {
-
 
     private var eventResponse: EventsResponse? = null
 
@@ -20,6 +18,7 @@ class EventManagerImpl(val api: Api) : EventManager {
                         .getEventData(Date(-60 * 60 * 24))
                         .doOnSuccess {
                             eventResponse = it
+
                         }
                         .doOnError {
                             it.printStackTrace()
@@ -28,7 +27,5 @@ class EventManagerImpl(val api: Api) : EventManager {
             else -> Single.just(eventResponse)
         }.subscribeOn(Schedulers.single())
                 .observeOn(AndroidSchedulers.mainThread())
-
-
     }
 }

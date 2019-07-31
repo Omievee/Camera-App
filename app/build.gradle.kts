@@ -8,7 +8,6 @@ plugins {
 }
 
 
-
 android {
     compileSdkVersion(28)
     defaultConfig {
