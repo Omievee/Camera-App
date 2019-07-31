@@ -1,6 +1,8 @@
 package com.itsovertime.overtimecamera.play.di
 
 import com.itsovertime.overtimecamera.play.application.OTApplication
+import com.itsovertime.overtimecamera.play.eventmanager.EventManager
+import com.itsovertime.overtimecamera.play.eventmanager.EventManagerImpl
 import com.itsovertime.overtimecamera.play.network.Api
 import com.itsovertime.overtimecamera.play.network.JobBindingModule
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
@@ -41,6 +43,13 @@ class AppModule {
     @Singleton
     fun provideJobBinding(): NetworkSchedulerService {
         return NetworkSchedulerService()
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideEventManager(api: Api): EventManager {
+        return EventManagerImpl(api)
     }
 
 

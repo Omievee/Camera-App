@@ -478,6 +478,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             progress.visibility = View.VISIBLE
             engageCamera()
         }
+        getEventData()
     }
 
     var selfieCameraEngaged: Boolean? = false
@@ -490,6 +491,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             stopLiveView(paused, selfieCameraEngaged ?: false)
             presenter.clearProgressAnimation()
         }
+    }
+
+    private fun  getEventData(){
+        presenter.getEvents()
     }
 
     private fun startLiveView() {
@@ -506,7 +511,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun stopLiveView(isPaused: Boolean, isSelfieCamera: Boolean) {
-//
         stopRecording(isPaused)
         hideViews(isSelfieCamera)
         if (!isSelfieCamera) {

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:id="@+id/mainView"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    android:rotation="90">
+
+
+
+    <ImageView
+        android:id="@+id/dot"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/margin_standard"
+        android:src="@drawable/orange_dot"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/eventName"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:id="@+id/eventName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/margin_half"
+        android:background="@android:color/transparent"
+        android:lines="1"
+        android:maxLines="1"
+        android:text="Beta Testing"
+        android:textColor="@color/OT_White"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/drop"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+      <ImageView
+          android:id="@+id/drop"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:src="@drawable/menu_triangle"
+          app:layout_constraintBottom_toBottomOf="parent"
+          app:layout_constraintEnd_toStartOf="@id/eventName"
+          app:layout_constraintTop_toTopOf="parent" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

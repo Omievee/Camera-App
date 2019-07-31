@@ -1,169 +1,189 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                                   xmlns:app="http://schemas.android.com/apk/res-auto"
-                                                   xmlns:tools="http://schemas.android.com/tools"
-                                                   android:layout_width="match_parent"
-                                                   android:layout_height="match_parent"
-                                                   android:background="@android:color/transparent"
-                                                   tools:context=".play.camera.CameraFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    tools:context=".play.camera.CameraFragment">
 
 
     <com.itsovertime.overtimecamera.play.camera.TXView
-            android:id="@+id/cameraView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+        android:id="@+id/cameraView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clickable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
     <View
-            android:id="@+id/topView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:background="@android:drawable/screen_background_dark_transparent"
-            app:layout_constraintBottom_toBottomOf="@id/topGuide"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+        android:id="@+id/topView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@android:drawable/screen_background_dark_transparent"
+        app:layout_constraintBottom_toBottomOf="@id/topGuide"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+     <com.itsovertime.overtimecamera.play.camera.EventPickVIew
+         android:id="@+id/eventName"
+         android:layout_width="wrap_content"
+         android:layout_height="0dp"
+         android:background="@drawable/gradient"
+         android:orientation="vertical"
+         app:layout_constraintBottom_toTopOf="@id/bottomGuide"
+         app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintStart_toStartOf="@id/verticalGuide"
+         app:layout_constraintTop_toBottomOf="@id/topGuide" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/verticalGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent=".85" />
+
 
     <ImageButton
-            android:id="@+id/selfieButton"
-            android:background="@android:color/transparent"
-            android:layout_width="35dp"
-            android:layout_height="0dp"
-            android:layout_margin="@dimen/margin_standard"
-            android:rotation="90"
-            android:src="@drawable/selfie_icon"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/topGuide"
-            app:layout_constraintTop_toTopOf="parent"/>
+        android:id="@+id/selfieButton"
+        android:layout_width="35dp"
+        android:layout_height="0dp"
+        android:layout_margin="@dimen/margin_standard"
+        android:background="@android:color/transparent"
+        android:rotation="90"
+        android:src="@drawable/selfie_icon"
+        app:layout_constraintBottom_toTopOf="@id/topGuide"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
-            android:id="@+id/pauseButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/margin_half"
-            android:background="@android:color/transparent"
-            android:rotation="90"
-            android:src="@drawable/pause"
-            android:tint="@color/OT_White"
-            app:layout_constraintBottom_toTopOf="@id/topGuide"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+        android:id="@+id/pauseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/margin_half"
+        android:background="@android:color/transparent"
+        android:rotation="90"
+        android:src="@drawable/pause"
+        android:tint="@color/OT_White"
+        app:layout_constraintBottom_toTopOf="@id/topGuide"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <View
-            android:id="@+id/bottomView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:background="@android:drawable/screen_background_dark_transparent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/bottomGuide"/>
+        android:id="@+id/bottomView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@android:drawable/screen_background_dark_transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/bottomGuide" />
 
 
     <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/topGuide"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_percent=".1"/>
+        android:id="@+id/topGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent=".1" />
 
     <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/bottomGuide"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_percent=".9"/>
+        android:id="@+id/bottomGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent=".9" />
 
 
     <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="65dp"
-            android:layout_height="65dp"
-            android:background="@drawable/circular_shape"
-            android:max="18"
-            android:progress="0"
-            android:progressDrawable="@drawable/circular_progress"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/bottomView"/>
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:background="@drawable/circular_shape"
+        android:max="18"
+        android:progress="0"
+        android:progressDrawable="@drawable/circular_progress"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/bottomView" />
 
 
     <ImageButton
-            android:id="@+id/favoriteIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:rotation="90"
-            android:src="@drawable/favebutton"
-            android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/tapToSave"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/bottomView"/>
+        android:id="@+id/favoriteIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:rotation="90"
+        android:src="@drawable/favebutton"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/tapToSave"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/bottomView" />
 
     <ImageButton
-            android:id="@+id/hahaIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:rotation="90"
-            android:src="@drawable/haha"
-            android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/tapToSave"
-            app:layout_constraintTop_toTopOf="@id/bottomView"/>
+        android:id="@+id/hahaIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:rotation="90"
+        android:src="@drawable/haha"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/tapToSave"
+        app:layout_constraintTop_toTopOf="@id/bottomView" />
 
     <ImageButton
-            android:id="@+id/tapToSave"
-            android:layout_width="65dp"
-            android:layout_height="65dp"
-            android:background="@drawable/tap"
-            android:rotation="90"
-            android:textAllCaps="false"
-            android:textColor="@color/OT_White"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/bottomView"/>
+        android:id="@+id/tapToSave"
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:background="@drawable/tap"
+        android:rotation="90"
+        android:textAllCaps="false"
+        android:textColor="@color/OT_White"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/bottomView" />
 
     <com.itsovertime.overtimecamera.play.camera.UploadButtonView
-            android:id="@+id/uploadButton"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:rotation="90"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/hahaIcon"
-            app:layout_constraintTop_toTopOf="@id/bottomView"/>
+        android:id="@+id/uploadButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:rotation="90"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/hahaIcon"
+        app:layout_constraintTop_toTopOf="@id/bottomView" />
 
 
     <com.itsovertime.overtimecamera.play.camera.PausedFlashBack
-            android:id="@+id/pausedView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/OT_DarkGray"
-            android:clickable="true"
-            android:focusable="true"
-            android:visibility="gone"/>
+        android:id="@+id/pausedView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/OT_DarkGray"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone" />
 
 
     <include
-            android:id="@+id/progress"
-            layout="@layout/camera_loading"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"/>
+        android:id="@+id/progress"
+        layout="@layout/camera_loading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,6 +3,7 @@ package com.itsovertime.overtimecamera.play.camera
 import android.annotation.SuppressLint
 import android.os.Environment
 import android.widget.ProgressBar
+import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import io.reactivex.disposables.Disposable
@@ -10,11 +11,11 @@ import java.io.File
 import java.util.*
 
 
-class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
+class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val eventsManager: EventManager) {
 
-    var filePath: String? = null
-
-    var totalDisposable: Disposable? = null
+    private var filePath: String? = null
+    private var totalDisposable: Disposable? = null
+    private var eventDisposable: Disposable? = null
 
     fun getVideoFilePath(photoFileName: String): File {
         val mediaStorageDir = File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime1080")
@@ -30,8 +31,8 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
 
         filePath?.let {
             manager.saveHighQualityVideoToDB(
-                filePath = it,
-                isFavorite = false
+                    filePath = it,
+                    isFavorite = false
             )
         }
         view.startPreview()
@@ -77,16 +78,17 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
     fun checkGallerySize() {
         totalDisposable?.dispose()
         totalDisposable = manager
-            .subscribeToVideoGallerySize()
-            .subscribe({
-                view.updateUploadsIconCount(it.toString())
-            }, {
+                .subscribeToVideoGallerySize()
+                .subscribe({
+                    view.updateUploadsIconCount(it.toString())
+                }, {
 
-            })
+                })
     }
 
     fun onDestroy() {
         totalDisposable?.dispose()
+        eventDisposable?.dispose()
     }
 
     fun clearProgressAnimation() {
@@ -95,6 +97,20 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager) {
 
     fun determineViewsForCameraId() {
         view.showOrHideViewsForCamera()
+    }
+
+    fun getEvents() {
+        eventDisposable?.dispose()
+
+        eventDisposable = eventsManager
+                .getEvents()
+                .subscribe({
+                    println("Event::::: $it")
+                }, {
+
+                })
+
+
     }
 
 }

@@ -3,6 +3,7 @@ package com.itsovertime.overtimecamera.play.network
 import io.reactivex.Single
 import okhttp3.MultipartBody
 import retrofit2.http.*
+import java.util.*
 
 interface Api {
 
@@ -15,5 +16,8 @@ interface Api {
 
     @POST("/api/media/upload_token")
     fun uploadToken(): Single<VideoInstanceRequest>
+
+    @GET("api/events?")
+    fun getEventData(@Query("starts_after=") time: Date): Single<EventsResponse?>
 }
 
