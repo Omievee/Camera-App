@@ -18,11 +18,14 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
     override fun getVideoInstance(): Single<VideoResponse> {
         val request =
             VideoInstanceRequest(
-                client_id = UUID.fromString(favoriteVideos[0].id)
-//                is_favorite = favoriteVideos[0].is_favorite,
-//                is_selfie = favoriteVideos[0].is_selfie,
-//                latitude = 0.0,
-//                longitude = 0.0
+                client_id = UUID.fromString(favoriteVideos[0].id),
+                is_favorite = favoriteVideos[0].is_favorite,
+                is_selfie = favoriteVideos[0].is_selfie,
+                latitude = 0.0,
+                longitude = 0.0,
+                event_id = 0,
+                tagged_user_ids = "",
+                source_high_quality_path = ""
             )
 
         return api
