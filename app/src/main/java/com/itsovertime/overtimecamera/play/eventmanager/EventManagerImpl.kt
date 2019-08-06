@@ -15,17 +15,16 @@ class EventManagerImpl(val api: Api) : EventManager {
         return when (eventResponse) {
             null -> {
                 api
-                        .getEventData(Date(-60 * 60 * 24))
-                        .doOnSuccess {
-                            eventResponse = it
-
-                        }
-                        .doOnError {
-                            it.printStackTrace()
-                        }
+                    .getEventData(Date(-60 * 60 * 24))
+                    .doOnSuccess {
+                        eventResponse = it
+                    }
+                    .doOnError {
+                        it.printStackTrace()
+                    }
             }
             else -> Single.just(eventResponse)
         }.subscribeOn(Schedulers.single())
-                .observeOn(AndroidSchedulers.mainThread())
+            .observeOn(AndroidSchedulers.mainThread())
     }
 }

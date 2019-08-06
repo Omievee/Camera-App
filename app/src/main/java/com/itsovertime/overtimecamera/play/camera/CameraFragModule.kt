@@ -13,8 +13,6 @@ class CameraFragModule {
     @FragmentScope
     fun providePresenter(fragment: CameraFragment, manager: VideosManager, eventManager: EventManager): CameraPresenter =
             CameraPresenter(fragment, manager, eventManager)
-
-
 }
 
 

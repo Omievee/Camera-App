@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/OT_DarkGray"
+    android:clickable="true"
+    android:focusable="true">
+
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/margin_half"
+        android:text="Beta Testing::: "
+        android:textAlignment="center"
+        android:textColor="@color/OT_Orange"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@id/date"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/margin_half"
+        android:text="8/20/1998"
+        android:textColor="@color/OT_Orange"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/location"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/name" />
+
+    <TextView
+        android:id="@+id/location"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/margin_half"
+        android:text="talos, Greece"
+        android:textColor="@color/OT_Orange"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/date" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

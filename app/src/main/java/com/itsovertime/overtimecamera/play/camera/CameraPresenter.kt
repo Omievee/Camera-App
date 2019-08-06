@@ -9,7 +9,6 @@ import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import io.reactivex.disposables.Disposable
 import java.io.File
-import java.util.*
 
 
 class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val eventsManager: EventManager) {
@@ -101,20 +100,27 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
     }
 
     var ev: List<Event>? = null
+    var eventName: String? = ""
     fun getEvents() {
         eventDisposable?.dispose()
         eventDisposable = eventsManager
                 .getEvents()
+                .map {
+                    eventName = it?.events?.get(0).name ?: ""
+                    ev = it.events
+                }
                 .subscribe({
-                    ev = it?.events?.filter { e ->
-                        e.city.equals("New York", true)
-                    }
-                    println("new york======= $ev")
+                    println("size from disp:... ${ev?.size}")
+                    view.setUpEventViewData(eventName, ev)
                 }, {
 
                 })
 
 
+    }
+
+    fun displayEventsFragment(evList: List<Event>) {
+        view.openEvents(evList)
     }
 
 }

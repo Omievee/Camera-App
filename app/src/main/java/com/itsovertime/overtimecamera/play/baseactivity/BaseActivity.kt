@@ -45,12 +45,12 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     var orientation: OrientationEventListener? = null
     private val permissionsCode = 0
     private val requiredAppPermissions = arrayOf(
-        Manifest.permission.CAMERA,
-        Manifest.permission.RECORD_AUDIO,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
     )
 
 
@@ -60,22 +60,22 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun displayAlert() {
         AlertDialog.Builder(this, com.itsovertime.overtimecamera.play.R.style.CUSTOM_ALERT)
-            .setTitle("Permissions Request")
-            .setMessage("Allow overtimecamera..")
-            .setPositiveButton("Continue") { _, _ ->
-                displaySystemPermissionsDialog()
-            }
-            .setNegativeButton("Not Now") { _, _ ->
-                presenter.permissionsDenied()
-            }
-            .setCancelable(false)
-            .show()
+                .setTitle("Permissions Request")
+                .setMessage("Allow overtimecamera..")
+                .setPositiveButton("Continue") { _, _ ->
+                    displaySystemPermissionsDialog()
+                }
+                .setNegativeButton("Not Now") { _, _ ->
+                    presenter.permissionsDenied()
+                }
+                .setCancelable(false)
+                .show()
     }
 
     private fun displaySystemPermissionsDialog() {
         requestPermissions(
-            requiredAppPermissions,
-            permissionsCode
+                requiredAppPermissions,
+                permissionsCode
         )
     }
 
@@ -83,7 +83,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     private var wakeLock: PowerManager.WakeLock? = null
     private fun keepScreenUnlocked() {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
+        //   wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
     }
 
     @Inject
@@ -103,12 +103,12 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     private fun scheduleJob() {
 
         val myJob = JobInfo.Builder(0, ComponentName(this, NetworkSchedulerService::class.java))
-            .setRequiresCharging(false)
-            .setMinimumLatency(1000)
-            .setOverrideDeadline(2000)
-            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-            .setPersisted(true)
-            .build()
+                .setRequiresCharging(false)
+                .setMinimumLatency(1000)
+                .setOverrideDeadline(2000)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setPersisted(true)
+                .build()
 
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
         jobScheduler.schedule(myJob)
@@ -128,7 +128,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onDestroy() {
         super.onDestroy()
         stopService(Intent(this, NetworkSchedulerService::class.java))
-        wakeLock?.release()
+        //   wakeLock?.release()
     }
 
 
@@ -213,10 +213,15 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                     if (it.childFragmentManager.backStackEntryCount > 0) {
                         it.childFragmentManager.popBackStack()
                     } else if (it.childFragmentManager.backStackEntryCount == 0 && viewPager.currentItem == 1) {
-                        wakeLockAcquire()
                         viewPager.currentItem = 0
+                    }
+                }
+                is CameraFragment -> {
+                    println("visi... ${it.isVisible}")
+                    if (it.childFragmentManager.backStackEntryCount > 0) {
+                        it.childFragmentManager.popBackStack()
                     } else {
-                        finishAffinity()
+                        //   finishAffinity()
                     }
                 }
             }
@@ -234,7 +239,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 }
 
 class CustomViewPageAdapter(fragmentManager: FragmentManager, private val isMainViewPager: Boolean) :
-    FragmentPagerAdapter(fragmentManager) {
+        FragmentPagerAdapter(fragmentManager) {
     private var TABS: Int = 0
     override fun getCount(): Int {
         TABS = when (isMainViewPager) {

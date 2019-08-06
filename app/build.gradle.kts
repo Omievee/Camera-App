@@ -103,7 +103,10 @@ dependencies {
     //WorkManager
     implementation("androidx.work:work-runtime-ktx:2.0.1")
     implementation("androidx.work:work-rxjava2:2.0.1")
-    //Testing
+
+    implementation("com.google.android:flexbox:1.1.0")
+
+//Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")
     androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
