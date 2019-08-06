@@ -15,12 +15,14 @@ import android.util.Log
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.*
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.itsovertime.overtimecamera.play.R
-import com.itsovertime.overtimecamera.play.events.EventsFragment
+import com.itsovertime.overtimecamera.play.events.EventsAdapter
+import com.itsovertime.overtimecamera.play.events.EventsClickListener
 import com.itsovertime.overtimecamera.play.model.Event
 import dagger.android.support.AndroidSupportInjection
 import io.reactivex.Observable
@@ -40,24 +42,20 @@ import javax.inject.Inject
 
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
-    override fun openEvents(evList: List<Event>) {
-        childFragmentManager.beginTransaction().apply {
-            setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-            setCustomAnimations(R.anim.enter_from_right, R.anim.exit_from_right)
-            replace(R.id.fragContainerA, EventsFragment.newInstance(evList))
-            addToBackStack("events")
-            commit()
-        }
+    override fun openEvents() {
+        println("MADE IT")
+        hiddenEvents.visibility = View.VISIBLE
     }
-
-    var evList: List<Event>? = null
 
     override fun setUpEventViewData(event: String?, eventList: List<Event>?) {
         if (eventList.isNullOrEmpty()) {
             eventSpace.visibility = View.GONE
         }
         eventTitle.text = event ?: ""
-        evList = eventList
+        println("List? ${eventList?.size}")
+        evAdapter = EventsAdapter(eventList, listener)
+        hiddenEvents.adapter = evAdapter
+        println("ADAP: $evAdapter")
     }
 
     override fun showOrHideViewsForCamera() {
@@ -126,9 +124,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.eventSpace -> {
-                if (!evList.isNullOrEmpty()) {
-                    presenter.displayEventsFragment(evList ?: return)
-                }
+                presenter.displayHiddenView()
+
             }
 
             R.id.tapToSave -> {
@@ -463,12 +460,20 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         return inflater.inflate(R.layout.fragment_camera, container, false)
     }
 
+    val listener: EventsClickListener = object : EventsClickListener {
+        override fun onEventSelected(event: Event) {
+            println("event is : ${event.name}")
+        }
+    }
 
+    private var evAdapter: EventsAdapter? = null
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         txView = cameraView
         presenter.setUpClicks()
         presenter.checkGallerySize()
+        getEventData()
+        hiddenEvents.layoutManager = LinearLayoutManager(context, LinearLayout.VERTICAL, false)
     }
 
 
@@ -508,7 +513,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             progress.visibility = View.VISIBLE
             engageCamera()
         }
-        getEventData()
+
     }
 
     var selfieCameraEngaged: Boolean? = false

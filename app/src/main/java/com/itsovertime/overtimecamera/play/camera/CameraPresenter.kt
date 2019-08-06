@@ -110,7 +110,6 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
                     ev = it.events
                 }
                 .subscribe({
-                    println("size from disp:... ${ev?.size}")
                     view.setUpEventViewData(eventName, ev)
                 }, {
 
@@ -119,8 +118,8 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
 
     }
 
-    fun displayEventsFragment(evList: List<Event>) {
-        view.openEvents(evList)
+    fun displayHiddenView() {
+        view.openEvents()
     }
 
 }

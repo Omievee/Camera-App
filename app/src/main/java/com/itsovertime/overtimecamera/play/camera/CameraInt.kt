@@ -16,6 +16,6 @@ interface CameraInt {
     fun stopProgressAnimation()
     fun showOrHideViewsForCamera()
     fun setUpEventViewData(event: String?, eventList: List<Event>?)
-    fun openEvents(evList: List<Event>)
+    fun openEvents()
 
 }

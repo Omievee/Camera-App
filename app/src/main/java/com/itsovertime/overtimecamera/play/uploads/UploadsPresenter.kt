@@ -36,7 +36,7 @@ class UploadsPresenter(
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
                 if (!it?.isNullOrEmpty()) {
-                    getVideoInstance()
+                  //  getVideoInstance()
                 }
 
             }.subscribe({
