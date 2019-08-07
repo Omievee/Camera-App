@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.model.Event
@@ -16,11 +17,14 @@ class EventsView(context: Context, attributeSet: AttributeSet? = null) : Constra
     var event: Event? = null
 
     override fun onClick(v: View?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        when (v?.id) {
+            R.id.view -> listener?.onEventSelected(event ?: return)
+        }
     }
 
     init {
         View.inflate(context, R.layout.events_item_view, this)
+        view.setOnClickListener(this)
         layoutParams = MarginLayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -28,10 +32,10 @@ class EventsView(context: Context, attributeSet: AttributeSet? = null) : Constra
     }
 
     fun bind(event: Event) {
-        println("EVENT VIEW BIND")
+
         this.event = event
         name.text = event.name
-//        location.text = "${event.city}"
+        location.text = "${event.address}"
 
 
     }

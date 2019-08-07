@@ -12,39 +12,39 @@ import java.util.*
 @JsonClass(generateAdapter = true)
 @Parcelize
 data class VideoInstanceRequest(
-    @field:Json(name = "client_id")
-    val client_id: UUID? = null,
-    val is_favorite: Boolean,
-    val is_selfie: Boolean,
-    val latitude: Double,
-    val longitude: Double,
-    val event_id: Int,
-    val tagged_user_ids: String,
-    val source_high_quality_path: String
+        @field:Json(name = "client_id")
+        val client_id: UUID? = null,
+        val is_favorite: Boolean,
+        val is_selfie: Boolean,
+        val latitude: Double,
+        val longitude: Double,
+        val event_id: Int? = null,
+        val tagged_user_ids: String? = null,
+        val source_high_quality_path: String? = null
 ) : Parcelable
 
 @Parcelize
 data class VideoResponse(
-    val video: Video
+        val video: Video
 ) : Parcelable
 
 @Parcelize
 data class Video(
-    val id: String? = "",
-    val filmed_at: String? = "",
-    val client_id: String? = "",
-    val user_id: String? = "",
-    val event_id: Int? = 0,
-    val item_id: Int? = 0,
-    val is_favorite: Boolean? = false,
-    val is_funny: Boolean? = false,
-    val is_selfie: Boolean? = false,
-    val tagged_user_ids: Int? = 0,
-    val latitude: Double? = 0.0,
-    val longitude: Double? = 0.0,
-    val source_high_quality_path: String? = "",
-    val source_medium_quality_path: String? = "",
-    val source_low_quality_path: String? = ""
+        val id: String? = "",
+        val filmed_at: String? = "",
+        val client_id: String? = "",
+        val user_id: String? = "",
+        val event_id: Int? = 0,
+        val item_id: Int? = 0,
+        val is_favorite: Boolean? = false,
+        val is_funny: Boolean? = false,
+        val is_selfie: Boolean? = false,
+        val tagged_user_ids: Int? = 0,
+        val latitude: Double? = 0.0,
+        val longitude: Double? = 0.0,
+        val source_high_quality_path: String? = "",
+        val source_medium_quality_path: String? = "",
+        val source_low_quality_path: String? = ""
 
 //val source_high_quality_progress":-1,
 //val source_medium_quality_progress":-1,

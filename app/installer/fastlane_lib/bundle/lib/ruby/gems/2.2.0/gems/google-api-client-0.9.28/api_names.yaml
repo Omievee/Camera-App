@@ -4209,7 +4209,7 @@
 "/compute:beta/SSLHealthCheck/portName": port_name
 "/compute:beta/SSLHealthCheck/proxyHeader": proxy_header
 "/compute:beta/SSLHealthCheck/request": request
-"/compute:beta/SSLHealthCheck/response": response
+"/compute:beta/SSLHealthCheck/response": videoInstanceResponse
 "/compute:beta/Scheduling": scheduling
 "/compute:beta/Scheduling/automaticRestart": automatic_restart
 "/compute:beta/Scheduling/onHostMaintenance": on_host_maintenance
@@ -4309,7 +4309,7 @@
 "/compute:beta/TCPHealthCheck/portName": port_name
 "/compute:beta/TCPHealthCheck/proxyHeader": proxy_header
 "/compute:beta/TCPHealthCheck/request": request
-"/compute:beta/TCPHealthCheck/response": response
+"/compute:beta/TCPHealthCheck/response": videoInstanceResponse
 "/compute:beta/Tags": tags
 "/compute:beta/Tags/fingerprint": fingerprint
 "/compute:beta/Tags/items": items
@@ -4514,7 +4514,7 @@
 "/compute:beta/UDPHealthCheck/port": port
 "/compute:beta/UDPHealthCheck/portName": port_name
 "/compute:beta/UDPHealthCheck/request": request
-"/compute:beta/UDPHealthCheck/response": response
+"/compute:beta/UDPHealthCheck/response": videoInstanceResponse
 "/compute:beta/UrlMap": url_map
 "/compute:beta/UrlMap/creationTimestamp": creation_timestamp
 "/compute:beta/UrlMap/defaultService": default_service
@@ -11950,7 +11950,7 @@
 "/civicinfo:v2/VoterInfoSegmentResult/generatedMillis": generated_millis
 "/civicinfo:v2/VoterInfoSegmentResult/postalAddress": postal_address
 "/civicinfo:v2/VoterInfoSegmentResult/request": request
-"/civicinfo:v2/VoterInfoSegmentResult/response": response
+"/civicinfo:v2/VoterInfoSegmentResult/response": videoInstanceResponse
 "/cloudbuild:v1/key": key
 "/cloudbuild:v1/quotaUser": quota_user
 "/cloudbuild:v1/fields": fields
@@ -12010,8 +12010,8 @@
 "/cloudbuild:v1/Operation/done": done
 "/cloudbuild:v1/Operation/metadata": metadata
 "/cloudbuild:v1/Operation/metadata/metadatum": metadatum
-"/cloudbuild:v1/Operation/response": response
-"/cloudbuild:v1/Operation/response/response": response
+"/cloudbuild:v1/Operation/response": videoInstanceResponse
+"/cloudbuild:v1/Operation/response/response": videoInstanceResponse
 "/cloudbuild:v1/Operation/name": name
 "/cloudbuild:v1/BuildTrigger": build_trigger
 "/cloudbuild:v1/BuildTrigger/id": id
@@ -12275,8 +12275,8 @@
 "/cloudresourcemanager:v1/Operation/done": done
 "/cloudresourcemanager:v1/Operation/metadata": metadata
 "/cloudresourcemanager:v1/Operation/metadata/metadatum": metadatum
-"/cloudresourcemanager:v1/Operation/response": response
-"/cloudresourcemanager:v1/Operation/response/response": response
+"/cloudresourcemanager:v1/Operation/response": videoInstanceResponse
+"/cloudresourcemanager:v1/Operation/response/response": videoInstanceResponse
 "/cloudresourcemanager:v1/Operation/name": name
 "/cloudresourcemanager:v1/GetIamPolicyRequest": get_iam_policy_request
 "/cloudresourcemanager:v1/SetIamPolicyRequest": set_iam_policy_request
@@ -14688,7 +14688,7 @@
 "/compute:v1/SSLHealthCheck/portName": port_name
 "/compute:v1/SSLHealthCheck/proxyHeader": proxy_header
 "/compute:v1/SSLHealthCheck/request": request
-"/compute:v1/SSLHealthCheck/response": response
+"/compute:v1/SSLHealthCheck/response": videoInstanceResponse
 "/compute:v1/Scheduling": scheduling
 "/compute:v1/Scheduling/automaticRestart": automatic_restart
 "/compute:v1/Scheduling/onHostMaintenance": on_host_maintenance
@@ -14785,7 +14785,7 @@
 "/compute:v1/TCPHealthCheck/portName": port_name
 "/compute:v1/TCPHealthCheck/proxyHeader": proxy_header
 "/compute:v1/TCPHealthCheck/request": request
-"/compute:v1/TCPHealthCheck/response": response
+"/compute:v1/TCPHealthCheck/response": videoInstanceResponse
 "/compute:v1/Tags": tags
 "/compute:v1/Tags/fingerprint": fingerprint
 "/compute:v1/Tags/items": items
@@ -19368,7 +19368,7 @@
 "/discovery:v1/RestMethod/request": request
 "/discovery:v1/RestMethod/request/$ref": _ref
 "/discovery:v1/RestMethod/request/parameterName": parameter_name
-"/discovery:v1/RestMethod/response": response
+"/discovery:v1/RestMethod/response": videoInstanceResponse
 "/discovery:v1/RestMethod/response/$ref": _ref
 "/discovery:v1/RestMethod/scopes": scopes
 "/discovery:v1/RestMethod/scopes/scope": scope
@@ -22718,8 +22718,8 @@
 "/appengine:v1beta5/Operation/metadata/metadatum": metadatum
 "/appengine:v1beta5/Operation/done": done
 "/appengine:v1beta5/Operation/error": error
-"/appengine:v1beta5/Operation/response": response
-"/appengine:v1beta5/Operation/response/response": response
+"/appengine:v1beta5/Operation/response": videoInstanceResponse
+"/appengine:v1beta5/Operation/response/response": videoInstanceResponse
 "/appengine:v1beta5/Status": status
 "/appengine:v1beta5/Status/code": code
 "/appengine:v1beta5/Status/message": message
@@ -24477,8 +24477,8 @@
 "/dataproc:v1/Operation/metadata/metadatum": metadatum
 "/dataproc:v1/Operation/done": done
 "/dataproc:v1/Operation/error": error
-"/dataproc:v1/Operation/response": response
-"/dataproc:v1/Operation/response/response": response
+"/dataproc:v1/Operation/response": videoInstanceResponse
+"/dataproc:v1/Operation/response/response": videoInstanceResponse
 "/dataproc:v1/Status": status
 "/dataproc:v1/Status/code": code
 "/dataproc:v1/Status/message": message
@@ -24887,8 +24887,8 @@
 "/genomics:v1/Operation/metadata/metadatum": metadatum
 "/genomics:v1/Operation/done": done
 "/genomics:v1/Operation/error": error
-"/genomics:v1/Operation/response": response
-"/genomics:v1/Operation/response/response": response
+"/genomics:v1/Operation/response": videoInstanceResponse
+"/genomics:v1/Operation/response/response": videoInstanceResponse
 "/genomics:v1/CancelOperationRequest": cancel_operation_request
 "/genomics:v1/ImportReadGroupSetsRequest": import_read_group_sets_request
 "/genomics:v1/ImportReadGroupSetsRequest/datasetId": dataset_id
@@ -25525,7 +25525,7 @@
 "/partners:v2/CreateLeadRequest/recaptchaChallenge": recaptcha_challenge
 "/partners:v2/RecaptchaChallenge": recaptcha_challenge
 "/partners:v2/RecaptchaChallenge/id": id
-"/partners:v2/RecaptchaChallenge/response": response
+"/partners:v2/RecaptchaChallenge/response": videoInstanceResponse
 "/partners:v2/CreateLeadResponse": create_lead_response
 "/partners:v2/CreateLeadResponse/responseMetadata": response_metadata
 "/partners:v2/CreateLeadResponse/lead": lead
@@ -25754,7 +25754,7 @@
 "/people:v1/DomainMembership/inViewerDomain": in_viewer_domain
 "/people:v1/GetPeopleResponse": get_people_response
 "/people:v1/GetPeopleResponse/responses": responses
-"/people:v1/GetPeopleResponse/responses/response": response
+"/people:v1/GetPeopleResponse/responses/response": videoInstanceResponse
 "/people:v1/PersonResponse": person_response
 "/people:v1/PersonResponse/httpStatusCode": http_status_code
 "/people:v1/PersonResponse/person": person
@@ -25919,8 +25919,8 @@
 "/script:v1/Operation/metadata/metadatum": metadatum
 "/script:v1/Operation/done": done
 "/script:v1/Operation/error": error
-"/script:v1/Operation/response": response
-"/script:v1/Operation/response/response": response
+"/script:v1/Operation/response": videoInstanceResponse
+"/script:v1/Operation/response/response": videoInstanceResponse
 "/script:v1/Status": status
 "/script:v1/Status/code": code
 "/script:v1/Status/message": message
@@ -26039,8 +26039,8 @@
 "/storagetransfer:v1/Operation/metadata/metadatum": metadatum
 "/storagetransfer:v1/Operation/done": done
 "/storagetransfer:v1/Operation/error": error
-"/storagetransfer:v1/Operation/response": response
-"/storagetransfer:v1/Operation/response/response": response
+"/storagetransfer:v1/Operation/response": videoInstanceResponse
+"/storagetransfer:v1/Operation/response/response": videoInstanceResponse
 "/storagetransfer:v1/Status": status
 "/storagetransfer:v1/Status/code": code
 "/storagetransfer:v1/Status/message": message
@@ -28744,7 +28744,7 @@
 "/sheets:v4/BatchUpdateValuesResponse/totalUpdatedSheets": total_updated_sheets
 "/sheets:v4/BatchUpdateValuesResponse/totalUpdatedColumns": total_updated_columns
 "/sheets:v4/BatchUpdateValuesResponse/responses": responses
-"/sheets:v4/BatchUpdateValuesResponse/responses/response": response
+"/sheets:v4/BatchUpdateValuesResponse/responses/response": videoInstanceResponse
 "/sheets:v4/BatchUpdateValuesResponse/totalUpdatedCells": total_updated_cells
 "/sheets:v4/BatchUpdateValuesResponse/spreadsheetId": spreadsheet_id
 "/sheets:v4/BatchUpdateValuesResponse/totalUpdatedRows": total_updated_rows
@@ -28797,7 +28797,7 @@
 "/sheets:v4/DimensionRange/endIndex": end_index
 "/sheets:v4/DimensionRange/startIndex": start_index
 "/sheets:v4/DimensionRange/dimension": dimension
-"/sheets:v4/Response": response
+"/sheets:v4/Response": videoInstanceResponse
 "/sheets:v4/Response/updateEmbeddedObjectPosition": update_embedded_object_position
 "/sheets:v4/Response/addFilterView": add_filter_view
 "/sheets:v4/Response/addSheet": add_sheet
@@ -29460,7 +29460,7 @@
 "/slides:v1/OpaqueColor": opaque_color
 "/slides:v1/OpaqueColor/rgbColor": rgb_color
 "/slides:v1/OpaqueColor/themeColor": theme_color
-"/slides:v1/Response": response
+"/slides:v1/Response": videoInstanceResponse
 "/slides:v1/Response/createTable": create_table
 "/slides:v1/Response/replaceAllText": replace_all_text
 "/slides:v1/Response/createLine": create_line
@@ -29841,8 +29841,8 @@
 "/speech:v1beta1/Operation/done": done
 "/speech:v1beta1/Operation/metadata": metadata
 "/speech:v1beta1/Operation/metadata/metadatum": metadatum
-"/speech:v1beta1/Operation/response": response
-"/speech:v1beta1/Operation/response/response": response
+"/speech:v1beta1/Operation/response": videoInstanceResponse
+"/speech:v1beta1/Operation/response/response": videoInstanceResponse
 "/speech:v1beta1/Operation/name": name
 "/speech:v1beta1/SpeechRecognitionAlternative": speech_recognition_alternative
 "/speech:v1beta1/SpeechRecognitionAlternative/transcript": transcript
@@ -31381,7 +31381,7 @@
 "/vision:v1/Feature/maxResults": max_results
 "/vision:v1/BatchAnnotateImagesResponse": batch_annotate_images_response
 "/vision:v1/BatchAnnotateImagesResponse/responses": responses
-"/vision:v1/BatchAnnotateImagesResponse/responses/response": response
+"/vision:v1/BatchAnnotateImagesResponse/responses/response": videoInstanceResponse
 "/vision:v1/ImageProperties": image_properties
 "/vision:v1/ImageProperties/dominantColors": dominant_colors
 "/vision:v1/LatLng": lat_lng

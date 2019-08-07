@@ -10,12 +10,13 @@ interface Api {
     @POST("/api/writer/videos")
     fun getVideoInstance(@Body request: VideoInstanceRequest): Single<VideoResponse>
 
+    @POST("/api/media/upload_token")
+    fun uploadToken(@Body request: VideoResponse): Single<TokenResponse>
+
     @Multipart
-    @POST("/api/writer/videos")
+    @POST("api/uploads")
     fun uploadVideo(@Part video: MultipartBody.Part): Single<VideoInstanceRequest>
 
-    @POST("/api/media/upload_token")
-    fun uploadToken(): Single<VideoInstanceRequest>
 
     @GET("api/events?")
     fun getEventData(@Query("starts_after=") time: Date): Single<EventsResponse?>

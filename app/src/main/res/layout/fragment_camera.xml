@@ -29,28 +29,37 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/hiddenEvents"
-        android:layout_width="200dp"
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/vert"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent=".8" />
+
+
+
+    <com.itsovertime.overtimecamera.play.camera.EventPickVIew
+        android:id="@+id/eventSpace"
+        android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:background="@android:drawable/screen_background_dark_transparent"
-        android:orientation="horizontal"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@id/bottomGuide"
+        android:background="@drawable/gradient"
+        app:layout_constraintBottom_toTopOf="@id/bottomGuide"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/verticalGuide"
-        app:layout_constraintTop_toTopOf="@id/topGuide" />
+        app:layout_constraintTop_toBottomOf="@id/topGuide" />
 
-     <com.itsovertime.overtimecamera.play.camera.EventPickVIew
-         android:id="@+id/eventSpace"
-         android:layout_width="wrap_content"
-         android:layout_height="0dp"
-         android:background="@drawable/gradient"
-         android:visibility="gone"
-         app:layout_constraintBottom_toTopOf="@id/bottomGuide"
-         app:layout_constraintEnd_toEndOf="parent"
-         app:layout_constraintStart_toStartOf="@id/verticalGuide"
-         app:layout_constraintTop_toBottomOf="@id/topGuide" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/hiddenEvents"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@android:drawable/screen_background_dark_transparent"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/bottomGuide"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/vert"
+            app:layout_constraintTop_toTopOf="@id/topGuide" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/verticalGuide"
@@ -196,12 +205,12 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-     <FrameLayout
-         android:id="@+id/fragContainerA"
-         android:layout_width="match_parent"
-         android:layout_height="match_parent">
+    <FrameLayout
+        android:id="@+id/fragContainerA"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        </FrameLayout>
+    </FrameLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

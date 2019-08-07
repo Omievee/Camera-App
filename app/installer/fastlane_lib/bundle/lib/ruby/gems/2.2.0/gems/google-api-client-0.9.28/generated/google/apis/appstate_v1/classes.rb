@@ -37,7 +37,7 @@ module Google
         attr_accessor :data
       
         # Uniquely identifies the type of this resource. Value is always the fixed
-        # string appstate#getResponse.
+        # string appstate#getVideoInstanceResponse.
         # Corresponds to the JSON property `kind`
         # @return [String]
         attr_accessor :kind

@@ -43,19 +43,22 @@ import javax.inject.Inject
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
     override fun openEvents() {
-        println("MADE IT")
+        presenter.expand(hiddenEvents)
         hiddenEvents.visibility = View.VISIBLE
+        eventSpace.visibility = View.GONE
+
     }
 
     override fun setUpEventViewData(event: String?, eventList: List<Event>?) {
         if (eventList.isNullOrEmpty()) {
             eventSpace.visibility = View.GONE
         }
+        selectedEvent = eventList?.get(0)
         eventTitle.text = event ?: ""
         println("List? ${eventList?.size}")
         evAdapter = EventsAdapter(eventList, listener)
         hiddenEvents.adapter = evAdapter
-        println("ADAP: $evAdapter")
+
     }
 
     override fun showOrHideViewsForCamera() {
@@ -347,7 +350,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     .doFinally {
                         when (isPaused) {
                             false -> {
-                                presenter.saveRecordingToDataBase()
+                                presenter.saveRecordingToDataBase(selectedEvent ?: return@doFinally)
 //                                startLiveView()
                             }
                             else -> presenter.deletePreviousFile()
@@ -460,9 +463,14 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         return inflater.inflate(R.layout.fragment_camera, container, false)
     }
 
+    var selectedEvent: Event? = null
     val listener: EventsClickListener = object : EventsClickListener {
         override fun onEventSelected(event: Event) {
-            println("event is : ${event.name}")
+            hiddenEvents.visibility = View.GONE
+            eventSpace.visibility = View.VISIBLE
+
+            selectedEvent = event
+            eventTitle.text = event.name
         }
     }
 

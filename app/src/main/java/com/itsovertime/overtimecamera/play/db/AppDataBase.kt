@@ -4,9 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 
-@Database(entities = [SavedVideo::class], version = 10)
+@Database(entities = [SavedVideo::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun videoDao(): VideoObjectDAO
@@ -18,14 +19,14 @@ abstract class AppDatabase : RoomDatabase() {
             if (databaseInstance == null) {
                 synchronized(AppDatabase::class) {
                     databaseInstance = Room
-                        .databaseBuilder(
-                            context
-                                .applicationContext,
-                            AppDatabase::class.java,
-                            "DB"
-                        )
-                        .fallbackToDestructiveMigration()
-                        .build()
+                            .databaseBuilder(
+                                    context
+                                            .applicationContext,
+                                    AppDatabase::class.java,
+                                    "DB"
+                            )
+                            .fallbackToDestructiveMigration()
+                            .build()
                 }
             }
             return databaseInstance

@@ -24,7 +24,6 @@
         android:id="@+id/eventTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/margin_half"
         android:background="@android:color/transparent"
         android:lines="1"
         android:maxLines="1"
