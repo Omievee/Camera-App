@@ -1,16 +1,13 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
 import com.itsovertime.overtimecamera.play.model.SavedVideo
-import com.itsovertime.overtimecamera.play.network.TokenResponse
-import com.itsovertime.overtimecamera.play.network.UploadRequest
-import com.itsovertime.overtimecamera.play.network.VideoInstanceRequest
-import com.itsovertime.overtimecamera.play.network.VideoResponse
+import com.itsovertime.overtimecamera.play.network.*
 import io.reactivex.Single
 
 interface UploadsManager {
 
     fun onUploadFavoriteMedQualityVideo(): Single<VideoInstanceRequest>
-    fun uploadVideos(data: TokenResponse): Single<UploadRequest>
+    fun uploadVideos(data: TokenResponse): Single<UploadResponse>
 
     fun onUploadMediumQualityVideo()
     fun onUploadHighQualityVideo()

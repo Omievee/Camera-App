@@ -111,6 +111,7 @@ class UploadsPresenter(
 
     var uploadDisposable: Disposable? = null
     private fun uploadVideo() {
+        println("Token Response::: ${tokenResponse}")
         uploadDisposable?.dispose()
         uploadDisposable =
                 uploadManager
