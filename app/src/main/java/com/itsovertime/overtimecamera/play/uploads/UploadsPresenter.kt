@@ -93,9 +93,8 @@ class UploadsPresenter(
         tokenDisposable?.dispose()
         tokenDisposable =
                 uploadManager
-                        .getTokenForLowQuality(response ?: return)
+                        .getAWSDataForUpload(response ?: return)
                         .doOnError {
-                            println("token error:: ${it.message}")
                         }
                         .map {
                             tokenResponse = it
@@ -115,12 +114,12 @@ class UploadsPresenter(
         uploadDisposable?.dispose()
         uploadDisposable =
                 uploadManager
-                        .uploadVideos(tokenResponse ?: return)
+                        .registerUploadForId(tokenResponse ?: return)
                         .doOnError {
 
                         }
                         .doOnSuccess {
-                            println("success from upload.... $it")
+                            println("success from upload.... ${it.upload?.id}")
                         }
                         .subscribe({
 

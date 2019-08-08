@@ -14,9 +14,11 @@ import java.security.NoSuchAlgorithmException
 class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManager: WifiManager) : UploadsManager {
 
 
-    override fun uploadVideos(data: TokenResponse): Single<UploadResponse> {
-        val request = UploadRequest(md5ForFile(favoriteVideos[0].trimmedVidPath
-                ?: ""), data.S3Bucket, data.S3Key, data.AccessKeyId, data.SecretAccessKey, data.SessionToken)
+    override fun registerUploadForId(data: TokenResponse): Single<UploadResponse> {
+
+        val request = UploadRequest(
+                md5ForFile(favoriteVideos[0].trimmedVidPath
+                        ?: ""), data.S3Bucket, data.S3Key, data.AccessKeyId, data.SecretAccessKey, data.SessionToken)
         return api
                 .uploadVideo(request)
                 .doOnSuccess {
@@ -30,15 +32,14 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
 
     }
 
-    override fun getTokenForLowQuality(response: VideoResponse): Single<TokenResponse> {
+    override fun getAWSDataForUpload(response: VideoResponse): Single<TokenResponse> {
         return api
                 .uploadToken(response)
                 .doOnSuccess {
-                    println("it?? $it")
-                }
 
+                }
                 .doOnError {
-                    println("Error... ${it.message}")
+
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -54,15 +55,12 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
                         latitude = favoriteVideos[0].latitude ?: 0.0,
                         longitude = favoriteVideos[0].longitude ?: 0.0
                 )
-
-
         return api
                 .getVideoInstance(request)
                 .doOnSuccess {
                     videoInstanceFromServer = it
                 }
                 .doOnError {
-                    println("it.... ${it.stackTrace}")
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

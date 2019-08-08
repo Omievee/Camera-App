@@ -1,11 +1,9 @@
 package com.itsovertime.overtimecamera.play.model
 
 import android.os.Parcelable
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.*
+import com.itsovertime.overtimecamera.play.uploads.UploadState
 import kotlinx.android.parcel.Parcelize
-import java.util.*
 
 
 @Parcelize
@@ -54,10 +52,35 @@ data class SavedVideo(
         @ColumnInfo(name = "updated")
         val updated_at: String? = null,
         @ColumnInfo(name = "isVideographer")
-        val isVideographer: Boolean = false
+        val isVideographer: Boolean = false,
+        @ColumnInfo(name = "uploadState")
+        @TypeConverters(enumConverter::class)
+        val uploadState: UploadState
 
 
 ) : Parcelable
+
+
+object enumConverter {
+    enum class UploadState(i: Int) {
+        QUEUED(0),
+        PAUSED(1),
+        REGISTERED(2),
+        UPLOADED_MEDIUM(3),
+        UPLOADED_HIGH(4),
+        COMPLETE(5),
+        UNKONWN(6)
+    }
+
+    @TypeConverter
+    @JvmStatic
+    fun toOrdinal(type: UploadState): Int = type.ordinal
+
+    @TypeConverter
+    @JvmStatic
+    fun toEnum(ordinal: Int): UploadState = UploadState.values().first { it.ordinal == ordinal }
+}
+
 
 //@ColumnInfo(name = "tagged")
 //val taggedUsers: List<TaggedUsers> = emptyList(),

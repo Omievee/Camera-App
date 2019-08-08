@@ -7,7 +7,7 @@ import io.reactivex.Single
 interface UploadsManager {
 
     fun onUploadFavoriteMedQualityVideo(): Single<VideoInstanceRequest>
-    fun uploadVideos(data: TokenResponse): Single<UploadResponse>
+    fun registerUploadForId(data: TokenResponse): Single<UploadResponse>
 
     fun onUploadMediumQualityVideo()
     fun onUploadHighQualityVideo()
@@ -15,6 +15,6 @@ interface UploadsManager {
     fun onReadyVideosForUpload(videoList: MutableList<SavedVideo>)
 
     fun getVideoInstance(): Single<VideoResponse>
-    fun getTokenForLowQuality(response: VideoResponse): Single<TokenResponse>
+    fun getAWSDataForUpload(response: VideoResponse): Single<TokenResponse>
 
 }
