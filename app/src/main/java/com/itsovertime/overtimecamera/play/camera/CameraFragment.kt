@@ -150,13 +150,14 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
             }
             R.id.pauseButton -> {
-                paused = true
-                releaseCamera()
                 pausedView.visibility = View.VISIBLE
+                paused = true
+
             }
             R.id.pausedView -> {
                 paused = false
                 pausedView.visibility = View.GONE
+                progress.visibility = View.VISIBLE
                 engageCamera()
             }
             R.id.hahaIcon -> {
@@ -209,17 +210,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @SuppressLint("CheckResult")
     @Synchronized
     override fun switchCameras() {
-        println("recording?? $recording")
         activity?.runOnUiThread {
             selfieButton.isEnabled = false
         }
-
+        println("recording?? $recording")
         CAMERA = if (CAMERA == 0) {
             1
         } else {
             0
         }
-        synchronized(this) {
+        synchronized(lock = this) {
             Single.fromCallable {
                 releaseCamera()
             }.subscribeOn(Schedulers.io())
@@ -289,45 +289,55 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                 add(s)
                             }
                         }
-                        previewRequestBuilder =
-                                cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-                                    this?.addTarget(previewSurface)
-                                    recorderSurface?.let { s ->
-                                        this?.addTarget(s)
-                                    }
-                                } ?: return@subscribe
+                        previewRequestBuilder = cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                            this?.addTarget(previewSurface)
+                            recorderSurface?.let { s ->
+                                this?.addTarget(s)
+                            }
+                        }!!
 
 
-                        cameraDevice?.createCaptureSession(
-                                surfaces, object : CameraCaptureSession.StateCallback() {
-                            override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                                captureSession = cameraCaptureSession
-                                previewRequestBuilder.set(
-                                        CaptureRequest.CONTROL_MODE,
-                                        CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
-                                )
-                                try {
-                                    setUpCaptureRequestBuilder(previewRequestBuilder)
-                                    HandlerThread("CameraPreview").start()
-                                    startRecordingThread()
-                                    captureSession?.setRepeatingRequest(
-                                            previewRequestBuilder.build(),
-                                            null, recordHandler
-                                    )
-                                } catch (e: CameraAccessException) {
-                                    Log.e("CameraMain", e.toString())
-                                } catch (ise: IllegalStateException) {
+
+                        synchronized(this) {
+                            cameraDevice?.createCaptureSession(surfaces, object : CameraCaptureSession.StateCallback() {
+                                override fun onClosed(session: CameraCaptureSession) {
+                                    super.onClosed(session)
+                                    println("Closed camera.... .$session")
                                 }
-                            }
 
-                            override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
-                                showToast("Failed $cameraCaptureSession")
-                            }
-                        }, null
-                        )
+                                override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                                    captureSession = cameraCaptureSession
+                                    previewRequestBuilder.set(
+                                            CaptureRequest.CONTROL_MODE,
+                                            CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
+                                    )
+                                    try {
+                                        setUpCaptureRequestBuilder(previewRequestBuilder)
+                                        HandlerThread("CameraPreview").start()
+                                        startRecordingThread()
+                                        captureSession?.setRepeatingRequest(
+                                                previewRequestBuilder.build(),
+                                                null, recordHandler
+                                        )
+
+                                    } catch (e: CameraAccessException) {
+                                        Log.e("CameraMain", e.toString())
+                                    } catch (ise: IllegalStateException) {
+                                    }
+                                }
+
+
+                                override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
+                                    showToast("Failed $cameraCaptureSession")
+                                }
+                            }, null
+                            )
+                        }
                     }, {
                         it.printStackTrace()
                     })
+
+
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         } catch (e: IOException) {
@@ -408,16 +418,18 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                         override fun onConfigured(session: CameraCaptureSession) {
                             captureSession = session
                             updatePreview()
+
                         }
 
                         override fun onConfigureFailed(session: CameraCaptureSession) {
                         }
                     }, backgroundHandler
             )
-            println("CAMERA?? $CAMERA")
+
             if (CAMERA == 0) {
                 startLiveView()
             }
+
 
         } catch (e: CameraAccessException) {
             e.printStackTrace()

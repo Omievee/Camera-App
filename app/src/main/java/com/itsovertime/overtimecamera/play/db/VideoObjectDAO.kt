@@ -27,7 +27,6 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET trimmedVidPath = :trimmedVidPath WHERE id = :lastID")
     fun updateTrimVideoPath(trimmedVidPath: String, lastID: String)
 
-
     @Query("SELECT * FROM SavedVideo")
     fun getVideos(): List<SavedVideo>
 }

@@ -14,6 +14,7 @@ import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.uploads.UploadState
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -24,7 +25,6 @@ import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
 import java.util.*
-import kotlin.math.max
 
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
@@ -57,18 +57,15 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     var commandCCopy = "-c"
     var copyVideo = "copy"
 
-    var maxEventTime: String? = ""
     private fun executeFFMPEG(savedVideo: SavedVideo) {
         println("execute started...")
         val newFile = fileForTrimmedVideo(File(savedVideo.vidPath).name)
-
-        println("Time... ${maxEventTime}")
-        val last12Or18Seconds = "-$lastVideoMaxTime"
+        val maxVideoLengthFromEvent = "-$lastVideoMaxTime"
         val complexCommand = arrayOf(
                 //seek to end of video
                 seekToEndOf,
-                //given amount of time from Event - 12s or 18s
-                last12Or18Seconds,
+                //given amount of time from Event -
+                maxVideoLengthFromEvent,
                 // Y command overwrites files w/ out permission
                 commandYOverwrite,
                 // I command reads from designated input file
@@ -264,7 +261,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     starts_at = event.starts_at,
                     address = event.address,
                     latitude = event.latitude,
-                    longitude = event.longitude
+                    longitude = event.longitude,
+                    uploadState = UploadState.QUEUED
             )
             val videoDao = db?.videoDao()
             with(videoDao) {

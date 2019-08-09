@@ -69,14 +69,13 @@
         app:layout_constraintGuide_percent=".85" />
 
 
-    <ImageButton
+    <Button
         android:id="@+id/selfieButton"
-        android:layout_width="35dp"
-        android:layout_height="0dp"
+        android:layout_width="50dp"
+        android:layout_height="30dp"
         android:layout_margin="@dimen/margin_standard"
-        android:background="@android:color/transparent"
+        android:background="@drawable/selfie_icon"
         android:rotation="90"
-        android:src="@drawable/selfie_icon"
         app:layout_constraintBottom_toTopOf="@id/topGuide"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

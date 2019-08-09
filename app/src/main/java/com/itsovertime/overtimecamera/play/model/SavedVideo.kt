@@ -9,7 +9,6 @@ import kotlinx.android.parcel.Parcelize
 @Parcelize
 @Entity(tableName = "SavedVideo")
 data class SavedVideo(
-
         @PrimaryKey
         @ColumnInfo(name = "id")
         val id: String,
@@ -54,23 +53,22 @@ data class SavedVideo(
         @ColumnInfo(name = "isVideographer")
         val isVideographer: Boolean = false,
         @ColumnInfo(name = "uploadState")
-        @TypeConverters(enumConverter::class)
         val uploadState: UploadState
-
-
 ) : Parcelable
+
+enum class UploadState {
+    QUEUED,
+    PAUSED,
+    REGISTERED,
+    UPLOADED_MEDIUM,
+    UPLOADED_HIGH,
+    COMPLETE,
+    UNKONWN
+}
 
 
 object enumConverter {
-    enum class UploadState(i: Int) {
-        QUEUED(0),
-        PAUSED(1),
-        REGISTERED(2),
-        UPLOADED_MEDIUM(3),
-        UPLOADED_HIGH(4),
-        COMPLETE(5),
-        UNKONWN(6)
-    }
+
 
     @TypeConverter
     @JvmStatic
