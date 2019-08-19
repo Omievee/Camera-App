@@ -10,10 +10,10 @@ import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import io.reactivex.disposables.Disposable
 
 class UploadsPresenter(
-    val view: UploadsFragment,
-    val manager: VideosManager,
-    val wifiManager: WifiManager,
-    val uploadManager: UploadsManager
+        val view: UploadsFragment,
+        val manager: VideosManager,
+        val wifiManager: WifiManager,
+        val uploadManager: UploadsManager
 ) {
 
 
@@ -33,35 +33,35 @@ class UploadsPresenter(
     private fun subscribeToVideosFromGallery() {
         managerDisposable?.dispose()
         managerDisposable = manager
-            .subscribeToVideoGallery()
-            .subscribe({
-                view.updateAdapter(it)
-                view.swipe2RefreshIsFalse()
-                if (!it?.isNullOrEmpty()!!) {
-                    getVideoInstance()
-                }
-            }, {
-                println("throwable: ${it.printStackTrace()}")
-            })
+                .subscribeToVideoGallery()
+                .subscribe({
+                    view.updateAdapter(it)
+                    view.swipe2RefreshIsFalse()
+                    if (!it?.isNullOrEmpty()!!) {
+                        getVideoInstance()
+                    }
+                }, {
+                    println("throwable: ${it.printStackTrace()}")
+                })
     }
 
     private var networkDisposable: Disposable? = null
     private fun subscribeToNetworkUpdates() {
         networkDisposable?.dispose()
         networkDisposable = wifiManager
-            .subscribeToNetworkUpdates()
-            .subscribe({
-                when (it) {
-                    NETWORK_TYPE.WIFI -> view.displayWifiReady()
+                .subscribeToNetworkUpdates()
+                .subscribe({
+                    when (it) {
+                        NETWORK_TYPE.WIFI -> view.displayWifiReady()
 //                    NETWORK_TYPE.MOBILE_LTE -> view.display
 //                    NETWORK_TYPE.MOBILE_EDGE -> view.display
-                    else -> view.displayNoNetworkConnection()
-                }
-                //  getVideoInstance()
+                        else -> view.displayNoNetworkConnection()
+                    }
+                    //  getVideoInstance()
 
-            }, {
-                it.printStackTrace()
-            })
+                }, {
+                    it.printStackTrace()
+                })
     }
 
 
@@ -69,20 +69,20 @@ class UploadsPresenter(
     private fun getVideoInstance() {
         instanceDisposable?.dispose()
         instanceDisposable =
-            uploadManager
-                .getVideoInstance()
-                .doOnError {
-                }
-                .map {
-                    videoInstanceResponse = it
-                }
-                .doOnSuccess {
-                    requestTokenForUpload(videoInstanceResponse)
-                }
-                .subscribe({
-                }, {
+                uploadManager
+                        .getVideoInstance()
+                        .doOnError {
+                        }
+                        .map {
+                            videoInstanceResponse = it
+                        }
+                        .doOnSuccess {
+                            requestTokenForUpload(videoInstanceResponse)
+                        }
+                        .subscribe({
+                        }, {
 
-                })
+                        })
     }
 
     var videoInstanceResponse: VideoInstanceResponse? = null
@@ -91,20 +91,20 @@ class UploadsPresenter(
     fun requestTokenForUpload(response: VideoInstanceResponse?) {
         awsDataDisposable?.dispose()
         awsDataDisposable =
-            uploadManager
-                .getAWSDataForUpload(response ?: return)
-                .doOnError {
-                }
-                .map {
-                    tokenResponse = it
-                }
-                .doOnSuccess {
-                    uploadVideo()
-                }
-                .subscribe({
-                }, {
+                uploadManager
+                        .getAWSDataForUpload(response ?: return)
+                        .doOnError {
+                        }
+                        .map {
+                            tokenResponse = it
+                        }
+                        .doOnSuccess {
+                            uploadVideo()
+                        }
+                        .subscribe({
+                        }, {
 
-                })
+                        })
     }
 
     var awsDataDisposable: Disposable? = null
@@ -113,22 +113,22 @@ class UploadsPresenter(
         println("Token Response::: ${tokenResponse}")
         tokenDisposable?.dispose()
         tokenDisposable =
-            uploadManager
-                .registerUploadForId(tokenResponse ?: return)
-                .map {
-                    encryptionResponse = it
-                }
-                .doOnError {
+                uploadManager
+                        .registerUploadForId(tokenResponse ?: return)
+                        .map {
+                            encryptionResponse = it
+                        }
+                        .doOnError {
 
-                }
-                .doOnSuccess {
-                    uploadRegisteredVideo(id = encryptionResponse?.upload?.id ?: "")
-                }
-                .subscribe({
+                        }
+                        .doOnSuccess {
+                            uploadRegisteredVideo(id = encryptionResponse?.upload?.id ?: "")
+                        }
+                        .subscribe({
 
-                }, {
+                        }, {
 
-                })
+                        })
 
     }
 
@@ -137,19 +137,19 @@ class UploadsPresenter(
         println("Continue with upload... .$id")
         uploadDisposable?.dispose()
         uploadDisposable =
-            uploadManager
-                .uploadVideo(id)
-                .doOnError {
-                        println("error from upload api... ${it.message}")
-                }
-                .doOnSuccess {
-                    println("success $it.... ")
-                }
-                .subscribe({
+                uploadManager
+                        .uploadVideo(id)
+                        .doOnError {
+                            println("error from upload api... ${it.message}")
+                        }
+                        .doOnSuccess {
+                            println("success $it.... ")
+                        }
+                        .subscribe({
 
-                }, {
+                        }, {
 
-                })
+                        })
 
     }
 

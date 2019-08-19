@@ -17,60 +17,62 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
     private var MIN_CHUNK_SIZE = 0.5 * 1024
     private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
     private var chunkSize = 1 * 1024
-    private var uploadRate: Double? = 0.0
+    private var uploadRate: Double = 0.0
     private var time = System.currentTimeMillis()
+
 
     override fun getVideoInstance(): Single<VideoInstanceResponse> {
         return api
-            .getVideoInstance(
-                VideoInstanceRequest(
-                    client_id = UUID.fromString(favoriteVideos[0].id),
-                    is_favorite = favoriteVideos[0].is_favorite,
-                    is_selfie = favoriteVideos[0].is_selfie,
-                    latitude = favoriteVideos[0].latitude ?: 0.0,
-                    longitude = favoriteVideos[0].longitude ?: 0.0
+                .getVideoInstance(
+                        VideoInstanceRequest(
+                                client_id = UUID.fromString(favoriteVideos[0].id),
+                                is_favorite = favoriteVideos[0].is_favorite,
+                                is_selfie = favoriteVideos[0].is_selfie,
+                                latitude = favoriteVideos[0].latitude ?: 0.0,
+                                longitude = favoriteVideos[0].longitude ?: 0.0
+                        )
                 )
-            )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
     }
 
     override fun registerUploadForId(data: TokenResponse): Single<EncryptedResponse> {
         return api
-            .uploadDataForMd5(
-                UploadRequest(
-                    md5ForFile(
-                        favoriteVideos[0].trimmedVidPath
-                            ?: ""
-                    ), data.S3Bucket, data.S3Key, data.AccessKeyId, data.SecretAccessKey, data.SessionToken
+                .uploadDataForMd5(
+                        UploadRequest(
+                                md5ForFile(
+                                        favoriteVideos[0].trimmedVidPath
+                                                ?: ""
+                                ), data.S3Bucket, data.S3Key, data.AccessKeyId, data.SecretAccessKey, data.SessionToken
+                        )
                 )
-            )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
     }
 
     override fun getAWSDataForUpload(response: VideoInstanceResponse): Single<TokenResponse> {
         return api
-            .uploadToken(response)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+                .uploadToken(response)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
     }
 
 
     override fun uploadVideo(id: String): Single<VideoUploadResponse> {
         println("Manager begins....  $id")
         return api
-            .uploadSelectedVideo(id = id, uploadIndex = 0)
-            .doOnSuccess {
-                println("Response from upload... ? $it")
-            }
-            .doOnError {
-                println("Manager Error:::::: ${it.message}")
-                println("Manager Error:::::: ${it.cause}")
-            }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+                .uploadSelectedVideo(id = id, uploadIndex = 1)
+                .doOnSuccess {
+                    println("Response from upload... ? $it")
+                }
+                .doOnError {
+                    println("Manager Error:::::: ${it.message}")
+                    println("Manager Error:::::: ${it.cause}")
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+
+
     }
 
     private var favoriteVideos = mutableListOf<SavedVideo>()
@@ -92,7 +94,7 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
         try {
             // Create MD5 Hash
             val digest = java.security.MessageDigest
-                .getInstance(MD5)
+                    .getInstance(MD5)
             digest.update(s.toByteArray())
             val messageDigest = digest.digest()
             // Create Hex String
