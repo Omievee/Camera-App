@@ -7,6 +7,7 @@ import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
@@ -47,10 +48,10 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
     }
 
     @SuppressLint("CheckResult")
-    fun animateProgressBar(progressBar: ProgressBar) {
-        val anim = ProgressBarAnimation(progressBar, 0, 12000)
-        anim.duration = 12000
-        progressBar.max = 12000
+    fun animateProgressBar(progressBar: ProgressBar, maxTime: Int) {
+        val anim = ProgressBarAnimation(progressBar, 0, maxTime * 1000)
+        anim.duration = (maxTime * 1000).toLong()
+        progressBar.max = maxTime * 1000
         progressBar.startAnimation(anim)
     }
 
@@ -114,7 +115,8 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
                     ev = it.events
                 }
                 .subscribe({
-                    view.setUpEventViewData(eventName, ev)
+                    view.setUpEventViewData(ev)
+                    view.updateEventTitle(eventName ?: "")
                 }, {
 
                 })
@@ -127,7 +129,7 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
     }
 
     fun expand(v: View) {
-        v.measure(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        v.measure(ConstraintLayout.LayoutParams.WRAP_CONTENT, ConstraintLayout.LayoutParams.WRAP_CONTENT)
         val targetHeight = v.measuredHeight
 
         v.layoutParams.height = 1
@@ -135,24 +137,21 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
 
         val animate = object : Animation() {
             override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                v.layoutParams.height = 0
+                v.layoutParams.height = if (interpolatedTime == 1f) ConstraintLayout.LayoutParams.WRAP_CONTENT else (targetHeight * interpolatedTime).toInt()
                 v.requestLayout()
             }
 
             override fun willChangeBounds(): Boolean {
                 return true
             }
-
-
         }
 
-        animate.duration = (targetHeight / v.context.resources.displayMetrics.density).toLong()
+        animate.duration = 2000
         v.startAnimation(animate)
     }
 
     fun collapse(v: View) {
         val initialHeight = v.measuredHeight
-
         val a = object : Animation() {
             override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
                 if (interpolatedTime == 1f) {
@@ -161,7 +160,6 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
                     v.layoutParams.height = initialHeight - (initialHeight * interpolatedTime).toInt()
                     v.requestLayout()
                 }
-
             }
 
             override fun willChangeBounds(): Boolean {
@@ -169,8 +167,16 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
             }
         }
 
-        a.duration = (initialHeight / v.context.resources.displayMetrics.density).toLong()
+        a.duration = 2000
         v.startAnimation(a)
+    }
+
+    fun changeEvent(event: String) {
+        view.updateEventTitle(event)
+    }
+
+    fun hideEvents() {
+        view.hideEventsRV()
     }
 
 }

@@ -21,12 +21,6 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
                         ?: ""), data.S3Bucket, data.S3Key, data.AccessKeyId, data.SecretAccessKey, data.SessionToken)
         return api
                 .uploadVideo(request)
-                .doOnSuccess {
-                    println("response id ::: ${it.upload?.id}")
-                }
-                .doOnError {
-                    println("Upload error... ${it.message}")
-                }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
 
@@ -35,12 +29,6 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
     override fun getAWSDataForUpload(response: VideoResponse): Single<TokenResponse> {
         return api
                 .uploadToken(response)
-                .doOnSuccess {
-
-                }
-                .doOnError {
-
-                }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
     }

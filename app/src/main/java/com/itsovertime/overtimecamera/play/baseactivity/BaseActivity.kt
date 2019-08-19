@@ -220,8 +220,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                     println("visi... ${it.isVisible}")
                     if (it.childFragmentManager.backStackEntryCount > 0) {
                         it.childFragmentManager.popBackStack()
-                    } else {
-                        //   finishAffinity()
+                    }
+                    if (CameraFragment().fragmentIsVisibleToUser ?: return && it.childFragmentManager.backStackEntryCount == 0) {
+                        finishAffinity()
                     }
                 }
             }

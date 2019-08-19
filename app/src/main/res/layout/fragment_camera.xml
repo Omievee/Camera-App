@@ -66,18 +66,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent=".85" />
+        app:layout_constraintGuide_begin="350dp" />
 
 
     <Button
         android:id="@+id/selfieButton"
-        android:layout_width="50dp"
-        android:layout_height="30dp"
+        android:layout_width="0dp"
+        android:layout_height="25dp"
         android:layout_margin="@dimen/margin_standard"
         android:background="@drawable/selfie_icon"
         android:rotation="90"
         app:layout_constraintBottom_toTopOf="@id/topGuide"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/verticalGuide"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton

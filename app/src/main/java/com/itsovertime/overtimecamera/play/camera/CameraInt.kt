@@ -15,7 +15,10 @@ interface CameraInt {
     fun updateUploadsIconCount(count: String)
     fun stopProgressAnimation()
     fun showOrHideViewsForCamera()
-    fun setUpEventViewData(event: String?, eventList: List<Event>?)
+    fun setUpEventViewData(eventList: List<Event>?)
+    fun updateEventTitle(event: String)
     fun openEvents()
+    fun hideEventsRV()
+
 
 }

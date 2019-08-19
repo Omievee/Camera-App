@@ -33,14 +33,12 @@ class UploadsPresenter(
         managerDisposable?.dispose()
         managerDisposable = manager
                 .subscribeToVideoGallery()
-                .map {
+                .subscribe({
                     view.updateAdapter(it)
                     view.swipe2RefreshIsFalse()
-                    if (!it?.isNullOrEmpty()) {
+                    if (!it?.isNullOrEmpty()!!) {
                         getVideoInstance()
                     }
-
-                }.subscribe({
                 }, {
                     println("throwable: ${it.printStackTrace()}")
                 })
