@@ -9,7 +9,7 @@ interface UploadsManager {
     fun getVideoInstance(): Single<VideoInstanceResponse>
     fun registerUploadForId(data: TokenResponse): Single<EncryptedResponse>
     fun getAWSDataForUpload(response: VideoInstanceResponse): Single<TokenResponse>
-    fun uploadVideo(id: String): Single<VideoUploadResponse>
+    fun uploadVideo(upload: Upload): Single<VideoUploadResponse>
 
     fun onUploadFavoriteMedQualityVideo(): Single<VideoInstanceRequest>
     fun onUploadMediumQualityVideo()

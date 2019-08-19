@@ -1,6 +1,6 @@
 package com.itsovertime.overtimecamera.play.network
 
-class VideoUploadResponse {
+data class VideoUploadResponse(val id: String) {
 
 
 }

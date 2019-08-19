@@ -36,7 +36,9 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
                 .observeOn(AndroidSchedulers.mainThread())
     }
 
+    var data: TokenResponse? = null
     override fun registerUploadForId(data: TokenResponse): Single<EncryptedResponse> {
+        this.data = data
         return api
                 .uploadDataForMd5(
                         UploadRequest(
@@ -58,21 +60,18 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
     }
 
 
-    override fun uploadVideo(id: String): Single<VideoUploadResponse> {
-        println("Manager begins....  $id")
+    override fun uploadVideo(upload: Upload): Single<VideoUploadResponse> {
         return api
-                .uploadSelectedVideo(id = id, uploadIndex = 1)
+                .uploadSelectedVideo(id = upload.id
+                        ?: "", chunk = 0, data = VideoUploadRequest(upload.md5, favoriteVideos[0].mediumVidPath))
                 .doOnSuccess {
                     println("Response from upload... ? $it")
                 }
                 .doOnError {
-                    println("Manager Error:::::: ${it.message}")
-                    println("Manager Error:::::: ${it.cause}")
+                    println("Manager Error:::::: ${it.printStackTrace()}")
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-
-
     }
 
     private var favoriteVideos = mutableListOf<SavedVideo>()

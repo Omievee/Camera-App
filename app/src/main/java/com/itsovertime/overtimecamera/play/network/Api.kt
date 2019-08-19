@@ -21,9 +21,8 @@ interface Api {
 
     /*Step 4: Upload for selected video*/
 
-
-    @POST("api/uploads/{id}/{video.uploadPartIndex}")
-    fun uploadSelectedVideo(@Path("id") id: String, @Path("video.uploadPartIndex") uploadIndex: Int): Single<VideoUploadResponse>
+    @POST("api/uploads/{id}/{uploadPartIndex}")
+    fun uploadSelectedVideo(@Path("id") id: String, @Path("uploadPartIndex") chunk: Int, @Body data: VideoUploadRequest): Single<VideoUploadResponse>
 
     /*Events endpoint*/
     @GET("api/events?")

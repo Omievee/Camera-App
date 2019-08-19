@@ -2,6 +2,7 @@ package com.itsovertime.overtimecamera.play.uploads
 
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
+import com.itsovertime.overtimecamera.play.network.Upload
 import com.itsovertime.overtimecamera.play.network.VideoInstanceResponse
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
@@ -110,7 +111,6 @@ class UploadsPresenter(
     var awsDataDisposable: Disposable? = null
     var encryptionResponse: EncryptedResponse? = null
     private fun uploadVideo() {
-        println("Token Response::: ${tokenResponse}")
         tokenDisposable?.dispose()
         tokenDisposable =
                 uploadManager
@@ -122,7 +122,8 @@ class UploadsPresenter(
 
                         }
                         .doOnSuccess {
-                            uploadRegisteredVideo(id = encryptionResponse?.upload?.id ?: "")
+                            uploadRegisteredVideo(upload = encryptionResponse?.upload
+                                    ?: return@doOnSuccess)
                         }
                         .subscribe({
 
@@ -133,12 +134,11 @@ class UploadsPresenter(
     }
 
     var uploadDisposable: Disposable? = null
-    private fun uploadRegisteredVideo(id: String) {
-        println("Continue with upload... .$id")
+    private fun uploadRegisteredVideo(upload: Upload) {
         uploadDisposable?.dispose()
         uploadDisposable =
                 uploadManager
-                        .uploadVideo(id)
+                        .uploadVideo(upload)
                         .doOnError {
                             println("error from upload api... ${it.message}")
                         }
@@ -146,8 +146,9 @@ class UploadsPresenter(
                             println("success $it.... ")
                         }
                         .subscribe({
-
+                            println("subscrive... $it")
                         }, {
+                            println("throwable.... ${it.message}")
 
                         })
 
