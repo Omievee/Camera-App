@@ -12,15 +12,16 @@ import java.security.NoSuchAlgorithmException
 
 
 class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManager: WifiManager) : UploadsManager {
-
+    private var MIN_CHUNK_SIZE = 0.5 * 1024
+    private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
+    private var chunkSize = 1 * 1024
 
     override fun registerUploadForId(data: TokenResponse): Single<UploadResponse> {
 
-        val request = UploadRequest(
-                md5ForFile(favoriteVideos[0].trimmedVidPath
-                        ?: ""), data.S3Bucket, data.S3Key, data.AccessKeyId, data.SecretAccessKey, data.SessionToken)
         return api
-                .uploadVideo(request)
+                .uploadVideo(UploadRequest(
+                        md5ForFile(favoriteVideos[0].trimmedVidPath
+                                ?: ""), data.S3Bucket, data.S3Key, data.AccessKeyId, data.SecretAccessKey, data.SessionToken))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
 
