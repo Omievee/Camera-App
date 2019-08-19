@@ -20,9 +20,11 @@ interface Api {
     fun uploadDataForMd5(@Body token: UploadRequest): Single<EncryptedResponse>
 
     /*Step 4: Upload for selected video*/
-
     @POST("api/uploads/{id}/{uploadPartIndex}")
-    fun uploadSelectedVideo(@Path("id") id: String, @Path("uploadPartIndex") chunk: Int, @Body data: VideoUploadRequest): Single<VideoUploadResponse>
+    fun uploadSelectedVideo(@Path("id") id: String, @Path("uploadPartIndex") chunk: Double, @Body data: VideoUploadRequest): Single<VideoUploadResponse>
+
+
+
 
     /*Events endpoint*/
     @GET("api/events?")

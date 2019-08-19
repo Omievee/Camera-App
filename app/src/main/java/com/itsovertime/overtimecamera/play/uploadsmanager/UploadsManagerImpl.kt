@@ -63,12 +63,9 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
     override fun uploadVideo(upload: Upload): Single<VideoUploadResponse> {
         return api
                 .uploadSelectedVideo(id = upload.id
-                        ?: "", chunk = 0, data = VideoUploadRequest(upload.md5, favoriteVideos[0].mediumVidPath))
+                        ?: "", chunk = 0.0, data = VideoUploadRequest(upload.md5))
                 .doOnSuccess {
                     println("Response from upload... ? $it")
-                }
-                .doOnError {
-                    println("Manager Error:::::: ${it.printStackTrace()}")
                 }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -76,9 +73,12 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
 
     private var favoriteVideos = mutableListOf<SavedVideo>()
     private var standardVideos = mutableListOf<SavedVideo>()
+
     override fun onReadyVideosForUpload(videoList: MutableList<SavedVideo>) {
+
         favoriteVideos.clear()
         standardVideos.clear()
+
         videoList.forEach {
             when (it.is_favorite) {
                 true -> favoriteVideos.add(it)
@@ -86,7 +86,6 @@ class UploadsManagerImpl(val context: OTApplication, val api: Api, val wifiManag
             }
         }
     }
-
 
     private fun md5ForFile(s: String): String {
         val MD5 = "MD5"
