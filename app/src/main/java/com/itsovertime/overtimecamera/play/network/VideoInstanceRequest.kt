@@ -24,7 +24,7 @@ data class VideoInstanceRequest(
 ) : Parcelable
 
 @Parcelize
-data class VideoResponse(
+data class VideoInstanceResponse(
         val video: Video
 ) : Parcelable
 

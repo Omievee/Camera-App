@@ -405,7 +405,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }
             timer.schedule(timerTask, 7000)
         }
-
     }
 
     override fun onAttach(context: Context?) {
