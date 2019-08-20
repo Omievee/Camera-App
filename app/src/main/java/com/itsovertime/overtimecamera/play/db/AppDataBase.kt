@@ -9,7 +9,7 @@ import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.enumConverter
 
-@Database(entities = [SavedVideo::class], version = 3)
+@Database(entities = [SavedVideo::class], version = 1)
 @TypeConverters(value = [enumConverter::class])
 abstract class AppDatabase : RoomDatabase() {
 

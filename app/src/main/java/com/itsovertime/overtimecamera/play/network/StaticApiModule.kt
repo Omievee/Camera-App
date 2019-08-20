@@ -86,18 +86,3 @@ class StaticApiModule {
 
 }
 
-//
-//class UUIDAdapter : JsonAdapter<UUID>() {
-//
-//    @Synchronized
-//    override fun fromJson(reader: JsonReader): UUID? {
-//        val uuid = reader.nextString()
-//        return uuid
-//    }
-//
-//
-//    override fun toJson(writer: JsonWriter, value: UUID?) {
-//        writer.value()
-//    }
-//
-//}

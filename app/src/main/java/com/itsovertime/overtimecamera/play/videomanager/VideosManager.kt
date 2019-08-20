@@ -14,4 +14,6 @@ interface VideosManager {
     fun transcodeVideo(videoFile: File)
     fun updateVideoFavorite(isFavorite: Boolean)
     fun updateVideoFunny(isFunny: Boolean)
+    fun updateVideoMd5(md5:String,clientId:String)
+    fun updateUploadId(uploadId:String, clientId:String)
 }

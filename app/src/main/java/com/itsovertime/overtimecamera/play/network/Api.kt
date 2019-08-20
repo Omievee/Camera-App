@@ -1,11 +1,13 @@
 package com.itsovertime.overtimecamera.play.network
 
+import android.net.Uri
+import com.itsovertime.overtimecamera.play.model.SavedVideo
 import io.reactivex.Single
 import retrofit2.http.*
+import java.io.File
 import java.util.*
 
 interface Api {
-
 
     /*  Step 1: Post for Video Instance */
     @POST("/api/writer/videos")
@@ -20,14 +22,17 @@ interface Api {
     fun uploadDataForMd5(@Body token: UploadRequest): Single<EncryptedResponse>
 
     /*Step 4: Upload for selected video*/
-    @POST("api/uploads/{id}/{uploadPartIndex}")
-    fun uploadSelectedVideo(@Path("id") id: String, @Path("uploadPartIndex") chunk: Double, @Body data: VideoUploadRequest): Single<VideoUploadResponse>
-
-
-
+    @POST("api/uploads/{videoId}/{uploadChunk}")
+    fun uploadSelectedVideo(
+        @Header("Content-Type") typeHeader: String, @Header("Content-MD5") md5Header: String, @Path("videoId") videoId: String, @Path(
+            "uploadChunk"
+        ) uploadChunk: Int
+    ): Single<VideoUploadResponse>
 
     /*Events endpoint*/
     @GET("api/events?")
     fun getEventData(@Query("starts_after=") time: Date): Single<EventsResponse?>
+
+
 }
 

@@ -120,7 +120,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun onStop() {
-        //  stopService(Intent(this, NetworkSchedulerService::class.java))
+        stopService(Intent(this, NetworkSchedulerService::class.java))
         super.onStop()
     }
 
@@ -210,6 +210,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         supportFragmentManager.fragments.forEach {
             when (it) {
                 is UploadsFragment -> {
+                    println("uploads..... ${it.isVisible}")
                     if (it.childFragmentManager.backStackEntryCount > 0) {
                         it.childFragmentManager.popBackStack()
                     } else if (it.childFragmentManager.backStackEntryCount == 0 && viewPager.currentItem == 1) {
@@ -217,7 +218,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                     }
                 }
                 is CameraFragment -> {
-                    println("visi... ${it.isVisible}")
+                    println("camera..... ${it.isVisible}")
                     if (it.childFragmentManager.backStackEntryCount > 0) {
                         it.childFragmentManager.popBackStack()
                     }
@@ -245,7 +246,7 @@ class CustomViewPageAdapter(fragmentManager: FragmentManager, private val isMain
     override fun getCount(): Int {
         TABS = when (isMainViewPager) {
             true -> 2
-            false -> 4
+            else -> 4
         }
         return TABS
     }

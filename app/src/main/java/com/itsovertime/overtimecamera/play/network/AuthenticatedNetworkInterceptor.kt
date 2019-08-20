@@ -20,5 +20,4 @@ class AuthenticatedNetworkInterceptor : Interceptor {
     }
 }
 
-
 //Todo: User pref for tokens..
