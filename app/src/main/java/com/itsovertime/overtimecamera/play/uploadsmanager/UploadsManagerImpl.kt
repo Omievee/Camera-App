@@ -6,9 +6,11 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.network.*
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.BehaviorSubject
 import retrofit2.http.FormUrlEncoded
 import java.io.File
 import java.util.*
@@ -21,15 +23,21 @@ class UploadsManagerImpl(
     val api: Api,
     val manager: WifiManager
 ) : UploadsManager {
+    override fun onCurrentVideoId(): Observable<String> {
+        return subject
+            .observeOn(Schedulers.io())
+            .subscribeOn(AndroidSchedulers.mainThread())
+    }
 
     private var MIN_CHUNK_SIZE = 0.5 * 1024
     private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
     private var chunkSize = 1 * 1024
     private var uploadRate: Double = 0.0
     private var time = System.currentTimeMillis()
-
+    private val subject: BehaviorSubject<String> = BehaviorSubject.create()
 
     override fun getVideoInstance(): Single<VideoInstanceResponse> {
+        subject.onNext(favoriteVideos[0].clientId)
         return api
             .getVideoInstance(
                 VideoInstanceRequest(

@@ -246,7 +246,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     var cameraIsClosed: Boolean = false
     override fun closeCamera() {
-        println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Closing camera......")
         cameraIsClosed = true
         try {
             cameraOpenCloseLock.acquire()
@@ -427,24 +426,28 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             closePreviewSession()
             val texture = txView?.surfaceTexture
             texture?.setDefaultBufferSize(videoSize?.width ?: 0, videoSize?.height ?: 0)
-            cameraDevice?.let {
-                previewRequestBuilder = it.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+
+            if (!cameraIsClosed) {
+                cameraDevice?.let {
+                    previewRequestBuilder = it.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+                }
+                val previewSurface = Surface(texture)
+                previewRequestBuilder.addTarget(previewSurface)
+                cameraDevice?.createCaptureSession(
+                    listOf(previewSurface),
+                    object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) {
+                            captureSession = session
+                            updatePreview()
+
+                        }
+
+                        override fun onConfigureFailed(session: CameraCaptureSession) {
+                        }
+                    }, backgroundHandler
+                )
             }
-            val previewSurface = Surface(texture)
-            previewRequestBuilder.addTarget(previewSurface)
-            cameraDevice?.createCaptureSession(
-                listOf(previewSurface),
-                object : CameraCaptureSession.StateCallback() {
-                    override fun onConfigured(session: CameraCaptureSession) {
-                        captureSession = session
-                        updatePreview()
 
-                    }
-
-                    override fun onConfigureFailed(session: CameraCaptureSession) {
-                    }
-                }, backgroundHandler
-            )
 
             if (CAMERA == 0) {
                 startLiveView()

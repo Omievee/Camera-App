@@ -118,7 +118,6 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefre
         super.onDestroy()
         presenter.onDestroy()
     }
-    //https://admin.itsovertime.com/videos/
 
     companion object {
         @JvmStatic

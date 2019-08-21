@@ -26,8 +26,21 @@ class UploadsPresenter(
         view.swipe2RefreshIsTrue()
         subscribeToVideosFromGallery()
         subscribeToNetworkUpdates()
+        subscribeToCurrentVideoBeingUploaded()
 
+    }
 
+    var clientIdDisposable: Disposable? = null
+    var clientId: String? = ""
+    private fun subscribeToCurrentVideoBeingUploaded() {
+        clientIdDisposable?.dispose()
+        clientIdDisposable = uploadManager
+            .onCurrentVideoId()
+            .subscribe({
+                clientId = it
+            }, {
+
+            })
     }
 
     var managerDisposable: Disposable? = null
@@ -126,8 +139,8 @@ class UploadsPresenter(
 
                 }
                 .doOnSuccess {
-                    manager.updateVideoMd5(encryptionResponse?.upload?.md5 ?: "", "")
-                    manager.updateUploadId(encryptionResponse?.upload?.id ?: "", "")
+                    manager.updateVideoMd5(encryptionResponse?.upload?.md5 ?: "", clientId ?: "")
+                    manager.updateUploadId(encryptionResponse?.upload?.id ?: "", clientId ?: "")
                     uploadRegisteredVideo(
                         upload = encryptionResponse?.upload
                             ?: return@doOnSuccess
@@ -154,7 +167,7 @@ class UploadsPresenter(
                     println("success $it.... ")
                 }
                 .subscribe({
-                    println("subscrive... $it")
+
                 }, {
                     println("throwable.... ${it.message}")
 
@@ -168,6 +181,7 @@ class UploadsPresenter(
         networkDisposable?.dispose()
         instanceDisposable?.dispose()
         tokenDisposable?.dispose()
+        clientIdDisposable?.dispose()
     }
 
     fun displayBottomSheetSettings() {
