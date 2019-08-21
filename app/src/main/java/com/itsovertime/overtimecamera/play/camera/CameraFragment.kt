@@ -231,20 +231,20 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             Single.fromCallable {
                 releaseCamera()
             }.subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doFinally {
-                        engageCamera()
-                    }
-                    .subscribe({
-                    }, {
-                    })
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    engageCamera()
+                }
+                .subscribe({
+                }, {
+                })
         }
 
         presenter.determineViewsForCameraId()
 
     }
 
-    var cameraIsClosed: Boolean = true
+    var cameraIsClosed: Boolean = false
     override fun closeCamera() {
         println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Closing camera......")
         cameraIsClosed = true
@@ -273,46 +273,47 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             Single.fromCallable {
                 setUpMediaRecorder()
             }.subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doFinally {
-                        activity?.runOnUiThread {
-                            progress.visibility = View.GONE
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    activity?.runOnUiThread {
+                        progress.visibility = View.GONE
+                    }
+                }
+                .map {
+                    mediaRecorder = it
+                }
+                .doOnSuccess {
+                    mediaRecorder?.start()
+                }
+                .subscribe({
+                    val texture = txView?.surfaceTexture.apply {
+                        this?.setDefaultBufferSize(
+                            videoSize?.width ?: 0, videoSize?.height
+                                ?: 0
+                        )
+                    }
+                    val previewSurface = Surface(texture)
+                    val recorderSurface = mediaRecorder?.surface
+                    val surfaces = ArrayList<Surface>().apply {
+                        add(previewSurface)
+                        recorderSurface?.let { s ->
+                            add(s)
                         }
                     }
-                    .map {
-                        mediaRecorder = it
-                    }
-                    .doOnSuccess {
-                        mediaRecorder?.start()
-                    }
-                    .subscribe({
-                        val texture = txView?.surfaceTexture.apply {
-                            this?.setDefaultBufferSize(
-                                    videoSize?.width ?: 0, videoSize?.height
-                                    ?: 0
-                            )
-                        }
-                        val previewSurface = Surface(texture)
-                        val recorderSurface = mediaRecorder?.surface
-                        val surfaces = ArrayList<Surface>().apply {
-                            add(previewSurface)
-                            recorderSurface?.let { s ->
-                                add(s)
-                            }
-                        }
 
-                        println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~camera closed check.... $cameraIsClosed")
-                        if (cameraDevice != null && !cameraIsClosed) {
-                            synchronized(this) {
-                                previewRequestBuilder = cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                    println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~camera closed check.... $cameraIsClosed")
+                    if (!cameraIsClosed) {
+                        synchronized(this) {
+                            previewRequestBuilder =
+                                cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
                                     this?.addTarget(previewSurface)
                                     recorderSurface?.let { s ->
                                         this?.addTarget(s)
                                     }
                                 } ?: return@subscribe
 
-                                cameraDevice?.createCaptureSession(
-                                        surfaces, object : CameraCaptureSession.StateCallback() {
+                            cameraDevice?.createCaptureSession(
+                                surfaces, object : CameraCaptureSession.StateCallback() {
                                     override fun onClosed(session: CameraCaptureSession) {
                                         super.onClosed(session)
                                         println("CLOSED::::: $session")
@@ -321,16 +322,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                     override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                                         captureSession = cameraCaptureSession
                                         previewRequestBuilder.set(
-                                                CaptureRequest.CONTROL_MODE,
-                                                CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
+                                            CaptureRequest.CONTROL_MODE,
+                                            CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
                                         )
                                         try {
                                             setUpCaptureRequestBuilder(previewRequestBuilder)
                                             HandlerThread("CameraPreview").start()
                                             startRecordingThread()
                                             captureSession?.setRepeatingRequest(
-                                                    previewRequestBuilder.build(),
-                                                    null, recordHandler
+                                                previewRequestBuilder.build(),
+                                                null, recordHandler
                                             )
 
                                         } catch (e: CameraAccessException) {
@@ -344,12 +345,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                         showToast("Failed $cameraCaptureSession")
                                     }
                                 }, null
-                                )
-                            }
+                            )
                         }
-                    }, {
-                        it.printStackTrace()
-                    })
+                    }
+                }, {
+                    it.printStackTrace()
+                })
 
 
         } catch (e: CameraAccessException) {
@@ -370,21 +371,21 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     reset()
                 }
             }.subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doFinally {
-                        when (isPaused) {
-                            false -> {
-                                presenter.saveRecordingToDataBase(selectedEvent ?: return@doFinally)
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    when (isPaused) {
+                        false -> {
+                            presenter.saveRecordingToDataBase(selectedEvent ?: return@doFinally)
 //                                startLiveView()
-                            }
-                            else -> deleteUnsavedFile()
                         }
-
+                        else -> deleteUnsavedFile()
                     }
-                    .subscribe({
-                    }, {
-                        it.printStackTrace()
-                    })
+
+                }
+                .subscribe({
+                }, {
+                    it.printStackTrace()
+                })
         } catch (r: RuntimeException) {
             r.printStackTrace()
         } catch (e: java.lang.IllegalStateException) {
@@ -432,17 +433,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             val previewSurface = Surface(texture)
             previewRequestBuilder.addTarget(previewSurface)
             cameraDevice?.createCaptureSession(
-                    listOf(previewSurface),
-                    object : CameraCaptureSession.StateCallback() {
-                        override fun onConfigured(session: CameraCaptureSession) {
-                            captureSession = session
-                            updatePreview()
+                listOf(previewSurface),
+                object : CameraCaptureSession.StateCallback() {
+                    override fun onConfigured(session: CameraCaptureSession) {
+                        captureSession = session
+                        updatePreview()
 
-                        }
+                    }
 
-                        override fun onConfigureFailed(session: CameraCaptureSession) {
-                        }
-                    }, backgroundHandler
+                    override fun onConfigureFailed(session: CameraCaptureSession) {
+                    }
+                }, backgroundHandler
             )
 
             if (CAMERA == 0) {
@@ -477,8 +478,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             setUpCaptureRequestBuilder(previewRequestBuilder)
             HandlerThread("CameraPreview").start()
             captureSession?.setRepeatingRequest(
-                    previewRequestBuilder.build(),
-                    null, backgroundHandler
+                previewRequestBuilder.build(),
+                null, backgroundHandler
             )
         } catch (e: CameraAccessException) {
             Log.e("CameraMain", e.toString())
@@ -567,17 +568,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             closeCamera()
             stopBackgroundThread()
         }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally {
-                    if (recording) {
-                        paused = true
-                        stopLiveView(paused, selfieCameraEngaged ?: false)
-                        presenter.clearProgressAnimation()
-                    }
+            .observeOn(AndroidSchedulers.mainThread())
+            .doFinally {
+                if (recording) {
+                    paused = true
+                    stopLiveView(paused, selfieCameraEngaged ?: false)
+                    presenter.clearProgressAnimation()
                 }
-                .subscribe({
-                }, {
-                })
+            }
+            .subscribe({
+            }, {
+            })
     }
 
     private fun getEventData() {
@@ -608,9 +609,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     fun showToast(message: String) {
         Toast.makeText(
-                context,
-                message,
-                Toast.LENGTH_LONG
+            context,
+            message,
+            Toast.LENGTH_LONG
         ).show()
     }
 
@@ -632,7 +633,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
             val characteristics = manager?.getCameraCharacteristics(cameraId)
             val map = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                    ?: throw RuntimeException("Cannot get available preview/video sizes")
+                ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
 
@@ -760,10 +761,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
 
     private fun chooseOptimalSize(
-            choices: Array<Size>,
-            width: Int,
-            height: Int,
-            aspectRatio: Size
+        choices: Array<Size>,
+        width: Int,
+        height: Int,
+        aspectRatio: Size
     ): Size {
 
         val w = aspectRatio.width
@@ -786,6 +787,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
 class Compare : Comparator<Size> {
     override fun compare(lhs: Size, rhs: Size) =
-            Long.signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
+        Long.signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
 }
 
