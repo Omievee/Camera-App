@@ -1,21 +1,23 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.network.*
-import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import retrofit2.http.FormUrlEncoded
-import java.io.File
-import java.util.*
+import okhttp3.MediaType
+import java.io.*
 import java.security.NoSuchAlgorithmException
-import javax.inject.Inject
+import java.util.*
+import okhttp3.RequestBody
+import okhttp3.MultipartBody
+import com.facebook.common.file.FileUtils
 
 
 class UploadsManagerImpl(
@@ -23,6 +25,8 @@ class UploadsManagerImpl(
     val api: Api,
     val manager: WifiManager
 ) : UploadsManager {
+
+
     override fun onCurrentVideoId(): Observable<String> {
         return subject
             .observeOn(Schedulers.io())
@@ -54,7 +58,6 @@ class UploadsManagerImpl(
 
 
     override fun registerUploadForId(data: TokenResponse): Single<EncryptedResponse> {
-        println("made it")
         val md5 = md5ForFile(favoriteVideos[0].trimmedVidPath ?: "")
 
         return api
@@ -74,15 +77,31 @@ class UploadsManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-
     override fun uploadVideo(upload: Upload): Single<VideoUploadResponse> {
+        val file = splitFile(File(favoriteVideos[0].trimmedVidPath))[0]
 
-        println("Video: ${favoriteVideos[0]}}")
+        val requestFile = RequestBody.create(
+            MediaType.parse("application/octet-stream"), file
+        )
+        val requestMd5 = RequestBody.create(
+            MediaType.parse(context.contentResolver.getType(Uri.parse(upload.md5 ?: "")) ?: ""), upload.md5 ?: ""
+        )
+
+        val body =
+            MultipartBody.Part.createFormData("data", file.name, requestFile)
+
+        val md5 = RequestBody.create(
+            MultipartBody.FORM, upload.md5 ?: ""
+        )
 
         return api
             .uploadSelectedVideo(
-                typeHeader = "application/octet-stream", md5Header = upload.md5 ?: "", videoId = upload.id
-                    ?: "", uploadChunk = 0
+                md5Header = upload.md5 ?: "",
+                typeHeader = "application/octet-stream",
+                videoId = upload.id ?: "",
+                uploadChunk = 0,
+                description = md5,
+                file = body
             )
 
             .doOnSuccess {
@@ -97,6 +116,32 @@ class UploadsManagerImpl(
 
     private var favoriteVideos = mutableListOf<SavedVideo>()
     private var standardVideos = mutableListOf<SavedVideo>()
+
+    @Throws(IOException::class)
+    fun splitFile(f: File): List<File> {
+        var partCounter = 1
+        val result = arrayListOf<File>()
+        val sizeOfFiles = 1024 * 1024// 1MB
+        val buffer = ByteArray(sizeOfFiles) // create a buffer of bytes sized as the one chunk size
+        val bis = BufferedInputStream(FileInputStream(f))
+        val name = f.name
+        println("byte.. ${(bis.read(buffer)) > 0}")
+        while ((bis.read(buffer)) > 0) {
+            val newFile = File(
+                f.parent,
+                name + "." + String.format("%03d", partCounter++)
+            ) // naming files as <inputFileName>.001, <inputFileName>.002, ...
+            val out = FileOutputStream(newFile)
+            out.write(
+                buffer,
+                0,
+                chunkSize
+            )//tmp is chunk size. Need it for the last chunk, which could be less then 1 mb.
+            result.add(newFile)
+        }
+        return result
+    }
+
 
     override fun onReadyVideosForUpload(videoList: MutableList<SavedVideo>) {
 

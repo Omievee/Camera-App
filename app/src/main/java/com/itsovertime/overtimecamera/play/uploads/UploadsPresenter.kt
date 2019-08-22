@@ -34,16 +34,17 @@ class UploadsPresenter(
     var clientId: String? = ""
     private fun subscribeToCurrentVideoBeingUploaded() {
         clientIdDisposable?.dispose()
-        clientIdDisposable = uploadManager
-            .onCurrentVideoId()
-            .subscribe({
-                clientId = it
-            }, {
+        clientIdDisposable =
+            uploadManager
+                .onCurrentVideoId()
+                .subscribe({
+                    clientId = it
+                }, {
 
-            })
+                })
     }
 
-    var managerDisposable: Disposable? = null
+    private var managerDisposable: Disposable? = null
     private fun subscribeToVideosFromGallery() {
         managerDisposable?.dispose()
         managerDisposable = manager
@@ -52,7 +53,7 @@ class UploadsPresenter(
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
                 if (!it?.isNullOrEmpty()!!) {
-                    getVideoInstance()
+                   getVideoInstance()
                 }
             }, {
                 println("throwable: ${it.printStackTrace()}")

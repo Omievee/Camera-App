@@ -126,13 +126,11 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                 override fun onSuccess(message: String?) {
                     super.onSuccess(message)
-                    println("Successful Execution:::::: $message")
                     transcodeVideo(newFile)
                 }
 
                 override fun onFailure(message: String?) {
                     super.onFailure(message)
-                    println("failure from execution:::: $message")
                     Crashlytics.log("Failed to execute ffmpeg -- $message")
                 }
             })
@@ -248,13 +246,11 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
         val listener = object : MediaTranscoder.Listener {
             override fun onTranscodeProgress(progress: Double) {
-                println("progress.. $progress")
             }
 
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
                 Toast.makeText(context, "Failed to transcode:: $exception", Toast.LENGTH_SHORT).show()
-                println("FAILED ${exception?.printStackTrace()}")
             }
 
 
