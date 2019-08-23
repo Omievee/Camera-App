@@ -23,6 +23,7 @@ import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_main.*
 import javax.inject.Inject
+import kotlin.math.log
 
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick {
@@ -45,12 +46,12 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     var orientation: OrientationEventListener? = null
     private val permissionsCode = 0
     private val requiredAppPermissions = arrayOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION
     )
 
 
@@ -60,22 +61,22 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun displayAlert() {
         AlertDialog.Builder(this, com.itsovertime.overtimecamera.play.R.style.CUSTOM_ALERT)
-                .setTitle("Permissions Request")
-                .setMessage("Allow overtimecamera..")
-                .setPositiveButton("Continue") { _, _ ->
-                    displaySystemPermissionsDialog()
-                }
-                .setNegativeButton("Not Now") { _, _ ->
-                    presenter.permissionsDenied()
-                }
-                .setCancelable(false)
-                .show()
+            .setTitle("Permissions Request")
+            .setMessage("Allow overtimecamera..")
+            .setPositiveButton("Continue") { _, _ ->
+                displaySystemPermissionsDialog()
+            }
+            .setNegativeButton("Not Now") { _, _ ->
+                presenter.permissionsDenied()
+            }
+            .setCancelable(false)
+            .show()
     }
 
     private fun displaySystemPermissionsDialog() {
         requestPermissions(
-                requiredAppPermissions,
-                permissionsCode
+            requiredAppPermissions,
+            permissionsCode
         )
     }
 
@@ -93,7 +94,12 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         super.onCreate(savedInstanceState)
         AndroidInjection.inject(this)
         setContentView(R.layout.activity_main)
-        presenter.onCreate()
+        val loginCheck = intent?.extras?.get("logIn")
+
+
+
+        println("login check... $loginCheck")
+        //presenter.onCreate()
         scheduleJob()
         //detectOrientation()
         keepScreenUnlocked()
@@ -103,12 +109,12 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     private fun scheduleJob() {
 
         val myJob = JobInfo.Builder(0, ComponentName(this, NetworkSchedulerService::class.java))
-                .setRequiresCharging(false)
-                .setMinimumLatency(1000)
-                .setOverrideDeadline(2000)
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPersisted(true)
-                .build()
+            .setRequiresCharging(false)
+            .setMinimumLatency(1000)
+            .setOverrideDeadline(2000)
+            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+            .setPersisted(true)
+            .build()
 
         val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
         jobScheduler.schedule(myJob)
@@ -167,7 +173,11 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == permissionsCode) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -240,8 +250,11 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
 }
 
-class CustomViewPageAdapter(fragmentManager: FragmentManager, private val isMainViewPager: Boolean) :
-        FragmentPagerAdapter(fragmentManager) {
+class CustomViewPageAdapter(
+    fragmentManager: FragmentManager,
+    private val isMainViewPager: Boolean
+) :
+    FragmentPagerAdapter(fragmentManager) {
     private var TABS: Int = 0
     override fun getCount(): Int {
         TABS = when (isMainViewPager) {

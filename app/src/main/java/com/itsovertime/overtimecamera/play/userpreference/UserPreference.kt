@@ -12,5 +12,13 @@ object UserPreference {
     }
 
 
+    var loggedIn: String
+        get() {
+            return sPrefs.getString(Constants.USER, "") ?: ""
+        }
+        set(value) {
+            sPrefs.edit()
+                .putString(Constants.USER, value).apply()
+        }
 
 }

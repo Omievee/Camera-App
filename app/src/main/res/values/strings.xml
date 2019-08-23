@@ -13,5 +13,8 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="auth_enter_phone">Enter Phone Number</string>
+    <string name="auth_message">An access code will be sent to your phone via text message</string>
+    <string name="auth_submit_button">Submit</string>
 
 </resources>

@@ -1,20 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black">
 
 
+    <ImageView
+            android:id="@+id/OTSplash"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:rotation="90"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-       <com.itsovertime.overtimecamera.play.viewpager.CustomViewpager
-           android:id="@+id/viewPager"
-           android:layout_width="match_parent"
-           android:layout_height="match_parent"/>
+
+    <com.itsovertime.overtimecamera.play.viewpager.CustomViewpager
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
 
-
-        <TextView
+    <TextView
             android:id="@+id/rotateWarning"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -27,8 +38,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+    <com.itsovertime.overtimecamera.play.onboarding.PhoneVerificationView
+            android:id="@+id/phoneVerificationView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible" />
 
-        <ImageView
+
+    <ImageView
             android:id="@+id/rotateView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -39,8 +56,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/rotateWarning" />
-
-
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
