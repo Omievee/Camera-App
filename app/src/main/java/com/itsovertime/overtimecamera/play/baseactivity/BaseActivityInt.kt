@@ -11,6 +11,8 @@ interface BaseActivityInt {
     fun displayErrorFromResponse()
     fun displayEnterResponseView(number: String)
     fun resetViews()
+    fun displaySignUpPage()
+
 }
 
 

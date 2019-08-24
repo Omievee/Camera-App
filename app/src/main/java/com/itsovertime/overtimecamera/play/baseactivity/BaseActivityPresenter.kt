@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
+import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import io.reactivex.disposables.Disposable
 
 class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationManager) {
@@ -57,13 +58,13 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
         verifyDisposable?.dispose()
         verifyDisposable = auth
             .onRequestAccessCodeForNumber(numberProvided ?: "")
-            .doOnSuccess {
+            .doFinally {
                 view.hideDisplayProgress()
+            }
+            .doOnSuccess {
                 view.displayEnterResponseView(numberProvided ?: "")
             }
             .doOnError {
-                view.hideDisplayProgress()
-                println("Stack... ${it.message}")
                 view.displayErrorFromResponse()
             }
             .subscribe({
@@ -75,6 +76,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
 
     fun onDestroy() {
         verifyDisposable?.dispose()
+        codeDisposable?.dispose()
     }
 
     fun resendAccessCode() {
@@ -85,9 +87,29 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
         view.resetViews()
     }
 
+    var codeDisposable: Disposable? = null
     fun submitAccessCode(code: String) {
-        println("code is ... $code")
+        view.displayProgress()
+        codeDisposable?.dispose()
+        codeDisposable = auth
+            .onVerifyAccessCodeRecieved(code)
+            .doFinally {
+                view.hideDisplayProgress()
+            }
+            .doOnSuccess {
+                UserPreference.authToken = it.token
+                view.displaySignUpPage()
+            }
+            .doOnError {
+                println("Stacktrace :: ${it.message}")
+            }
+            .subscribe({
+
+            }, {
+
+            })
     }
 
 
 }
+

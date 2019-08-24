@@ -21,7 +21,7 @@ class SplashActivity : AppCompatActivity() {
     private fun launchActivity() {
         //TODO: logic for checking user / login....
         Handler().postDelayed({
-            when (UserPreference.loggedIn) {
+            when (UserPreference.authToken) {
                 "" -> {
                     startActivity(Intent(this, BaseActivity::class.java).putExtra("logIn", false))
                     finish()

@@ -11,6 +11,15 @@ object UserPreference {
         sPrefs = context.getSharedPreferences(Constants.PREFS_FILE, Context.MODE_PRIVATE)
     }
 
+    var authToken: String
+        get() {
+            return sPrefs.getString(Constants.TOKEN, "") ?: ""
+        }
+        set(token) {
+            sPrefs.edit()
+                .putString(Constants.TOKEN, token).apply()
+        }
+
 
     var loggedIn: String
         get() {

@@ -19,5 +19,7 @@
     <string name="auth_no_network">No Network Connection. Please Reconnect</string>
     <string name="auth_enter_access_code">Enter Access Code</string>
     <string name="auth_resend_code_button">Resend Code</string>
+    <string name="auth_invalid_num">Invalid Number</string>
+    <string name="error">Error. Try Again.</string>
 
 </resources>

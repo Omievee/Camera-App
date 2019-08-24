@@ -34,8 +34,8 @@ class StaticApiModule {
                 logging.level = HttpLoggingInterceptor.Level.BODY
                 this.addInterceptor(logging)
             }
-            connectTimeout(30, TimeUnit.SECONDS)
-            readTimeout(30, TimeUnit.SECONDS)
+            connectTimeout(1, TimeUnit.MINUTES)
+            readTimeout(1, TimeUnit.MINUTES)
             cache(cache)
         }
     }

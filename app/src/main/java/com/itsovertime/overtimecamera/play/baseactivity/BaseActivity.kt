@@ -32,6 +32,11 @@ import kotlin.math.log
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
+
+    override fun displaySignUpPage() {
+
+    }
+
     var accessCodeSent: Boolean = false
     override fun resetViews() {
         accessCodeSent = false
@@ -52,7 +57,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun displayErrorFromResponse() {
-        showToast("Error. Try Again.")
+        showToast(getString(R.string.error))
     }
 
     fun showToast(msg: String) {
@@ -75,7 +80,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                 } else {
                     submitNumberForCode()
                 }
-
             }
             R.id.resend -> presenter.resendAccessCode()
             R.id.changeNum -> presenter.resetViews()
@@ -88,7 +92,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     private fun submitNumberForCode() {
         if (enterNumber.text.toString() == "" || enterNumber.text.toString().length < 10) {
-            showToast("Invalid Number")
+            showToast(getString(R.string.auth_invalid_num))
         } else {
             presenter.submitClicked(enterNumber.text.toString())
         }
@@ -164,7 +168,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         resend.setOnClickListener(this)
         changeNum.setOnClickListener(this)
 
-        when (intent?.extras?.get("logIn")) {
+
+        val token = intent?.extras?.get("logIn")
+        when (token) {
             true -> {
 
             }
