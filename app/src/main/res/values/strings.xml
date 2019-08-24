@@ -16,5 +16,8 @@
     <string name="auth_enter_phone">Enter Phone Number</string>
     <string name="auth_message">An access code will be sent to your phone via text message</string>
     <string name="auth_submit_button">Submit</string>
+    <string name="auth_no_network">No Network Connection. Please Reconnect</string>
+    <string name="auth_enter_access_code">Enter Access Code</string>
+    <string name="auth_resend_code_button">Resend Code</string>
 
 </resources>

@@ -7,55 +7,33 @@
         android:background="@android:color/black">
 
 
-    <ImageView
-            android:id="@+id/OTSplash"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:rotation="90"
-            android:scaleType="fitXY"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-
     <com.itsovertime.overtimecamera.play.viewpager.CustomViewpager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
-
-    <TextView
-            android:id="@+id/rotateWarning"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/margin_standard"
-            android:text="Please rotate your phone"
-            android:textColor="@color/OT_White"
-            android:textSize="25sp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
     <com.itsovertime.overtimecamera.play.onboarding.PhoneVerificationView
             android:id="@+id/phoneVerificationView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
-
-    <ImageView
-            android:id="@+id/rotateView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="@dimen/margin_spacing_extra"
-            android:src="@drawable/rotate_icon"
+    <TextView
+            android:layout_width="0dp"
+            android:id="@+id/noNetwork"
+            android:layout_height="wrap_content"
+            android:background="@color/OT_White"
+            android:padding="@dimen/margin_half"
+            android:text="@string/auth_no_network"
+            android:textAlignment="center"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
             android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/rotateWarning" />
+            app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

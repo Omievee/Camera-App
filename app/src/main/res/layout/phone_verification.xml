@@ -54,14 +54,31 @@
             app:layout_constraintStart_toStartOf="@id/start"
             app:layout_constraintTop_toBottomOf="@id/enter" />
 
+
+    <TextView
+            android:id="@+id/changeNum"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_half"
+            android:padding="@dimen/margin_half"
+            android:text="(Change Number)"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="13sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@id/end"
+            app:layout_constraintStart_toStartOf="@id/start"
+            app:layout_constraintTop_toBottomOf="@id/descrip" />
+
     <EditText
             android:id="@+id/enterNumber"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/margin_standard"
-            android:background="@android:drawable/screen_background_light_transparent"
+            android:background="@android:drawable/screen_background_dark_transparent"
             android:elevation="5dp"
             android:inputType="number"
+            android:maxLength="11"
             android:padding="@dimen/margin_half"
             android:textAlignment="center"
             android:textColor="@color/OT_White"
@@ -69,7 +86,7 @@
             app:layout_constraintBottom_toTopOf="@id/submit"
             app:layout_constraintEnd_toEndOf="@id/end"
             app:layout_constraintStart_toStartOf="@id/start"
-            app:layout_constraintTop_toBottomOf="@id/descrip" />
+            app:layout_constraintTop_toBottomOf="@id/changeNum" />
 
     <Button
             android:id="@+id/submit"
@@ -77,12 +94,37 @@
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/margin_standard"
             android:background="@android:color/transparent"
+            android:elevation="0dp"
             android:text="@string/auth_submit_button"
             android:textAllCaps="false"
             android:textColor="@color/OT_Orange"
+            android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="@id/end"
             app:layout_constraintStart_toStartOf="@id/start"
             app:layout_constraintTop_toBottomOf="@id/enterNumber" />
+
+    <Button
+            android:id="@+id/resend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:elevation="0dp"
+            android:text="@string/auth_resend_code_button"
+            android:textAllCaps="false"
+            android:textColor="@color/OT_White"
+            android:textSize="15sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@id/end"
+            app:layout_constraintStart_toStartOf="@id/start"
+            app:layout_constraintTop_toBottomOf="@id/submit" />
+
+
+    <include
+            android:id="@+id/progress"
+            layout="@layout/progress_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

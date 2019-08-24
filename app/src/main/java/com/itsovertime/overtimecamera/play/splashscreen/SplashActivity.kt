@@ -39,7 +39,7 @@ class SplashActivity : AppCompatActivity() {
 
     companion object {
         // Splash screen timer
-        private val SPLASH_TIME_OUT = 2000
+        private val SPLASH_TIME_OUT = 4000
     }
 
 }

@@ -27,7 +27,9 @@ interface Api {
     @Multipart
     @POST("api/uploads/{videoId}/{uploadChunk}")
     fun uploadSelectedVideo(
-        @Header("Content-Type") typeHeader: String, @Header("Content-MD5") md5Header: String, @Path("videoId") videoId: String, @Path(
+        @Header("Content-Type") typeHeader: String, @Header("Content-MD5") md5Header: String, @Path(
+            "videoId"
+        ) videoId: String, @Path(
             "uploadChunk"
         ) uploadChunk: Int, @Part("description") description: RequestBody,
         @Part file: MultipartBody.Part
@@ -36,5 +38,13 @@ interface Api {
     /*Events endpoint*/
     @GET("api/events?")
     fun getEventData(@Query("starts_after=") time: Date): Single<EventsResponse?>
+
+    @POST("api/auth/send_code")
+    fun verifyNumberForAccessCode(@Body phoneNumber:VerifyNumberRequest) : Single<LoginResponse>
+
+    @POST("api/auth/verify_code")
+    fun verifyAccessCode()
+
+
 }
 

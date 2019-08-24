@@ -9,8 +9,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.PowerManager
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.OrientationEventListener
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -22,11 +25,57 @@ import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.phone_verification.*
 import javax.inject.Inject
 import kotlin.math.log
 
 
-class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick {
+class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
+    View.OnClickListener {
+    override fun resetViews() {
+        enterNumber.text.clear()
+        changeNum.visibility = View.GONE
+        resend.visibility = View.GONE
+        enter.text = getString(R.string.auth_enter_phone)
+        descrip.text = getString(R.string.auth_message)
+
+    }
+
+    override fun displayEnterResponseView(number: String) {
+        enterNumber.text.clear()
+        changeNum.visibility = View.VISIBLE
+        enter.text = getString(R.string.auth_enter_access_code)
+        descrip.text = "We sent an access code to $number"
+        resend.visibility = View.VISIBLE
+    }
+
+    override fun displayErrorFromResponse() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun displayProgress() {
+        progress.visibility = View.VISIBLE
+    }
+
+    override fun hideDisplayProgress() {
+        progress.visibility = View.GONE
+    }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.submit -> submitNumberForCode()
+            R.id.resend -> presenter.resendAccessCode()
+            R.id.changeNum -> presenter.resetViews()
+        }
+    }
+
+    private fun submitNumberForCode() {
+        if (enterNumber.text.toString() == "" || enterNumber.text.toString().length < 9) {
+            Toast.makeText(this, "Invalid Number", Toast.LENGTH_SHORT).show()
+        } else {
+            presenter.submitClicked(enterNumber.text.toString())
+        }
+    }
 
 
     override fun onUploadsButtonClicked() {
@@ -60,7 +109,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun displayAlert() {
-        AlertDialog.Builder(this, com.itsovertime.overtimecamera.play.R.style.CUSTOM_ALERT)
+        AlertDialog.Builder(this, R.style.CUSTOM_ALERT)
             .setTitle("Permissions Request")
             .setMessage("Allow overtimecamera..")
             .setPositiveButton("Continue") { _, _ ->
@@ -94,11 +143,19 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         super.onCreate(savedInstanceState)
         AndroidInjection.inject(this)
         setContentView(R.layout.activity_main)
-        val loginCheck = intent?.extras?.get("logIn")
+        submit.setOnClickListener(this)
+        resend.setOnClickListener(this)
+        changeNum.setOnClickListener(this)
 
+        when (intent?.extras?.get("logIn")) {
+            true -> {
 
+            }
+            else -> {
+                phoneVerificationView.visibility = View.VISIBLE
+            }
+        }
 
-        println("login check... $loginCheck")
         //presenter.onCreate()
         scheduleJob()
         //detectOrientation()
@@ -134,6 +191,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onDestroy() {
         super.onDestroy()
         stopService(Intent(this, NetworkSchedulerService::class.java))
+        presenter.onDestroy()
         //   wakeLock?.release()
     }
 
@@ -148,30 +206,30 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         wakeLockAcquire()
     }
 
-    private fun detectOrientation() {
-        orientation = object : OrientationEventListener(this) {
-            override fun onOrientationChanged(orientation: Int) {
-                when (orientation) {
-                    0 -> {
-                        showWarnings()
-                    }
-                    180 -> {
-                        showWarnings()
-                    }
-                    90 -> {
-                        hideWarnings()
-                    }
-                    270 -> {
-                        hideWarnings()
-                    }
-                    else -> {
-
-                    }
-                }
-            }
-        }
-
-    }
+//    private fun detectOrientation() {
+//        orientation = object : OrientationEventListener(this) {
+//            override fun onOrientationChanged(orientation: Int) {
+//                when (orientation) {
+//                    0 -> {
+//                        showWarnings()
+//                    }
+//                    180 -> {
+//                        showWarnings()
+//                    }
+//                    90 -> {
+//                        hideWarnings()
+//                    }
+//                    270 -> {
+//                        hideWarnings()
+//                    }
+//                    else -> {
+//
+//                    }
+//                }
+//            }
+//        }
+//
+//    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -188,17 +246,17 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         }
     }
 
-    fun showWarnings() {
-        rotateView.visibility = View.VISIBLE
-        rotateWarning.visibility = View.VISIBLE
-        viewPager.visibility = View.GONE
-    }
-
-    fun hideWarnings() {
-        rotateView.visibility = View.GONE
-        rotateWarning.visibility = View.GONE
-        viewPager.visibility = View.VISIBLE
-    }
+//    fun showWarnings() {
+//        rotateView.visibility = View.VISIBLE
+//        rotateWarning.visibility = View.VISIBLE
+//        viewPager.visibility = View.GONE
+//    }
+//
+//    fun hideWarnings() {
+//        rotateView.visibility = View.GONE
+//        rotateWarning.visibility = View.GONE
+//        viewPager.visibility = View.VISIBLE
+//    }
 
 
     override fun onPause() {
@@ -247,6 +305,22 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         }
     }
 
+    inner class CustomTextWatcher() : TextWatcher {
+
+        override fun afterTextChanged(s: Editable?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+    }
+
 
 }
 
@@ -285,3 +359,5 @@ class CustomViewPageAdapter(
 ////    }
 
 }
+
+

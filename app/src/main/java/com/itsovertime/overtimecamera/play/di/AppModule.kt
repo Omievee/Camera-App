@@ -1,6 +1,8 @@
 package com.itsovertime.overtimecamera.play.di
 
 import com.itsovertime.overtimecamera.play.application.OTApplication
+import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
+import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManagerImpl
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.eventmanager.EventManagerImpl
 import com.itsovertime.overtimecamera.play.network.Api
@@ -51,6 +53,14 @@ class AppModule {
     fun provideEventManager(api: Api): EventManager {
         return EventManagerImpl(api)
     }
+
+
+    @Provides
+    @Singleton
+    fun provideAuthManager(context: OTApplication, api:Api): AuthenticationManager {
+        return AuthenticationManagerImpl(context, api)
+    }
+
 
 
 }
