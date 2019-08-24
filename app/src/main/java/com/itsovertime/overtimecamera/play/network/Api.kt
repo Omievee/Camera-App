@@ -40,10 +40,10 @@ interface Api {
     fun getEventData(@Query("starts_after=") time: Date): Single<EventsResponse?>
 
     @POST("api/auth/send_code")
-    fun verifyNumberForAccessCode(@Body phoneNumber:VerifyNumberRequest) : Single<LoginResponse>
+    fun verifyNumberForAccessCode(@Body phoneNumber: VerifyNumberRequest): Single<LoginResponse>
 
     @POST("api/auth/verify_code")
-    fun verifyAccessCode()
+    fun verifyAccessCode(@Body code: VerifyAccessCodeRequest): Single<AccessResponse>
 
 
 }

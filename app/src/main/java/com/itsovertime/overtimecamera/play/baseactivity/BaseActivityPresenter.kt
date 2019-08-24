@@ -54,17 +54,17 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     var numberProvided: String? = ""
     private fun sendCodeToProvidedNumber(number: String) {
         numberProvided = number
-        view.hideDisplayProgress()
         verifyDisposable?.dispose()
         verifyDisposable = auth
             .onRequestAccessCodeForNumber(numberProvided ?: "")
             .doOnSuccess {
-                println("This is... $it")
-              //  view.displayEnterResponseView(numberProvided ?: "")
+                view.hideDisplayProgress()
+                view.displayEnterResponseView(numberProvided ?: "")
             }
             .doOnError {
+                view.hideDisplayProgress()
                 println("Stack... ${it.message}")
-               // view.displayErrorFromResponse()
+                view.displayErrorFromResponse()
             }
             .subscribe({
 
@@ -83,6 +83,10 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
 
     fun resetViews() {
         view.resetViews()
+    }
+
+    fun submitAccessCode(code: String) {
+        println("code is ... $code")
     }
 
 

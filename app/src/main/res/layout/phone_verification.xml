@@ -114,6 +114,7 @@
             android:textColor="@color/OT_White"
             android:textSize="15sp"
             android:visibility="gone"
+            android:textAlignment="center"
             app:layout_constraintEnd_toEndOf="@id/end"
             app:layout_constraintStart_toStartOf="@id/start"
             app:layout_constraintTop_toBottomOf="@id/submit" />

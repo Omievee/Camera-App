@@ -32,16 +32,18 @@ import kotlin.math.log
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
+    var accessCodeSent: Boolean = false
     override fun resetViews() {
+        accessCodeSent = false
         enterNumber.text.clear()
         changeNum.visibility = View.GONE
         resend.visibility = View.GONE
         enter.text = getString(R.string.auth_enter_phone)
         descrip.text = getString(R.string.auth_message)
-
     }
 
     override fun displayEnterResponseView(number: String) {
+        accessCodeSent = true
         enterNumber.text.clear()
         changeNum.visibility = View.VISIBLE
         enter.text = getString(R.string.auth_enter_access_code)
@@ -50,7 +52,11 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun displayErrorFromResponse() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        showToast("Error. Try Again.")
+    }
+
+    fun showToast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 
     override fun displayProgress() {
@@ -63,15 +69,26 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.submit -> submitNumberForCode()
+            R.id.submit -> {
+                if (accessCodeSent) {
+                    submitAccessCode()
+                } else {
+                    submitNumberForCode()
+                }
+
+            }
             R.id.resend -> presenter.resendAccessCode()
             R.id.changeNum -> presenter.resetViews()
         }
     }
 
+    private fun submitAccessCode() {
+        presenter.submitAccessCode(code = enterNumber.text.toString())
+    }
+
     private fun submitNumberForCode() {
-        if (enterNumber.text.toString() == "" || enterNumber.text.toString().length < 9) {
-            Toast.makeText(this, "Invalid Number", Toast.LENGTH_SHORT).show()
+        if (enterNumber.text.toString() == "" || enterNumber.text.toString().length < 10) {
+            showToast("Invalid Number")
         } else {
             presenter.submitClicked(enterNumber.text.toString())
         }
