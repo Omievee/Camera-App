@@ -6,6 +6,7 @@ import com.itsovertime.overtimecamera.play.camera.CameraFragModule
 import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.onboarding.OnBoardingFragment
 import com.itsovertime.overtimecamera.play.onboarding.OnBoardingModule
+import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
 import com.itsovertime.overtimecamera.play.settings.SettingsModule
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
@@ -21,6 +22,11 @@ interface AppBindingModule {
     @ActivityScope
     @ContributesAndroidInjector(modules = [BaseActivityModule::class])
     fun baseActivity(): BaseActivity
+
+
+    @ActivityScope
+    @ContributesAndroidInjector
+    fun onboardActivity(): OnboardingActivity
 
     @FragmentScope
     @ContributesAndroidInjector(modules = [CameraFragModule::class])

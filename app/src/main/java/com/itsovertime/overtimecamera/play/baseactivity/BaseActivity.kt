@@ -8,22 +8,30 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Parcelable
 import android.os.PowerManager
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.OrientationEventListener
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.fragment.app.FragmentTransaction
 import androidx.viewpager.widget.ViewPager
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
+import com.itsovertime.overtimecamera.play.onboarding.OnBoardingFragment
+import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
+import com.itsovertime.overtimecamera.play.settings.SettingsFragment
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import dagger.android.AndroidInjection
+import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.phone_verification.*
 import javax.inject.Inject
@@ -32,12 +40,23 @@ import kotlin.math.log
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
+    var orientation: OrientationEventListener? = null
+    private val permissionsCode = 0
+    private val requiredAppPermissions = arrayOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
+    var accessCodeSent: Boolean = false
 
     override fun displaySignUpPage() {
-
+        startActivity(Intent(this, OnboardingActivity::class.java))
     }
 
-    var accessCodeSent: Boolean = false
+
     override fun resetViews() {
         accessCodeSent = false
         enterNumber.text.clear()
@@ -88,6 +107,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     private fun submitAccessCode() {
         presenter.submitAccessCode(code = enterNumber.text.toString())
+        enterNumber.text.clear()
     }
 
     private fun submitNumberForCode() {
@@ -101,7 +121,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onUploadsButtonClicked() {
         viewPager.currentItem = 1
-//        wakeLock?.release()
     }
 
     override fun setUpAdapter() {
@@ -112,17 +131,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun displayDeniedPermissionsView() {
 
     }
-
-    var orientation: OrientationEventListener? = null
-    private val permissionsCode = 0
-    private val requiredAppPermissions = arrayOf(
-        Manifest.permission.CAMERA,
-        Manifest.permission.RECORD_AUDIO,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION
-    )
 
 
     override fun displayPermissions() {
@@ -154,15 +162,15 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     private var wakeLock: PowerManager.WakeLock? = null
     private fun keepScreenUnlocked() {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-        //   wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
+        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
     }
 
     @Inject
     lateinit var presenter: BaseActivityPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         AndroidInjection.inject(this)
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         submit.setOnClickListener(this)
         resend.setOnClickListener(this)
@@ -172,13 +180,13 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         val token = intent?.extras?.get("logIn")
         when (token) {
             true -> {
-
+                println("true..")
+                displaySignUpPage()
             }
             else -> {
                 phoneVerificationView.visibility = View.VISIBLE
             }
         }
-
         //presenter.onCreate()
         scheduleJob()
         //detectOrientation()
@@ -215,7 +223,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         super.onDestroy()
         stopService(Intent(this, NetworkSchedulerService::class.java))
         presenter.onDestroy()
-        //   wakeLock?.release()
     }
 
 
@@ -329,7 +336,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     inner class CustomTextWatcher() : TextWatcher {
-
         override fun afterTextChanged(s: Editable?) {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
@@ -350,13 +356,37 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 class CustomViewPageAdapter(
     fragmentManager: FragmentManager,
     private val isMainViewPager: Boolean
-) :
-    FragmentPagerAdapter(fragmentManager) {
+) : FragmentPagerAdapter(fragmentManager) {
+    var data = listOf(
+        OnboardData(
+            header = R.string.onboard_become_member,
+            body = R.string.onboard_message1,
+            buttonText = R.string.onboard_button_apply,
+            displayEditTextFields = false,
+            displayBottomText = true,
+            bottomText = R.string.onboard_already_member
+        ),
+        OnboardData(
+            header = R.string.onbarod_shooters,
+            body = R.string.onboard_message2,
+            buttonText = R.string.onbaord_button_submit,
+            displayEditTextFields = true
+        ),
+        OnboardData(
+            header = R.string.onboard_thank_you,
+            body = R.string.onboard_message3,
+            buttonText = R.string.onboard_status,
+            displayEditTextFields = false,
+            displayBottomText = true,
+            bottomText = R.string.onboard_stay_tuned
+        )
+    )
     private var TABS: Int = 0
+
     override fun getCount(): Int {
         TABS = when (isMainViewPager) {
             true -> 2
-            else -> 4
+            else -> data.size
         }
         return TABS
     }
@@ -367,20 +397,26 @@ class CustomViewPageAdapter(
             true -> {
                 when (position) {
                     0 -> CameraFragment()
-                    1 -> UploadsFragment.newInstance("", "")
+                    1 -> UploadsFragment()
                     else -> null
                 }
             }
             false -> {
-                null
+                println("false vewpager")
+                OnBoardingFragment.newInstance(data[position])
             }
         }
     }
-
-    //    override fun getPageTitle(position: Int): CharSequence? {
-//        return "Page $position"
-////    }
-
 }
+
+@Parcelize
+class OnboardData(
+    @StringRes val header: Int,
+    @StringRes val body: Int,
+    @StringRes val buttonText: Int,
+    val displayEditTextFields: Boolean = false,
+    val displayBottomText: Boolean = false,
+    val bottomText: Int? = null
+) : Parcelable
 
 

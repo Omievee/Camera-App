@@ -33,7 +33,6 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET uploadId = :uploadId WHERE clientId = :selectedVideoId")
     fun updateUploadId(uploadId: String, selectedVideoId: String)
 
-
     @Query("SELECT * FROM SavedVideo")
     fun getVideos(): List<SavedVideo>
 }

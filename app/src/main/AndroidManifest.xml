@@ -18,9 +18,8 @@
             android:name="android.hardware.camera"
             android:required="true" />
 
-
     <application
-            android:name="com.itsovertime.overtimecamera.play.application.OTApplication"
+            android:name=".application.OTApplication"
             android:allowBackup="true"
             android:configChanges="orientation|screenSize"
             android:icon="@mipmap/ic_launcher"
@@ -30,29 +29,24 @@
             android:supportsRtl="true"
             android:theme="@style/AppFullScreenTheme"
             tools:ignore="GoogleAppIndexingWarning">
-
-        <activity android:name="com.itsovertime.overtimecamera.play.splashscreen.SplashActivity">
+        <activity android:name=".onboarding.OnboardingActivity"></activity>
+        <activity android:name=".splashscreen.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
-
-        <activity android:name="com.itsovertime.overtimecamera.play.baseactivity.BaseActivity">
-
-
-
-        </activity>
+        <activity android:name=".baseactivity.BaseActivity"></activity>
 
         <meta-data
                 android:name="io.fabric.ApiKey"
                 android:value="cbe7680d1c986532833d98dc1134f52925897f2e" />
+
         <service
                 android:name=".network.NetworkSchedulerService"
                 android:exported="true"
                 android:permission="android.permission.BIND_JOB_SERVICE" />
-
     </application>
 
 </manifest>

@@ -6,12 +6,17 @@
         android:layout_height="match_parent"
         android:background="@android:color/black">
 
+    <FrameLayout
+            android:id="@+id/fragContainerB"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
 
     <com.itsovertime.overtimecamera.play.viewpager.CustomViewpager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone" />
+            android:visibility="visible" />
 
 
     <com.itsovertime.overtimecamera.play.onboarding.PhoneVerificationView
@@ -21,8 +26,8 @@
             android:visibility="gone" />
 
     <TextView
-            android:layout_width="0dp"
             android:id="@+id/noNetwork"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@color/OT_White"
             android:padding="@dimen/margin_half"

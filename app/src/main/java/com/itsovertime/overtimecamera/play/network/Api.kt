@@ -45,6 +45,18 @@ interface Api {
     @POST("api/auth/verify_code")
     fun verifyAccessCode(@Body code: VerifyAccessCodeRequest): Single<AccessResponse>
 
+    @POST("api/auth/resend_code")
+    fun resendAccessCode(@Body code: VerifyAccessCodeRequest): Single<AccessResponse>
+
+    @GET("api/users/{userId}?nocache=true")
+    fun getUser(@Path("userId") userId: String)
+
+    @PUT("api/writer/users/{userId}")
+    fun submitApplication(@Path("userId") id:String, @Body request: ApplicationRequest): Single<ApplicationResponse>
+
+    @GET("api/auth/refresh_token")
+    fun validateTokenCheckRestrictions(): Single<RestrictionsResponse>
+
 
 }
 

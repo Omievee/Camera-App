@@ -21,7 +21,8 @@ import javax.inject.Inject
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
+class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
+    SwipeRefreshLayout.OnRefreshListener {
 
     override fun displayNoNetworkConnection() {
         uploadsIcon.visibility = View.INVISIBLE
@@ -51,7 +52,8 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefre
         val transaction = manager?.beginTransaction()
         transaction?.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
         transaction?.setCustomAnimations(R.anim.slide_up, R.anim.slide_out)
-        transaction?.replace(R.id.fragContainer, SettingsFragment.newInstance("", ""))?.addToBackStack("settings")
+        transaction?.replace(R.id.fragContainer, SettingsFragment.newInstance("", ""))
+            ?.addToBackStack("settings")
             .commit()
     }
 
@@ -85,7 +87,11 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefre
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_uploads, container, false)
     }
 
@@ -111,7 +117,8 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefre
             R.color.OT_White,
             android.R.color.black
         )
-        uploadsRecycler.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        uploadsRecycler.layoutManager =
+            LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
     }
 
     override fun onDestroy() {
@@ -121,12 +128,9 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener, SwipeRefre
 
     companion object {
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            UploadsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+        fun newInstance() =
+            UploadsFragment()
+
     }
+
 }

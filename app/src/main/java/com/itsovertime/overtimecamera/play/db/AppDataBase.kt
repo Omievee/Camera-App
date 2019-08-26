@@ -7,13 +7,15 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.model.enumConverter
 
-@Database(entities = [SavedVideo::class], version = 1)
+@Database(entities = [SavedVideo::class, User::class], version = 2)
 @TypeConverters(value = [enumConverter::class])
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun videoDao(): VideoObjectDAO
+    abstract fun userDao(): UserObjectDAO
 
     companion object {
         var databaseInstance: AppDatabase? = null
@@ -22,15 +24,15 @@ abstract class AppDatabase : RoomDatabase() {
             if (databaseInstance == null) {
                 synchronized(AppDatabase::class) {
                     databaseInstance =
-                            Room
-                                    .databaseBuilder(
-                                            context
-                                                    .applicationContext,
-                                            AppDatabase::class.java,
-                                            "DB"
-                                    )
-                                    .fallbackToDestructiveMigration()
-                                    .build()
+                        Room
+                            .databaseBuilder(
+                                context
+                                    .applicationContext,
+                                AppDatabase::class.java,
+                                "DB"
+                            )
+                            .fallbackToDestructiveMigration()
+                            .build()
                 }
             }
             return databaseInstance

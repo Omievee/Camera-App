@@ -21,5 +21,16 @@
     <string name="auth_resend_code_button">Resend Code</string>
     <string name="auth_invalid_num">Invalid Number</string>
     <string name="error">Error. Try Again.</string>
+    <string name="onboard_become_member">Become An Overtime Shooter</string>
+    <string name="onboard_message1">You need to be an official Overtime Shooter to use the OT Camera</string>
+    <string name="onboard_button_apply">Apply</string>
+    <string name="onboard_already_member">Already an Overtime Shooter? Please contact your point person.</string>
+    <string name="onbarod_shooters">Shooters Shoot</string>
+    <string name="onboard_message2">Get paid to capture highlights of events in your area. Apply to become an official Overtime Shooter.</string>
+    <string name="onbaord_button_submit">Submit Application</string>
+    <string name="onboard_thank_you">Thank You</string>
+    <string name="onboard_message3">You application has been received.</string>
+    <string name="onboard_status">Check Status</string>
+    <string name="onboard_stay_tuned">Stay tuned. Your application is still being reviewed.</string>
 
 </resources>

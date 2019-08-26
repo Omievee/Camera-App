@@ -6,13 +6,14 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.viewpager.widget.ViewPager
 
-class CustomViewpager(context: Context, attrs: AttributeSet?=null) : ViewPager(context, attrs) {
+class CustomViewpager(context: Context, attrs: AttributeSet? = null) :
+    ViewPager(context, attrs) {
 
-    var canSwipe:Boolean = false
+    var canSwipe: Boolean = false
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(ev: MotionEvent?): Boolean {
-        return if(canSwipe) {
+        return if (canSwipe) {
             super.onTouchEvent(ev)
         } else {
             false

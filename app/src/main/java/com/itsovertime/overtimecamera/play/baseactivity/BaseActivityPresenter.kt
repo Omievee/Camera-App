@@ -95,6 +95,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             .onVerifyAccessCodeRecieved(code)
             .doFinally {
                 view.hideDisplayProgress()
+                refreshAuth()
             }
             .doOnSuccess {
                 UserPreference.authToken = it.token
@@ -105,6 +106,26 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             }
             .subscribe({
 
+            }, {
+
+            })
+    }
+
+    var authDis: Disposable? = null
+    private fun refreshAuth() {
+        println("REFRESHING>>>>>>>>>>>>...")
+        authDis?.dispose()
+        authDis = auth
+            .onRefreshAuth()
+            .doOnSuccess {
+                println("WTFFF>>>>>>>.... ${it.data.user.id}")
+                UserPreference.userId = it.data.user.id
+            }
+            .doOnError {
+                println("ERROR ::: $it")
+            }
+            .subscribe({
+                println("ID IS::: ${UserPreference.userId}")
             }, {
 
             })
