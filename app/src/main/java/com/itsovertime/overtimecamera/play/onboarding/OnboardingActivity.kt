@@ -76,18 +76,17 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick, View.
             }
             .doFinally {
                 progress.visibility = View.GONE
+                if (UserPreference.isSignUpComplete) {
+                    onboardinViewpager.currentItem = 2
+                }
             }
             .subscribe({
                 auth.saveUserToDB(it.user)
-
-                if (it.user.userName != null) {
-                    onboardinViewpager.currentItem = 2
-                }
                 if (it.user.camera_tos_agreed_at == null) {
                     displayTOS()
                 }
-
                 if (it.user.is_camera_authorized == false) {
+                    println("auth camera : ${it.user.is_camera_authorized}")
                     makeToast(getString(R.string.auth_check_back_status))
                 } else finish()
 
@@ -114,7 +113,7 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick, View.
     }
 
     fun makeToast(msg: String) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT)
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 
     var submitDisposable: Disposable? = null
@@ -127,6 +126,7 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick, View.
             }
             .doOnSuccess {
                 auth.saveUserToDB(it.user)
+                UserPreference.isSignUpComplete = true
                 onboardinViewpager.currentItem = 2
             }
             .doOnError {

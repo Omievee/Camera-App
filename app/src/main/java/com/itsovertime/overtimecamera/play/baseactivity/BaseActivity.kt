@@ -40,7 +40,7 @@ import javax.inject.Inject
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
     override fun allowAccess() {
-        presenter.checkPermissions()
+        setUpAdapter()
     }
 
     override fun beginPermissionsFlow() {

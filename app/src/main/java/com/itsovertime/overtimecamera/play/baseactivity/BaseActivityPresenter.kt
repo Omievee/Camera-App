@@ -143,7 +143,8 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             .subscribe({
                 auth.saveUserToDB(it.user)
                 allowAccess = it.user.is_camera_authorized ?: false
-                if (!allowAccess && it.user.userName == null) {
+                println("allow $allowAccess")
+                if (!allowAccess) {
                     view.displaySignUpPage()
                 } else if (!checkPermissions()) {
                     view.beginPermissionsFlow()
