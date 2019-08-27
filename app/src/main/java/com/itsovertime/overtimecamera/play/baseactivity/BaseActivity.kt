@@ -39,6 +39,9 @@ import javax.inject.Inject
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
+    override fun allowAccess() {
+        presenter.checkPermissions()
+    }
 
     override fun beginPermissionsFlow() {
         permissions.visibility = View.VISIBLE
@@ -63,7 +66,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         println("Result.... $requestCode, $resultCode, $data")
-        presenter.onCreate()
+        presenter.displayPermission()
     }
 
     override fun resetViews() {
@@ -139,15 +142,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         viewPager.adapter = CustomViewPageAdapter(supportFragmentManager, true)
     }
 
-    override fun displayDeniedPermissionsView() {
-
-    }
-
-
-    override fun displayPermissions() {
-        presenter.onCreate()
-    }
-
     override fun displayAlert() {
         requestPermissions(
             requiredAppPermissions,
@@ -173,12 +167,14 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         resend.setOnClickListener(this)
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
+
         when (intent?.extras?.get("logIn")) {
             true -> {
                 if (UserPreference.isSignUpComplete) {
                     presenter.retrieveFullUser()
-                } else displaySignUpPage()
-
+                } else {
+                    displaySignUpPage()
+                }
             }
             else -> {
                 phoneVerificationView.visibility = View.VISIBLE

@@ -19,18 +19,10 @@
       <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/executionHistory/executionHistory.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/fileHashes/fileHashes.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/fileHashes/fileHashes.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/fileHashes/resourceHashesCache.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/classAnalysis.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/classAnalysis.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/jarAnalysis.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/jarAnalysis.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/javaCompile.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/javaCompile.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/taskHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/taskHistory.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityInt.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityInt.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/permissions/PermissionsItemView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/permissions/PermissionsItemView.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/permissions/PermissionsView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/permissions/PermissionsView.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/permissions_item_view.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/permissions_item_view.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/permissions_view.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/permissions_view.xml" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -87,20 +79,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="515">
-              <caret line="268" column="31" lean-forward="true" selection-start-line="268" selection-start-column="31" selection-end-line="268" selection-end-column="31" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/onboarding/OnboardingActivity.kt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2478">
-              <caret line="134" column="41" selection-start-line="134" selection-start-column="41" selection-end-line="134" selection-end-column="41" />
+            <state relative-caret-position="168">
+              <caret line="42" column="8" selection-start-line="42" selection-start-column="8" selection-end-line="42" selection-end-column="107" />
             </state>
           </provider>
         </entry>
@@ -109,17 +92,29 @@
         <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/activity_main.xml">
           <provider editor-type-id="android-designer2" />
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="903">
+            <state relative-caret-position="509">
               <caret line="43" column="68" selection-start-line="43" selection-start-column="68" selection-end-line="43" selection-end-column="68" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt">
           <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="457">
+              <caret line="150" column="31" selection-start-line="150" selection-start-column="31" selection-end-line="150" selection-end-column="31" />
+              <folding>
+                <element signature="e#1398#1466#1" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityInt.kt">
+          <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="336">
-              <caret line="39" column="30" selection-start-line="39" selection-start-column="23" selection-end-line="39" selection-end-column="30" />
+              <caret line="16" column="8" selection-start-line="16" selection-start-column="8" selection-end-line="16" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -142,9 +137,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>ondje</find>
-      <find>Disposable?</find>
-      <find>login</find>
       <find>verify</find>
       <find>val manager</find>
       <find>onbackp</find>
@@ -158,7 +150,6 @@
       <find>oncreat</find>
       <find>displayto</find>
       <find>webvi</find>
-      <find>finish</find>
       <find>it.data.user.isc</find>
       <find>oncreatew</find>
       <find>permission</find>
@@ -172,6 +163,10 @@
       <find>layoutparams =</find>
       <find>R.id.</find>
       <find>onreq</find>
+      <find>check</find>
+      <find>oncreate</find>
+      <find>R.id.all</find>
+      <find>finish</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -218,7 +213,6 @@
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/db/AppDataBase.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/model/User.kt" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/fragment_to.xml" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityInt.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/onboarding/OnBoardingFragment.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/tos/TOSFragment.kt" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/activity_onboarding.xml" />
@@ -238,8 +232,9 @@
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/permissions/PermissionsView.kt" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/permissions_item_view.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/permissions_view.xml" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityInt.kt" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt" />
       </list>
     </option>
   </component>
@@ -521,7 +516,7 @@
       <window_info anchor="bottom" id="Version Control" order="0" weight="0.32967034" />
       <window_info anchor="bottom" id="TODO" order="1" weight="0.32967034" />
       <window_info anchor="bottom" id="Event Log" order="2" sideWeight="0.456869" side_tool="true" weight="0.32667333" />
-      <window_info anchor="bottom" id="Terminal" order="3" sideWeight="0.58359957" weight="0.45454547" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="3" sideWeight="0.58359957" visible="true" weight="0.15184815" />
       <window_info anchor="bottom" id="Logcat" order="4" sideWeight="0.63045794" weight="0.66733265" />
       <window_info anchor="bottom" id="Android Profiler" order="5" weight="0.7281153" />
       <window_info anchor="bottom" id="Build" order="6" sideWeight="0.543131" weight="0.32667333" />
@@ -718,13 +713,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/fragment_to.xml" />
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityInt.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="294">
-          <caret line="14" selection-start-line="14" selection-end-line="14" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/tos/TOSFragment.kt" />
     <entry file="file://$USER_HOME$/Library/Android/sdk/sources/android-28/android/view/View.java">
       <provider selected="true" editor-type-id="text-editor">
@@ -856,21 +844,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/onboarding/OnboardingActivity.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2478">
-          <caret line="134" column="41" selection-start-line="134" selection-start-column="41" selection-end-line="134" selection-end-column="41" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/activity_main.xml">
-      <provider editor-type-id="android-designer2" />
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="903">
-          <caret line="43" column="68" selection-start-line="43" selection-start-column="68" selection-end-line="43" selection-end-column="68" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Library/Android/sdk/sources/android-28/android/widget/CheckedTextView.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="260">
@@ -925,17 +898,42 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt">
+    <entry file="file://$PROJECT_DIR$/app/src/main/res/layout/activity_main.xml">
+      <provider editor-type-id="android-designer2" />
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="515">
-          <caret line="268" column="31" lean-forward="true" selection-start-line="268" selection-start-column="31" selection-end-line="268" selection-end-column="31" />
+        <state relative-caret-position="509">
+          <caret line="43" column="68" selection-start-line="43" selection-start-column="68" selection-end-line="43" selection-end-column="68" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/onboarding/OnboardingActivity.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="275">
+          <caret line="85" column="16" lean-forward="true" selection-start-line="85" selection-start-column="16" selection-end-line="85" selection-end-column="16" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="457">
+          <caret line="150" column="31" selection-start-line="150" selection-start-column="31" selection-end-line="150" selection-end-column="31" />
+          <folding>
+            <element signature="e#1398#1466#1" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityInt.kt">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="336">
-          <caret line="39" column="30" selection-start-line="39" selection-start-column="23" selection-end-line="39" selection-end-column="30" />
+          <caret line="16" column="8" selection-start-line="16" selection-start-column="8" selection-end-line="16" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="168">
+          <caret line="42" column="8" selection-start-line="42" selection-start-column="8" selection-end-line="42" selection-end-column="107" />
         </state>
       </provider>
     </entry>

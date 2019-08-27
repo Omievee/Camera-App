@@ -10,7 +10,7 @@ import io.reactivex.disposables.Disposable
 
 class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationManager) {
 
-    fun onCreate() {
+    fun displayPermission() {
         view.beginPermissionsFlow()
     }
 
@@ -33,7 +33,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             view.displayAlert()
-        }else{
+        } else {
             view.setUpAdapter()
         }
     }
@@ -145,9 +145,11 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             .subscribe({
                 auth.saveUserToDB(it.user)
                 allowAccess = it.user.is_camera_authorized ?: false
-                if (allowAccess) {
+                if (!allowAccess) {
                     view.displaySignUpPage()
-                } else view.displayPermissions()
+                } else {
+                    view.allowAccess()
+                }
             }, {
 
             })
