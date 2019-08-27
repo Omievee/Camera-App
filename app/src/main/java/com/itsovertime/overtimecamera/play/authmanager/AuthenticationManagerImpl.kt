@@ -19,6 +19,15 @@ class AuthenticationManagerImpl(
     val context: OTApplication,
     val api: Api
 ) : AuthenticationManager {
+    override fun getFullUser(): Single<ApplicationResponse> {
+        return api
+            .getUser(UserPreference.userId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+
+
+    }
+
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
     override fun saveUserToDB(user: User) {

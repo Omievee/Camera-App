@@ -15,7 +15,6 @@ import android.text.TextWatcher
 import android.view.OrientationEventListener
 import android.view.View
 import android.widget.Toast
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
@@ -28,18 +27,21 @@ import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.onboarding.OnBoardingFragment
 import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
-import com.itsovertime.overtimecamera.play.settings.SettingsFragment
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
+import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.phone_verification.*
 import javax.inject.Inject
-import kotlin.math.log
 
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
+    override fun beginPermissionsFlow() {
+
+    }
+
     var orientation: OrientationEventListener? = null
     private val permissionsCode = 0
     private val requiredAppPermissions = arrayOf(
@@ -53,9 +55,14 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     var accessCodeSent: Boolean = false
 
     override fun displaySignUpPage() {
-        startActivity(Intent(this, OnboardingActivity::class.java))
+        startActivityForResult(Intent(this, OnboardingActivity::class.java), 0)
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        println("Result.... $requestCode, $resultCode, $data")
+        presenter.onCreate()
+    }
 
     override fun resetViews() {
         accessCodeSent = false
@@ -134,7 +141,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
 
     override fun displayPermissions() {
-
+        presenter.onCreate()
     }
 
     override fun displayAlert() {
@@ -176,12 +183,12 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         resend.setOnClickListener(this)
         changeNum.setOnClickListener(this)
 
-
-        val token = intent?.extras?.get("logIn")
-        when (token) {
+        when (intent?.extras?.get("logIn")) {
             true -> {
-                println("true..")
-                displaySignUpPage()
+                if (UserPreference.isSignUpComplete) {
+                    presenter.retrieveFullUser()
+                } else displaySignUpPage()
+
             }
             else -> {
                 phoneVerificationView.visibility = View.VISIBLE

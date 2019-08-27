@@ -11,3 +11,5 @@ class Data(
     val user: User,
     val iat: Int
 )
+
+class TOSResponse()

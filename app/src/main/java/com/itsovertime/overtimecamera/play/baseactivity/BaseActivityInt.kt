@@ -13,6 +13,9 @@ interface BaseActivityInt {
     fun resetViews()
     fun displaySignUpPage()
 
+    fun beginPermissionsFlow()
+
+
 }
 
 

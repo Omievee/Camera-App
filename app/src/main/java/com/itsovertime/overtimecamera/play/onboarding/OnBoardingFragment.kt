@@ -12,6 +12,7 @@ import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.baseactivity.CustomViewPageAdapter
 import com.itsovertime.overtimecamera.play.baseactivity.OnboardData
 import com.itsovertime.overtimecamera.play.camera.CameraFragment
+import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_on_boarding.*
 
@@ -21,22 +22,31 @@ class OnBoardingFragment : Fragment(), OnBoardingImpl, View.OnClickListener {
 
         when (v?.id) {
             R.id.button -> {
-                when (finalPage) {
+                when (UserPreference.isSignUpComplete) {
                     false -> {
-                        if (fieldsVisible) {
-                            callback?.onButtonClicked(
-                                nameInput.text.toString(),
-                                locInput.text.toString()
-                            )
-                        } else callback?.onButtonClicked()
+                        when (fieldsVisible) {
+                            true -> {
+                                callback?.onButtonClicked(
+                                    nameInput.text.toString(),
+                                    locInput.text.toString()
+                                )
+                                fieldsVisible = false
+                            }
+                            false -> {
+                                callback?.onButtonClicked()
+                            }
+                        }
+                    }
+                    true -> {
+                        println("True..")
+                        callback?.checkStatus()
                     }
                 }
             }
         }
-
     }
 
-    var finalPage: Boolean = false
+
     var fieldsVisible: Boolean = false
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -86,9 +96,12 @@ class OnBoardingFragment : Fragment(), OnBoardingImpl, View.OnClickListener {
         this.callback = listener
     }
 
+
     interface NextPageClick {
         fun onButtonClicked(name: String? = null, city: String? = null)
+        fun checkStatus()
     }
+
 
     companion object {
         private val ARG_SECTION_NUMBER = "section_number"

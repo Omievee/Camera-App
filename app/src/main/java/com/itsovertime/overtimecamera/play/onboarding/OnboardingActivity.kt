@@ -1,6 +1,5 @@
 package com.itsovertime.overtimecamera.play.onboarding
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -9,17 +8,40 @@ import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.baseactivity.CustomViewPageAdapter
 import com.itsovertime.overtimecamera.play.baseactivity.OTActivity
-import com.itsovertime.overtimecamera.play.camera.CameraFragment
-import com.itsovertime.overtimecamera.play.network.Api
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_onboarding.*
-import kotlinx.android.synthetic.main.fragment_uploads.*
+import kotlinx.android.synthetic.main.fragment_tos.*
 import javax.inject.Inject
 
 class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick {
+    override fun checkStatus() {
+        progress.visibility = View.VISIBLE
+        println("Retrieve....")
+        userDisposable?.dispose()
+        userDisposable = auth
+            .getFullUser()
+            .doOnError {
+                it.printStackTrace()
+            }
+            .doFinally {
+                progress.visibility = View.GONE
+            }
+            .subscribe({
+                auth.saveUserToDB(it.user)
+                if (it.user.is_camera_authorized != true) {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.auth_check_back_status),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else finish()
+            }, {
+            })
+    }
 
+    var userDisposable: Disposable? = null
 
     @Inject
     lateinit var auth: AuthenticationManager
@@ -29,7 +51,8 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick {
         if (onboardinViewpager.currentItem == 0) {
             onboardinViewpager.currentItem = 1
         } else if (onboardinViewpager.currentItem == 1 && name.equals("") || city.equals("")) {
-            Toast.makeText(this, "All Fields Required", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.auth_all_fields_required), Toast.LENGTH_SHORT)
+                .show()
         } else {
             progress.visibility = View.VISIBLE
             submitApplication(name ?: "", city ?: "")
@@ -53,9 +76,7 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick {
                 println("throwable... ${it.message}")
             }
             .subscribe({
-
             }, {
-
             })
     }
 
@@ -65,13 +86,18 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick {
         setContentView(R.layout.activity_onboarding)
 
 
+        displayTOS()
+
         onboardinViewpager.adapter =
             CustomViewPageAdapter(supportFragmentManager, isMainViewPager = false)
         if (UserPreference.isSignUpComplete)
             onboardinViewpager.currentItem = 2
-
     }
 
+    private fun displayTOS() {
+        tos.visibility = View.VISIBLE
+
+    }
 
     override fun onAttachFragment(fragment: Fragment?) {
         super.onAttachFragment(fragment)
@@ -80,18 +106,23 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick {
         }
     }
 
-
     override fun onBackPressed() {
         if (!UserPreference.isSignUpComplete) {
             if (onboardinViewpager.currentItem == 2) {
                 onboardinViewpager.currentItem = 1
-                OnBoardingFragment().finalPage = false
             } else {
                 onboardinViewpager.currentItem = 0
             }
+            supportFragmentManager.popBackStack()
         } else {
             finishAffinity()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        userDisposable?.dispose()
+        submitDisposable?.dispose()
     }
 
 }

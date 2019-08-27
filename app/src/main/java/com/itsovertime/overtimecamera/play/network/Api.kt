@@ -49,14 +49,16 @@ interface Api {
     fun resendAccessCode(@Body code: VerifyAccessCodeRequest): Single<AccessResponse>
 
     @GET("api/users/{userId}?nocache=true")
-    fun getUser(@Path("userId") userId: String)
+    fun getUser(@Path("userId") userId: String): Single<ApplicationResponse>
 
     @PUT("api/writer/users/{userId}")
-    fun submitApplication(@Path("userId") id:String, @Body request: ApplicationRequest): Single<ApplicationResponse>
+    fun submitApplication(@Path("userId") id: String, @Body request: ApplicationRequest): Single<ApplicationResponse>
 
     @GET("api/auth/refresh_token")
     fun validateTokenCheckRestrictions(): Single<RestrictionsResponse>
 
+    @PUT("api/writer/users/{userId}/agree_to_tos/{bundleId}")
+    fun acceptToTOS(@Path("userId") userId: String, @Path("bundleId") bundle: String): Single<TOSResponse>
 
 }
 

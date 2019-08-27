@@ -32,5 +32,8 @@
     <string name="onboard_message3">You application has been received.</string>
     <string name="onboard_status">Check Status</string>
     <string name="onboard_stay_tuned">Stay tuned. Your application is still being reviewed.</string>
+    <string name="auth_all_fields_required">All Fields Required</string>
+    <string name="tos_url">https://overtime.tv/terms_camera</string>
+    <string name="auth_check_back_status">Check back later</string>
 
 </resources>

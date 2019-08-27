@@ -10,7 +10,7 @@ import io.reactivex.disposables.Disposable
 class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationManager) {
 
     fun onCreate() {
-        checkPermissions()
+        view.beginPermissionsFlow()
     }
 
     private fun checkPermissions() {
@@ -77,10 +77,12 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     fun onDestroy() {
         verifyDisposable?.dispose()
         codeDisposable?.dispose()
+        authDis?.dispose()
+        userDisposable?.dispose()
     }
 
     fun resendAccessCode() {
-
+        //TODO !
     }
 
     fun resetViews() {
@@ -93,13 +95,9 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
         codeDisposable?.dispose()
         codeDisposable = auth
             .onVerifyAccessCodeRecieved(code)
-            .doFinally {
-                view.hideDisplayProgress()
-                refreshAuth()
-            }
             .doOnSuccess {
                 UserPreference.authToken = it.token
-                view.displaySignUpPage()
+                refreshAuth()
             }
             .doOnError {
                 println("Stacktrace :: ${it.message}")
@@ -113,13 +111,12 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
 
     var authDis: Disposable? = null
     private fun refreshAuth() {
-        println("REFRESHING>>>>>>>>>>>>...")
         authDis?.dispose()
         authDis = auth
             .onRefreshAuth()
             .doOnSuccess {
-                println("WTFFF>>>>>>>.... ${it.data.user.id}")
                 UserPreference.userId = it.data.user.id
+                retrieveFullUser()
             }
             .doOnError {
                 println("ERROR ::: $it")
@@ -131,6 +128,30 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             })
     }
 
+    var userDisposable: Disposable? = null
+    var allowAccess: Boolean = false
+    fun retrieveFullUser() {
+        println("Retrieve....")
+        userDisposable?.dispose()
+        userDisposable = auth
+            .getFullUser()
+            .doOnError {
+                it.printStackTrace()
+            }
+            .doFinally {
+                view.hideDisplayProgress()
+            }
+            .subscribe({
+                auth.saveUserToDB(it.user)
+                allowAccess = it.user.is_camera_authorized ?: false
+                if (allowAccess) {
+                    view.displaySignUpPage()
+                } else view.displayPermissions()
+            }, {
+
+            })
+
+    }
 
 }
 

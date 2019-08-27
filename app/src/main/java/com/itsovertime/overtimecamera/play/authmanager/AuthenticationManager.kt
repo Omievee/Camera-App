@@ -15,4 +15,5 @@ interface AuthenticationManager {
     fun submitApplication(name: String, city: String): Single<ApplicationResponse>
     fun onRefreshAuth(): Single<RestrictionsResponse>
     fun saveUserToDB(user: User)
+    fun getFullUser():Single<ApplicationResponse>
 }
