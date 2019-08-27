@@ -3,6 +3,7 @@ package com.itsovertime.overtimecamera.play.baseactivity
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import io.reactivex.disposables.Disposable
@@ -13,7 +14,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
         view.beginPermissionsFlow()
     }
 
-    private fun checkPermissions() {
+    fun checkPermissions() {
         if (ContextCompat.checkSelfPermission(
                 view,
                 Manifest.permission.CAMERA
@@ -32,13 +33,13 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             view.displayAlert()
-        } else {
+        }else{
             view.setUpAdapter()
         }
     }
 
     fun permissionsDenied() {
-
+        view.showToast(view.applicationContext.getString(R.string.permissions_required_msg))
     }
 
     fun setUpAdapter() {

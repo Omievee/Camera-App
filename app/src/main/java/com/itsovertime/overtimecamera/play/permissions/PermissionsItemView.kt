@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.itsovertime.overtimecamera.play.R
+import kotlinx.android.synthetic.main.permissions_item_view.view.*
 
 class PermissionsItemView(context: Context, attributeSet: AttributeSet? = null) :
     ConstraintLayout(context, attributeSet) {
@@ -17,5 +18,6 @@ class PermissionsItemView(context: Context, attributeSet: AttributeSet? = null) 
 
     fun bind(pres: PermissionPresentation) {
         println("Permission??? ${pres.permissionTitle}")
+        permission.text = pres.permissionTitle
     }
 }

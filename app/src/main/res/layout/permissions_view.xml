@@ -59,4 +59,18 @@
             app:layout_constraintStart_toStartOf="@id/start"
             app:layout_constraintTop_toBottomOf="@id/permissionHeader" />
 
+    <Button
+            android:id="@+id/allowPermissions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rectangle"
+            android:padding="@dimen/margin_half"
+            android:text="Allow Required Permissions"
+            android:textAllCaps="false"
+            android:textColor="@color/OT_White"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/end"
+            app:layout_constraintStart_toStartOf="@id/start"
+            app:layout_constraintTop_toBottomOf="@id/permissionsRV" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

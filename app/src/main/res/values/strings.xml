@@ -42,5 +42,6 @@
     <string name="permissions_mic">Enable Microphone Access</string>
     <string name="permissions_location">Enable Location Access</string>
     <string name="permissions_storage">Enable Storage Access</string>
+    <string name="permissions_required_msg">All permissions are required to continue</string>
 
 </resources>

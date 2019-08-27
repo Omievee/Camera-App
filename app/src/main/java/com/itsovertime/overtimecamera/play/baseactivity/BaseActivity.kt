@@ -32,6 +32,7 @@ import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.permissions_view.*
 import kotlinx.android.synthetic.main.phone_verification.*
 import javax.inject.Inject
 
@@ -110,6 +111,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             }
             R.id.resend -> presenter.resendAccessCode()
             R.id.changeNum -> presenter.resetViews()
+            R.id.allowPermissions -> presenter.checkPermissions()
         }
     }
 
@@ -132,6 +134,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun setUpAdapter() {
+        permissions.visibility = View.GONE
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
         viewPager.adapter = CustomViewPageAdapter(supportFragmentManager, true)
     }
@@ -146,20 +149,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun displayAlert() {
-        AlertDialog.Builder(this, R.style.CUSTOM_ALERT)
-            .setTitle("Permissions Request")
-            .setMessage("Allow overtimecamera..")
-            .setPositiveButton("Continue") { _, _ ->
-                displaySystemPermissionsDialog()
-            }
-            .setNegativeButton("Not Now") { _, _ ->
-                presenter.permissionsDenied()
-            }
-            .setCancelable(false)
-            .show()
-    }
-
-    private fun displaySystemPermissionsDialog() {
         requestPermissions(
             requiredAppPermissions,
             permissionsCode
@@ -183,7 +172,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         submit.setOnClickListener(this)
         resend.setOnClickListener(this)
         changeNum.setOnClickListener(this)
-
+        allowPermissions.setOnClickListener(this)
         when (intent?.extras?.get("logIn")) {
             true -> {
                 if (UserPreference.isSignUpComplete) {
@@ -195,7 +184,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                 phoneVerificationView.visibility = View.VISIBLE
             }
         }
-        //presenter.onCreate()
         scheduleJob()
         //detectOrientation()
         keepScreenUnlocked()

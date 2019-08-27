@@ -39,7 +39,12 @@ class PermissionsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-        return BaseViewHolder(PermissionsItemView(parent.context))
+        return BaseViewHolder(PermissionsItemView(parent.context).apply {
+            layoutParams = ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        })
     }
 
     override fun getItemCount(): Int {
