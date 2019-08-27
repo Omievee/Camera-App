@@ -38,8 +38,9 @@ import javax.inject.Inject
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
-    override fun beginPermissionsFlow() {
 
+    override fun beginPermissionsFlow() {
+        permissions.visibility = View.VISIBLE
     }
 
     var orientation: OrientationEventListener? = null

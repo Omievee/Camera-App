@@ -1,7 +1,10 @@
 package com.itsovertime.overtimecamera.play.onboarding
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.itsovertime.overtimecamera.play.R
@@ -15,10 +18,56 @@ import kotlinx.android.synthetic.main.activity_onboarding.*
 import kotlinx.android.synthetic.main.fragment_tos.*
 import javax.inject.Inject
 
-class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick {
+class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick, View.OnClickListener {
+    var clickedMore: Boolean = false
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.accept -> {
+                when (clickedMore) {
+                    true -> {
+                        progress.visibility = View.VISIBLE
+                        userAgreedToTOS()
+                    }
+                    false -> {
+                        deny.visibility = View.VISIBLE
+                        webview.flingScroll(0, 17500)
+                        clickedMore = true
+                        accept.text = getString(R.string.auth_tos_accept)
+                    }
+                }
+            }
+            R.id.deny -> {
+                finishAffinity()
+            }
+        }
+    }
+
+    var agreeDisp: Disposable? = null
+    private fun userAgreedToTOS() {
+        agreeDisp?.dispose()
+        agreeDisp =
+            auth
+                .onUserAgreedToTOS()
+                .doFinally {
+                    progress.visibility = View.GONE
+                }
+                .doOnSuccess {
+                    tos.visibility = View.GONE
+                }
+                .doOnError {
+                    makeToast(getString(R.string.auth_try_again))
+                    it.printStackTrace()
+                }
+                .subscribe({
+
+                }, {
+
+                })
+    }
+
+
     override fun checkStatus() {
         progress.visibility = View.VISIBLE
-        println("Retrieve....")
         userDisposable?.dispose()
         userDisposable = auth
             .getFullUser()
@@ -27,15 +76,12 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick {
             }
             .doFinally {
                 progress.visibility = View.GONE
+                onboardinViewpager.currentItem = 2
             }
             .subscribe({
                 auth.saveUserToDB(it.user)
-                if (it.user.is_camera_authorized != true) {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.auth_check_back_status),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                if (it.user.camera_tos_agreed_at == null) {
+                    makeToast(getString(R.string.auth_check_back_status))
                 } else finish()
             }, {
             })
@@ -51,12 +97,15 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick {
         if (onboardinViewpager.currentItem == 0) {
             onboardinViewpager.currentItem = 1
         } else if (onboardinViewpager.currentItem == 1 && name.equals("") || city.equals("")) {
-            Toast.makeText(this, getString(R.string.auth_all_fields_required), Toast.LENGTH_SHORT)
-                .show()
+            makeToast(getString(R.string.auth_all_fields_required))
         } else {
             progress.visibility = View.VISIBLE
             submitApplication(name ?: "", city ?: "")
         }
+    }
+
+    fun makeToast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT)
     }
 
     var submitDisposable: Disposable? = null
@@ -85,15 +134,28 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_onboarding)
 
+        accept.setOnClickListener(this)
+        deny.setOnClickListener(this)
 
-        displayTOS()
+
+
+
+
 
         onboardinViewpager.adapter =
             CustomViewPageAdapter(supportFragmentManager, isMainViewPager = false)
-        if (UserPreference.isSignUpComplete)
-            onboardinViewpager.currentItem = 2
+
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (UserPreference.isSignUpComplete) {
+            checkStatus()
+        }
+
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
     private fun displayTOS() {
         tos.visibility = View.VISIBLE
 

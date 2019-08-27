@@ -35,5 +35,12 @@
     <string name="auth_all_fields_required">All Fields Required</string>
     <string name="tos_url">https://overtime.tv/terms_camera</string>
     <string name="auth_check_back_status">Check back later</string>
+    <string name="auth_tos_accept">Accept</string>
+    <string name="auth_try_again">Error. Try Again Later</string>
+    <string name="permissions_message_header">We need a few things before you can start</string>
+    <string name="permissions_camera">Enable Camera Access</string>
+    <string name="permissions_mic">Enable Microphone Access</string>
+    <string name="permissions_location">Enable Location Access</string>
+    <string name="permissions_storage">Enable Storage Access</string>
 
 </resources>

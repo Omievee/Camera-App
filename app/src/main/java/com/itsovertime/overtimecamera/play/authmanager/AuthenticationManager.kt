@@ -1,10 +1,7 @@
 package com.itsovertime.overtimecamera.play.authmanager
 
 import com.itsovertime.overtimecamera.play.model.User
-import com.itsovertime.overtimecamera.play.network.AccessResponse
-import com.itsovertime.overtimecamera.play.network.ApplicationResponse
-import com.itsovertime.overtimecamera.play.network.LoginResponse
-import com.itsovertime.overtimecamera.play.network.RestrictionsResponse
+import com.itsovertime.overtimecamera.play.network.*
 import io.reactivex.Single
 
 interface AuthenticationManager {
@@ -15,5 +12,6 @@ interface AuthenticationManager {
     fun submitApplication(name: String, city: String): Single<ApplicationResponse>
     fun onRefreshAuth(): Single<RestrictionsResponse>
     fun saveUserToDB(user: User)
-    fun getFullUser():Single<ApplicationResponse>
+    fun getFullUser(): Single<ApplicationResponse>
+    fun onUserAgreedToTOS(): Single<TOSResponse>
 }

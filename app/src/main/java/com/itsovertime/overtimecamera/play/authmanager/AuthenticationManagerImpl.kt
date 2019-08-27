@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.authmanager
 
 import android.annotation.SuppressLint
+import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -19,12 +20,20 @@ class AuthenticationManagerImpl(
     val context: OTApplication,
     val api: Api
 ) : AuthenticationManager {
+
+    override fun onUserAgreedToTOS(): Single<TOSResponse> {
+
+        return api
+            .acceptToTOS(UserPreference.userId, BuildConfig.APPLICATION_ID)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
     override fun getFullUser(): Single<ApplicationResponse> {
         return api
             .getUser(UserPreference.userId)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-
 
     }
 

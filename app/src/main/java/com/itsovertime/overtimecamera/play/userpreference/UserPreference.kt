@@ -13,6 +13,16 @@ object UserPreference {
         sPrefs = context.getSharedPreferences(Constants.PREFS_FILE, Context.MODE_PRIVATE)
     }
 
+    var hasUserAgreedToTOS: Boolean
+        get() {
+            return sPrefs.getBoolean(Constants.TOS, false)
+        }
+        set(value) {
+            sPrefs.edit().putBoolean(Constants.TOS, value).apply()
+        }
+
+
+
     var isSignUpComplete: Boolean
         get() {
             return sPrefs.getBoolean(Constants.COMPLETE, false)

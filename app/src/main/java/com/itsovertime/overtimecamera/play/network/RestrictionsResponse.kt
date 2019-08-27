@@ -13,3 +13,4 @@ class Data(
 )
 
 class TOSResponse()
+class TOSRequest(val camera_tos_agreed_at: Boolean = true)
