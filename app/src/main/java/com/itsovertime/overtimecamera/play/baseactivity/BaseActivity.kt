@@ -114,7 +114,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             }
             R.id.resend -> presenter.resendAccessCode()
             R.id.changeNum -> presenter.resetViews()
-            R.id.allowPermissions -> presenter.checkPermissions()
+            R.id.allowPermissions -> if (!presenter.checkPermissions()) {
+                displayAlert()
+            }
         }
     }
 
@@ -168,13 +170,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
 
+        presenter.retrieveFullUser()
         when (intent?.extras?.get("logIn")) {
             true -> {
-                if (UserPreference.isSignUpComplete) {
-                    presenter.retrieveFullUser()
-                } else {
-                    displaySignUpPage()
-                }
+                presenter.retrieveFullUser()
             }
             else -> {
                 phoneVerificationView.visibility = View.VISIBLE

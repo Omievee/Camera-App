@@ -76,13 +76,22 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick, View.
             }
             .doFinally {
                 progress.visibility = View.GONE
-                onboardinViewpager.currentItem = 2
             }
             .subscribe({
                 auth.saveUserToDB(it.user)
+
+                if (it.user.userName != null) {
+                    onboardinViewpager.currentItem = 2
+                }
                 if (it.user.camera_tos_agreed_at == null) {
+                    displayTOS()
+                }
+
+                if (it.user.is_camera_authorized == false) {
                     makeToast(getString(R.string.auth_check_back_status))
                 } else finish()
+
+
             }, {
             })
     }
@@ -119,7 +128,6 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick, View.
             .doOnSuccess {
                 auth.saveUserToDB(it.user)
                 onboardinViewpager.currentItem = 2
-                UserPreference.isSignUpComplete = true
             }
             .doOnError {
                 println("throwable... ${it.message}")
@@ -138,10 +146,6 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick, View.
         deny.setOnClickListener(this)
 
 
-
-
-
-
         onboardinViewpager.adapter =
             CustomViewPageAdapter(supportFragmentManager, isMainViewPager = false)
 
@@ -149,16 +153,13 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick, View.
 
     override fun onResume() {
         super.onResume()
-        if (UserPreference.isSignUpComplete) {
-            checkStatus()
-        }
+        checkStatus()
 
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun displayTOS() {
         tos.visibility = View.VISIBLE
-
     }
 
     override fun onAttachFragment(fragment: Fragment?) {

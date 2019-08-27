@@ -14,7 +14,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
         view.beginPermissionsFlow()
     }
 
-    fun checkPermissions() {
+    fun checkPermissions(): Boolean {
         if (ContextCompat.checkSelfPermission(
                 view,
                 Manifest.permission.CAMERA
@@ -32,10 +32,9 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
                 Manifest.permission.READ_EXTERNAL_STORAGE
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            view.displayAlert()
-        } else {
-            view.setUpAdapter()
+            return false
         }
+        return true
     }
 
     fun permissionsDenied() {
@@ -132,7 +131,6 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     var userDisposable: Disposable? = null
     var allowAccess: Boolean = false
     fun retrieveFullUser() {
-        println("Retrieve....")
         userDisposable?.dispose()
         userDisposable = auth
             .getFullUser()
@@ -145,8 +143,10 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             .subscribe({
                 auth.saveUserToDB(it.user)
                 allowAccess = it.user.is_camera_authorized ?: false
-                if (!allowAccess) {
+                if (!allowAccess && it.user.userName == null) {
                     view.displaySignUpPage()
+                } else if (!checkPermissions()) {
+                    view.beginPermissionsFlow()
                 } else {
                     view.allowAccess()
                 }
