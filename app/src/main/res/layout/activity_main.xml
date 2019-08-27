@@ -1,46 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black">
+
+    <FrameLayout
+            android:id="@+id/fragContainerB"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
 
+    <com.itsovertime.overtimecamera.play.viewpager.CustomViewpager
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible" />
 
-       <com.itsovertime.overtimecamera.play.viewpager.CustomViewpager
-           android:id="@+id/viewPager"
-           android:layout_width="match_parent"
-           android:layout_height="match_parent"/>
 
+    <com.itsovertime.overtimecamera.play.onboarding.PhoneVerificationView
+            android:id="@+id/phoneVerificationView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
-
-        <TextView
-            android:id="@+id/rotateWarning"
-            android:layout_width="wrap_content"
+    <TextView
+            android:id="@+id/noNetwork"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:padding="@dimen/margin_standard"
-            android:text="Please rotate your phone"
-            android:textColor="@color/OT_White"
-            android:textSize="25sp"
+            android:background="@color/OT_White"
+            android:padding="@dimen/margin_half"
+            android:text="@string/auth_no_network"
+            android:textAlignment="center"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
 
-        <ImageView
-            android:id="@+id/rotateView"
+    <com.itsovertime.overtimecamera.play.permissions.PermissionsView
+            android:id="@+id/permissions"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="@dimen/margin_spacing_extra"
-            android:src="@drawable/rotate_icon"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/rotateWarning" />
-
-
-
+            android:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

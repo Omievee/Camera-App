@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/OT_DarkGray">
+
+    <ImageView
+            android:id="@+id/backGround"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ball"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+
+    <TextView
+            android:id="@+id/enter"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/margin_half"
+            android:text="@string/auth_enter_phone"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="@id/end"
+            app:layout_constraintStart_toStartOf="@id/start"
+            app:layout_constraintTop_toTopOf="@id/top" />
+
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent=".3" />
+
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent=".18" />
+
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/end"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent=".82" />
+
+
+    <TextView
+            android:id="@+id/descrip"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_half"
+            android:text="@string/auth_message"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="@id/end"
+            app:layout_constraintStart_toStartOf="@id/start"
+            app:layout_constraintTop_toBottomOf="@id/enter" />
+
+
+    <TextView
+            android:id="@+id/changeNum"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_half"
+            android:padding="@dimen/margin_half"
+            android:text="(Change Number)"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:textSize="13sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@id/end"
+            app:layout_constraintStart_toStartOf="@id/start"
+            app:layout_constraintTop_toBottomOf="@id/descrip" />
+
+    <EditText
+            android:id="@+id/enterNumber"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_standard"
+            android:background="@android:drawable/screen_background_dark_transparent"
+            android:elevation="5dp"
+            android:inputType="number"
+            android:maxLength="11"
+            android:padding="@dimen/margin_half"
+            android:textAlignment="center"
+            android:textColor="@color/OT_White"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toTopOf="@id/submit"
+            app:layout_constraintEnd_toEndOf="@id/end"
+            app:layout_constraintStart_toStartOf="@id/start"
+            app:layout_constraintTop_toBottomOf="@id/changeNum" />
+
+    <Button
+            android:id="@+id/submit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_standard"
+            android:background="@android:color/transparent"
+            android:elevation="0dp"
+            android:text="@string/auth_submit_button"
+            android:textAllCaps="false"
+            android:textColor="@color/OT_Orange"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="@id/end"
+            app:layout_constraintStart_toStartOf="@id/start"
+            app:layout_constraintTop_toBottomOf="@id/enterNumber" />
+
+    <Button
+            android:id="@+id/resend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:elevation="0dp"
+            android:text="@string/auth_resend_code_button"
+            android:textAllCaps="false"
+            android:textColor="@color/OT_White"
+            android:textSize="15sp"
+            android:visibility="gone"
+            android:textAlignment="center"
+            app:layout_constraintEnd_toEndOf="@id/end"
+            app:layout_constraintStart_toStartOf="@id/start"
+            app:layout_constraintTop_toBottomOf="@id/submit" />
+
+
+    <include
+            android:id="@+id/progress"
+            layout="@layout/progress_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,15 +1,121 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/black"
-    tools:context=".onboarding.OnBoardingFragment">
-
-    <com.itsovertime.overtimecamera.play.viewpager.CustomViewpager
-        android:id="@+id/onBoardingViewpager"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </com.itsovertime.overtimecamera.play.viewpager.CustomViewpager>
+        android:layout_height="match_parent"
+        tools:context=".onboarding.OnBoardingFragment">
+
+    <ImageView
+            android:id="@+id/backGround"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ball"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/bottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent=".8" />
+
+    <TextView
+            android:id="@+id/header"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_double"
+            android:letterSpacing="0"
+            android:textAlignment="center"
+            android:textAllCaps="true"
+            android:textColor="@color/OT_White"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/bottom"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+            android:id="@+id/body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_double"
+            android:paddingBottom="@dimen/margin_half"
+            android:textAlignment="center"
+            android:textColor="@color/OT_White"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/header" />
+
+    <EditText
+            android:id="@+id/nameInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_spacing_min"
+            android:layout_marginEnd="@dimen/margin_half"
+            android:background="@color/OT_White"
+            android:hint="Full Name"
+            android:inputType="textPersonName"
+            android:lines="1"
+            android:maxLines="1"
+            android:padding="@dimen/margin_half"
+            android:textColorHint="@color/background_gray"
+            android:textSize="15sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@id/locInput"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/body" />
+
+    <EditText
+            android:id="@+id/locInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_half"
+            android:layout_marginEnd="@dimen/margin_spacing_min"
+            android:background="@color/OT_White"
+            android:hint="Location (City, State)"
+            android:inputType="text"
+            android:lines="1"
+            android:maxLines="1"
+            android:padding="@dimen/margin_half"
+            android:textColorHint="@color/background_gray"
+            android:textSize="15sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/nameInput"
+            app:layout_constraintTop_toBottomOf="@id/body" />
+
+    <Button
+            android:id="@+id/button"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_double"
+            android:background="@drawable/rectangle"
+            android:textAllCaps="false"
+            android:textColor="@color/OT_White"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/nameInput" />
+
+
+    <TextView
+            android:id="@+id/footer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_double"
+            android:textAlignment="center"
+            android:textColor="@color/OT_White"
+            android:textSize="13sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

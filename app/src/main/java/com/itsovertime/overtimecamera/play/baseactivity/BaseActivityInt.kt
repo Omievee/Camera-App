@@ -6,5 +6,16 @@ interface BaseActivityInt {
     fun displayAlert()
     fun displayDeniedPermissionsView()
     fun setUpAdapter()
+    fun displayProgress()
+    fun hideDisplayProgress()
+    fun displayErrorFromResponse()
+    fun displayEnterResponseView(number: String)
+    fun resetViews()
+    fun displaySignUpPage()
+
+    fun beginPermissionsFlow()
+
 
 }
+
+

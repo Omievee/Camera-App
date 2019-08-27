@@ -13,5 +13,35 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="auth_enter_phone">Enter Phone Number</string>
+    <string name="auth_message">An access code will be sent to your phone via text message</string>
+    <string name="auth_submit_button">Submit</string>
+    <string name="auth_no_network">No Network Connection. Please Reconnect</string>
+    <string name="auth_enter_access_code">Enter Access Code</string>
+    <string name="auth_resend_code_button">Resend Code</string>
+    <string name="auth_invalid_num">Invalid Number</string>
+    <string name="error">Error. Try Again.</string>
+    <string name="onboard_become_member">Become An Overtime Shooter</string>
+    <string name="onboard_message1">You need to be an official Overtime Shooter to use the OT Camera</string>
+    <string name="onboard_button_apply">Apply</string>
+    <string name="onboard_already_member">Already an Overtime Shooter? Please contact your point person.</string>
+    <string name="onbarod_shooters">Shooters Shoot</string>
+    <string name="onboard_message2">Get paid to capture highlights of events in your area. Apply to become an official Overtime Shooter.</string>
+    <string name="onbaord_button_submit">Submit Application</string>
+    <string name="onboard_thank_you">Thank You</string>
+    <string name="onboard_message3">You application has been received.</string>
+    <string name="onboard_status">Check Status</string>
+    <string name="onboard_stay_tuned">Stay tuned. Your application is still being reviewed.</string>
+    <string name="auth_all_fields_required">All Fields Required</string>
+    <string name="tos_url">https://overtime.tv/terms_camera</string>
+    <string name="auth_check_back_status">Check back later</string>
+    <string name="auth_tos_accept">Accept</string>
+    <string name="auth_try_again">Error. Try Again Later</string>
+    <string name="permissions_message_header">We need a few things before you can start</string>
+    <string name="permissions_camera">Enable Camera Access</string>
+    <string name="permissions_mic">Enable Microphone Access</string>
+    <string name="permissions_location">Enable Location Access</string>
+    <string name="permissions_storage">Enable Storage Access</string>
+    <string name="permissions_required_msg">All permissions are required to continue</string>
 
 </resources>

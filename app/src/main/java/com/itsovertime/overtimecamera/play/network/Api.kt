@@ -27,7 +27,9 @@ interface Api {
     @Multipart
     @POST("api/uploads/{videoId}/{uploadChunk}")
     fun uploadSelectedVideo(
-        @Header("Content-Type") typeHeader: String, @Header("Content-MD5") md5Header: String, @Path("videoId") videoId: String, @Path(
+        @Header("Content-Type") typeHeader: String, @Header("Content-MD5") md5Header: String, @Path(
+            "videoId"
+        ) videoId: String, @Path(
             "uploadChunk"
         ) uploadChunk: Int, @Part("description") description: RequestBody,
         @Part file: MultipartBody.Part
@@ -36,5 +38,27 @@ interface Api {
     /*Events endpoint*/
     @GET("api/events?")
     fun getEventData(@Query("starts_after=") time: Date): Single<EventsResponse?>
+
+    @POST("api/auth/send_code")
+    fun verifyNumberForAccessCode(@Body phoneNumber: VerifyNumberRequest): Single<LoginResponse>
+
+    @POST("api/auth/verify_code")
+    fun verifyAccessCode(@Body code: VerifyAccessCodeRequest): Single<AccessResponse>
+
+    @POST("api/auth/resend_code")
+    fun resendAccessCode(@Body code: VerifyAccessCodeRequest): Single<AccessResponse>
+
+    @GET("api/users/{userId}?nocache=true")
+    fun getUser(@Path("userId") userId: String): Single<ApplicationResponse>
+
+    @PUT("api/writer/users/{userId}")
+    fun submitApplication(@Path("userId") id: String, @Body request: ApplicationRequest): Single<ApplicationResponse>
+
+    @GET("api/auth/refresh_token")
+    fun validateTokenCheckRestrictions(): Single<RestrictionsResponse>
+
+    @PUT("api/writer/users/{userId}/agree_to_tos/{bundleId}")
+    fun acceptToTOS(@Path("userId") userId: String, @Path("bundleId") bundle: String): Single<TOSResponse>
+
 }
 
