@@ -143,7 +143,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }
             R.id.favoriteIcon -> {
                 presenter.updateFavoriteField()
-                favoriteIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.fave, null))
+                favoriteIcon.setImageDrawable(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.fave,
+                        null
+                    )
+                )
             }
             R.id.selfieButton -> {
                 presenter.cameraSwitch()
@@ -164,7 +170,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }
             R.id.hahaIcon -> {
                 presenter.updateFunnyField()
-                hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.funny_active, null))
+                hahaIcon.setImageDrawable(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.funny_active,
+                        null
+                    )
+                )
             }
             R.id.uploadButton -> {
                 paused = true
@@ -207,12 +219,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         return gestureDetector.onTouchEvent(event)
     }
 
-    private var gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-        override fun onDoubleTap(e: MotionEvent?): Boolean {
+    private var gestureDetector =
+        GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent?): Boolean {
 //            presenter.cameraSwitch()
-            return true
-        }
-    })
+                return true
+            }
+        })
 
     private var CAMERA: Int = 0
     @SuppressLint("CheckResult")
@@ -300,7 +313,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                         }
                     }
 
-                    println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~camera closed check.... $cameraIsClosed")
                     if (!cameraIsClosed) {
                         synchronized(this) {
                             previewRequestBuilder =
@@ -375,11 +387,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     when (isPaused) {
                         false -> {
                             presenter.saveRecordingToDataBase(selectedEvent ?: return@doFinally)
-//                                startLiveView()
                         }
                         else -> deleteUnsavedFile()
                     }
-
                 }
                 .subscribe({
                 }, {
@@ -394,8 +404,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     private fun hideViews(isSelfieCamera: Boolean) {
         if (!isSelfieCamera) {
-            favoriteIcon.visibility = View.VISIBLE
-            hahaIcon.visibility = View.VISIBLE
+            favoriteIcon?.let {
+                it.visibility = View.VISIBLE
+            }
+            hahaIcon?.let {
+             it.visibility = View.VISIBLE
+            }
 
             val timer = Timer()
             val timerTask = object : TimerTask() {
@@ -494,7 +508,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         builder?.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_camera, container, false)
     }
 
@@ -530,7 +548,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             openCamera(p1, p2, CAMERA)
         }
 
-        override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture, width: Int, height: Int) {}
+        override fun onSurfaceTextureSizeChanged(
+            texture: SurfaceTexture,
+            width: Int,
+            height: Int
+        ) {
+        }
+
         override fun onSurfaceTextureDestroyed(surfaceTexture: SurfaceTexture) = true
         override fun onSurfaceTextureUpdated(surfaceTexture: SurfaceTexture) = Unit
     }
@@ -538,9 +562,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     private fun engageCamera() {
         startBackgroundThread()
+        println("TXVIEW :$txView")
         txView?.let {
             if (it.isAvailable) {
                 cameraIsClosed = false
+                println("opening $cameraIsClosed")
                 openCamera(it.width, it.height, CAMERA)
             } else {
                 it.surfaceTextureListener = surfaceTextureListener
@@ -605,7 +631,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         stopRecording(isPaused)
         hideViews(isSelfieCamera)
         if (!isSelfieCamera) {
-            favoriteIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.favebutton, null))
+            favoriteIcon.setImageDrawable(
+                ResourcesCompat.getDrawable(
+                    resources,
+                    R.drawable.favebutton,
+                    null
+                )
+            )
             hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.haha, null))
         }
     }
@@ -699,6 +731,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         val videoTimeStamp = System.currentTimeMillis().toString()
         videoFile = presenter.getVideoFilePath(videoTimeStamp)
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
+
         when (sensorOrientation) {
             SENSOR_ORIENTATION_DEFAULT_DEGREES ->
                 mediaRecorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
@@ -706,10 +739,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
         }
 
-        val profile = when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
-            true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
-            else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
-        }
+        val profile =
+            when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
+                true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
+                else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
+            }
 
         mediaRecorder?.apply {
             setAudioSource(MediaRecorder.AudioSource.CAMCORDER)

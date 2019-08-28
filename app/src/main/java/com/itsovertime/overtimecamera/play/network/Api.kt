@@ -2,6 +2,7 @@ package com.itsovertime.overtimecamera.play.network
 
 import android.net.Uri
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import io.reactivex.Observable
 import io.reactivex.Single
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -24,16 +25,15 @@ interface Api {
     fun uploadDataForMd5(@Body token: UploadRequest): Single<EncryptedResponse>
 
     /*Step 4: Upload for selected video*/
-    @Multipart
+    @Headers("Content-Type: application/octet-stream")
     @POST("api/uploads/{videoId}/{uploadChunk}")
     fun uploadSelectedVideo(
-        @Header("Content-Type") typeHeader: String, @Header("Content-MD5") md5Header: String, @Path(
+        @Header("Content-MD5") md5Header: String, @Path(
             "videoId"
         ) videoId: String, @Path(
             "uploadChunk"
-        ) uploadChunk: Int, @Part("description") description: RequestBody,
-        @Part file: MultipartBody.Part
-    ): Single<VideoUploadResponse>
+        ) uploadChunk: Int, @Body file: RequestBody
+    ): Observable<VideoUploadResponse>
 
     /*Events endpoint*/
     @GET("api/events?")

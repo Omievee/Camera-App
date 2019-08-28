@@ -79,7 +79,6 @@ class UploadsPresenter(
             })
     }
 
-
     var instanceDisposable: Disposable? = null
     private fun getVideoInstance() {
         instanceDisposable?.dispose()
@@ -163,9 +162,6 @@ class UploadsPresenter(
                 .uploadVideo(upload)
                 .doOnError {
                     println("error from upload api... ${it.message}")
-                }
-                .doOnSuccess {
-                    println("success $it.... ")
                 }
                 .subscribe({
 

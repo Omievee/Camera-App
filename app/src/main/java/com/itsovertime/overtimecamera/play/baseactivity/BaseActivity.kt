@@ -148,6 +148,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun setUpAdapter() {
         permissions.visibility = View.GONE
+        phoneVerificationView.visibility = View.GONE
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
         viewPager.adapter = CustomViewPageAdapter(supportFragmentManager, true)
     }
