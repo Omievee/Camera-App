@@ -13,6 +13,7 @@ interface BaseActivityInt {
 
     fun beginPermissionsFlow()
     fun allowAccess()
+    fun logOut()
 
 
 }

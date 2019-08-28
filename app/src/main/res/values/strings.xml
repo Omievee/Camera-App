@@ -43,5 +43,7 @@
     <string name="permissions_location">Enable Location Access</string>
     <string name="permissions_storage">Enable Storage Access</string>
     <string name="permissions_required_msg">All permissions are required to continue</string>
+    <string name="auth_invalid_access_code">Invalid Code</string>
+    <string name="auth_logout_not_authorized">You are not authorized</string>
 
 </resources>

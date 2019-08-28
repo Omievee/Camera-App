@@ -131,6 +131,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     var userDisposable: Disposable? = null
     var allowAccess: Boolean = false
     fun retrieveFullUser() {
+        view.displayProgress()
         userDisposable?.dispose()
         userDisposable = auth
             .getFullUser()
@@ -142,9 +143,12 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             }
             .subscribe({
                 auth.saveUserToDB(it.user)
-                allowAccess = it.user.is_camera_authorized ?: false
+                UserPreference.accessAllowed = it.user.is_camera_authorized ?: false
                 println("allow $allowAccess")
-                if (!allowAccess) {
+                if (!UserPreference.accessAllowed) {
+                    if (it.user.is_banned == true || it.user.is_suspended == true || it.user.is_camera_rejected == true) {
+                        logOut()
+                    }
                     view.displaySignUpPage()
                 } else if (!checkPermissions()) {
                     view.beginPermissionsFlow()
@@ -155,6 +159,14 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
 
             })
 
+    }
+
+    private fun logOut() {
+        UserPreference.authToken = ""
+        UserPreference.accessAllowed = false
+        UserPreference.userId = ""
+        UserPreference.isSignUpComplete = false
+        view.logOut()
     }
 
 }

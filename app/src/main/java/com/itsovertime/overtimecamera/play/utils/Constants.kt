@@ -8,7 +8,7 @@ class Constants {
         const val Authorization = "Authorization"
         const val PREFS_FILE = "prefs"
         const val ID = "id"
-        const val TOS="tos"
+        const val ACCESS="tos"
         const val COMPLETE = "complete"
         //BaseURL
         const val mainUploadURL = "https://api.itsovertime.com"

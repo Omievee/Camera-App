@@ -16,11 +16,9 @@ import android.view.OrientationEventListener
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
-import androidx.fragment.app.FragmentTransaction
 import androidx.viewpager.widget.ViewPager
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.camera.CameraFragment
@@ -39,6 +37,13 @@ import javax.inject.Inject
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
+    override fun logOut() {
+        viewPager.visibility = View.GONE
+        showToast(getString(R.string.auth_logout_not_authorized))
+        phoneVerificationView.visibility = View.VISIBLE
+        finishAffinity()
+    }
+
     override fun allowAccess() {
         setUpAdapter()
     }
@@ -58,14 +63,12 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         Manifest.permission.ACCESS_FINE_LOCATION
     )
     var accessCodeSent: Boolean = false
-
     override fun displaySignUpPage() {
         startActivityForResult(Intent(this, OnboardingActivity::class.java), 0)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        println("Result.... $requestCode, $resultCode, $data")
         presenter.displayPermission()
     }
 
@@ -116,11 +119,16 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             R.id.changeNum -> presenter.resetViews()
             R.id.allowPermissions -> if (!presenter.checkPermissions()) {
                 displayAlert()
+            } else {
+                setUpAdapter()
             }
         }
     }
 
     private fun submitAccessCode() {
+        if (enterNumber.text.toString() == "" || enterNumber.text.toString().length < 3) {
+            showToast(getString(R.string.auth_invalid_access_code))
+        }
         presenter.submitAccessCode(code = enterNumber.text.toString())
         enterNumber.text.clear()
     }
@@ -170,10 +178,14 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
 
-        presenter.retrieveFullUser()
         when (intent?.extras?.get("logIn")) {
             true -> {
-                presenter.retrieveFullUser()
+                if (UserPreference.accessAllowed) {
+                    setUpAdapter()
+                } else {
+                    displaySignUpPage()
+                }
+
             }
             else -> {
                 phoneVerificationView.visibility = View.VISIBLE
@@ -224,6 +236,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                 it.enable()
             }
         }
+        presenter.retrieveFullUser()
         wakeLockAcquire()
     }
 
@@ -347,6 +360,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 class CustomViewPageAdapter(
     fragmentManager: FragmentManager,
     private val isMainViewPager: Boolean
+
 ) : FragmentPagerAdapter(fragmentManager) {
     var data = listOf(
         OnboardData(
@@ -393,7 +407,6 @@ class CustomViewPageAdapter(
                 }
             }
             false -> {
-                println("false vewpager")
                 OnBoardingFragment.newInstance(data[position])
             }
         }
