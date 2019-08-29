@@ -58,7 +58,7 @@ class UploadsManagerImpl(
 
 
     override fun registerUploadForId(data: TokenResponse): Single<EncryptedResponse> {
-        val md5 = toHex(File(favoriteVideos[0].trimmedVidPath).absolutePath)
+        val md5 = hexToString(File(favoriteVideos[0].trimmedVidPath).readBytes())
         return api
             .uploadDataForMd5(
                 UploadRequest(
@@ -82,32 +82,6 @@ class UploadsManagerImpl(
     }
 
 
-//    private fun getMD5EncryptedString(encTarget: String): String {
-//        var mdEnc: MessageDigest? = null
-//        try {
-//            mdEnc = MessageDigest.getInstance("MD5")
-//        } catch (e: NoSuchAlgorithmException) {
-//            println("Exception while encrypting to md5")
-//            e.printStackTrace()
-//        }
-//        // Encryption algorithm
-//        mdEnc?.update(encTarget.toByteArray(), 0, encTarget.length)
-//        var md5 = BigInteger(1, mdEnc?.digest()).toString(16)
-//        while (md5.length < 32) {
-//            md5 = "0$md5"
-//        }
-//        return md5
-//    }
-
-    fun toHex(string: String): String {
-        val md5 = MessageDigest.getInstance("MD5")
-        val hash = BigInteger(
-            1,
-            md5.digest(string.toByteArray(Charset.defaultCharset()))
-        ).toString(16)
-        return hash
-    }
-
     private fun toHexString(bytes: ByteArray): String {
         val hexString = StringBuilder()
         for (i in bytes.indices) {
@@ -128,25 +102,18 @@ class UploadsManagerImpl(
             MIN_CHUNK_SIZE.toInt()
         )
 
-        val md5 = MessageDigest.getInstance("MD5")
-        val hash = BigInteger(
-            1,
-            md5.digest(array[0])
-        ).toString(16)
-
         val request = RequestBody.create(
             MediaType.parse("application/octet-stream"),
             array[0]
         )
         return api
             .uploadSelectedVideo(
-                md5Header = hash,
+                md5Header = hexToString(array[0]),
                 videoId = upload.id ?: "",
                 uploadChunk = 0,
                 file = request
             )
             .doOnError {
-                println("Throwable... ${it.localizedMessage}")
             }
             .doOnComplete {
             }
@@ -170,6 +137,14 @@ class UploadsManagerImpl(
             start += chunksize
         }
         return ret
+    }
+
+    private fun hexToString(byte: ByteArray): String {
+        val md5 = MessageDigest.getInstance("MD5")
+        return BigInteger(
+            1,
+            md5.digest(byte)
+        ).toString(16)
     }
 
 

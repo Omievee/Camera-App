@@ -20,7 +20,6 @@
                 android:id="@+id/counterText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="20"
                 android:layout_gravity="center"
                 android:textAlignment="center"
                 android:textColor="@android:color/black"

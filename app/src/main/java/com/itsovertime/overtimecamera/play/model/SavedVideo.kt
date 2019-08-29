@@ -12,8 +12,10 @@ data class SavedVideo(
     @PrimaryKey
     @ColumnInfo(name = "clientId")
     val clientId: String,
+    @ColumnInfo(name = "id")
+    val id: String?="",
     @ColumnInfo(name = "uploadId")
-    val uploadId: String?=null,
+    val uploadId: String? = null,
     @ColumnInfo(name = "vidPath")
     val vidPath: String?,
     @ColumnInfo(name = "mediumVidPath")

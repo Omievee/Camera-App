@@ -122,7 +122,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var sensorOrientation = 0
     var videoFile: File? = null
     var mediaRecorder: MediaRecorder? = null
-    var txView: TXView? = null
     var captureSession: CameraCaptureSession? = null
     lateinit var previewRequestBuilder: CaptureRequest.Builder
 
@@ -136,8 +135,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             R.id.tapToSave -> {
                 progress.visibility = View.VISIBLE
                 if (recording) {
+                    println("clicked.... $recording")
                     stopLiveView(false, selfieCameraEngaged ?: false)
                 } else {
+                    println("clicked.... $recording")
                     startLiveView()
                 }
             }
@@ -206,7 +207,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         favoriteIcon.setOnClickListener(this)
         selfieButton.setOnClickListener(this)
         pauseButton.setOnClickListener(this)
-        txView?.setOnTouchListener(this)
         pausedView.setOnClickListener(this)
         hahaIcon.setOnClickListener(this)
         eventSpace.setOnClickListener(this)
@@ -277,7 +277,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @SuppressLint("CheckResult")
     override fun startRecording() {
         recording = true
-        if (cameraDevice == null || txView?.isAvailable == false) {
+        if (cameraDevice == null || !cameraView.isAvailable) {
             return
         }
         try {
@@ -287,18 +287,22 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doFinally {
+                    println("PROGRESS GONE...")
                     activity?.runOnUiThread {
                         progress.visibility = View.GONE
                     }
                 }
                 .map {
+                    println("MRRRRRRRR $it")
                     mediaRecorder = it
                 }
                 .doOnSuccess {
+                    println("SUCCESSSSS ")
                     mediaRecorder?.start()
                 }
                 .subscribe({
-                    val texture = txView?.surfaceTexture.apply {
+                    println("SUBSCRIBE MRRRRRR >>>>>> $mediaRecorder")
+                    val texture = cameraView.surfaceTexture.apply {
                         this?.setDefaultBufferSize(
                             videoSize?.width ?: 0, videoSize?.height
                                 ?: 0
@@ -373,6 +377,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     @SuppressLint("CheckResult")
     override fun stopRecording(isPaused: Boolean) {
+        println("STOP RECORDING>>>>>>>>")
         stopRecordingThread()
         recording = false
         try {
@@ -381,9 +386,15 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     stop()
                     reset()
                 }
+                mediaRecorder = null
+                println("MEDIA STOP>>>> $mediaRecorder")
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnError {
+                    println("ERROR:::::: ${it.message}")
+                }
                 .doFinally {
+                    println("FINALLY $isPaused")
                     when (isPaused) {
                         false -> {
                             presenter.saveRecordingToDataBase(selectedEvent ?: return@doFinally)
@@ -408,7 +419,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 it.visibility = View.VISIBLE
             }
             hahaIcon?.let {
-             it.visibility = View.VISIBLE
+                it.visibility = View.VISIBLE
             }
 
             val timer = Timer()
@@ -436,9 +447,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     override fun startPreview() {
+        println("Start preview...")
         try {
             closePreviewSession()
-            val texture = txView?.surfaceTexture
+            val texture = cameraView.surfaceTexture
             texture?.setDefaultBufferSize(videoSize?.width ?: 0, videoSize?.height ?: 0)
 
             if (!cameraIsClosed) {
@@ -533,18 +545,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     private var evAdapter: EventsAdapter? = null
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        txView = cameraView
         presenter.setUpClicks()
         presenter.checkGallerySize()
-
-
         getEventData()
+        println("on view created.... $view")
         hiddenEvents.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
     }
 
 
     private val surfaceTextureListener = object : TextureView.SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(p0: SurfaceTexture?, p1: Int, p2: Int) {
+            println("surface listener.... $p1 ++ $p2")
             openCamera(p1, p2, CAMERA)
         }
 
@@ -562,16 +573,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     private fun engageCamera() {
         startBackgroundThread()
-        println("TXVIEW :$txView")
-        txView?.let {
-            if (it.isAvailable) {
-                cameraIsClosed = false
-                println("opening $cameraIsClosed")
-                openCamera(it.width, it.height, CAMERA)
-            } else {
-                it.surfaceTextureListener = surfaceTextureListener
-            }
+        println("ENGAGING CAMERA>>>>>>>>>>>>>>>> ${cameraView.isAvailable}")
+        if (cameraView.isAvailable) {
+            cameraIsClosed = false
+            println("opening $cameraIsClosed")
+            openCamera(cameraView.width, cameraView.height, CAMERA)
+        } else {
+            println("else.... $cameraView")
+            cameraView.surfaceTextureListener = surfaceTextureListener
         }
+
     }
 
     override fun onPause() {
@@ -584,6 +595,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         if (pausedView.visibility == View.GONE && this.fragmentIsVisibleToUser != false) {
             paused = false
             progress.visibility = View.VISIBLE
+            println("resume...")
             engageCamera()
         }
 
@@ -600,9 +612,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
                 if (recording) {
+                    presenter.clearProgressAnimation()
                     paused = true
                     stopLiveView(paused, selfieCameraEngaged ?: false)
-                    presenter.clearProgressAnimation()
                 }
             }
             .subscribe({
@@ -654,6 +666,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var manager: CameraManager? = null
     @SuppressLint("MissingPermission")
     override fun openCamera(width: Int, height: Int, camera: Int) {
+        println("OPEN CAMERA>>>>")
         manager = context?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
@@ -673,13 +686,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
 
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                txView?.setAspectRatio(videoSize?.width ?: 0, videoSize?.height ?: 0)
+                cameraView.setAspectRatio(videoSize?.width ?: 0, videoSize?.height ?: 0)
             } else {
-                txView?.setAspectRatio(videoSize?.height ?: 0, videoSize?.width ?: 0)
+                cameraView.setAspectRatio(videoSize?.height ?: 0, videoSize?.width ?: 0)
             }
 
             mediaRecorder = MediaRecorder()
-            txView?.setTransform(Matrix())
+            cameraView.setTransform(Matrix())
             manager?.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
 
         } catch (e: CameraAccessException) {
@@ -765,7 +778,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         fragmentIsVisibleToUser = isVisibleToUser
+        println("setUserVisibleHint $isVisibleToUser && $view")
         if (isVisibleToUser && view != null) {
+            println("setUserVisibleHint $isVisibleToUser && $view")
             progress.visibility = View.VISIBLE
             engageCamera()
         }
@@ -775,6 +790,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         override fun onOpened(cameraDevice: CameraDevice) {
             cameraOpenCloseLock.release()
             this@CameraFragment.cameraDevice = cameraDevice
+            println("on opened... $cameraDevice")
             startPreview()
         }
 
