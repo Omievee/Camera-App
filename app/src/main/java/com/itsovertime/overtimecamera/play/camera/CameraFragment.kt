@@ -288,9 +288,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 .observeOn(AndroidSchedulers.mainThread())
                 .doFinally {
                     println("PROGRESS GONE...")
-                    activity?.runOnUiThread {
-                        progress.visibility = View.GONE
-                    }
+                    progress.visibility = View.GONE
                 }
                 .map {
                     println("MRRRRRRRR $it")
@@ -397,7 +395,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     println("FINALLY $isPaused")
                     when (isPaused) {
                         false -> {
-                            presenter.saveRecordingToDataBase(selectedEvent ?: return@doFinally)
+                            println("selected Event $selectedEvent")
+                            presenter.saveRecordingToDataBase(selectedEvent)
                         }
                         else -> deleteUnsavedFile()
                     }
@@ -459,13 +458,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 }
                 val previewSurface = Surface(texture)
                 previewRequestBuilder.addTarget(previewSurface)
+
                 cameraDevice?.createCaptureSession(
                     listOf(previewSurface),
                     object : CameraCaptureSession.StateCallback() {
                         override fun onConfigured(session: CameraCaptureSession) {
                             captureSession = session
                             updatePreview()
-
                         }
 
                         override fun onConfigureFailed(session: CameraCaptureSession) {
@@ -592,10 +591,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun onResume() {
         super.onResume()
+        println("<<<<<<<<<<<<<<<<<< ON REUSUME>>>>>>>>>>>>>>>>...")
         if (pausedView.visibility == View.GONE && this.fragmentIsVisibleToUser != false) {
             paused = false
             progress.visibility = View.VISIBLE
-            println("resume...")
             engageCamera()
         }
 

@@ -45,7 +45,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun allowAccess() {
-        setUpAdapter()
+
     }
 
     override fun beginPermissionsFlow() {
@@ -147,6 +147,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun setUpAdapter() {
+        println("set adapter..")
         permissions.visibility = View.GONE
         phoneVerificationView.visibility = View.GONE
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
@@ -182,11 +183,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         when (intent?.extras?.get("logIn")) {
             true -> {
                 if (UserPreference.accessAllowed) {
-                    setUpAdapter()
+                    presenter.setUpAdapter()
                 } else {
                     displaySignUpPage()
                 }
-
             }
             else -> {
                 phoneVerificationView.visibility = View.VISIBLE
@@ -238,6 +238,8 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             }
         }
         presenter.retrieveFullUser()
+
+
         wakeLockAcquire()
     }
 
@@ -361,7 +363,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 class CustomViewPageAdapter(
     fragmentManager: FragmentManager,
     private val isMainViewPager: Boolean
-
 ) : FragmentPagerAdapter(fragmentManager) {
     var data = listOf(
         OnboardData(
@@ -391,7 +392,9 @@ class CustomViewPageAdapter(
 
     override fun getCount(): Int {
         TABS = when (isMainViewPager) {
-            true -> 2
+            true -> {
+                2
+            }
             else -> data.size
         }
         return TABS

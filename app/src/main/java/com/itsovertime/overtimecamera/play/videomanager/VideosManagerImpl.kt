@@ -279,7 +279,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     private var lastVideoId: String = ""
     @SuppressLint("CheckResult")
-    override fun saveHighQualityVideoToDB(event: Event, filePath: String, isFavorite: Boolean) {
+    override fun saveHighQualityVideoToDB(event: Event?, filePath: String, isFavorite: Boolean) {
         this.lastVideoMaxTime = event?.max_video_length.toString()
         println("Max time::: $lastVideoMaxTime")
         Observable.fromCallable {
@@ -288,12 +288,12 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 clientId = clientId,
                 vidPath = filePath,
                 is_favorite = isFavorite,
-                eventId = event.id,
-                eventName = event.name,
-                starts_at = event.starts_at,
-                address = event.address,
-                latitude = event.latitude,
-                longitude = event.longitude,
+                eventId = event?.id ?: "",
+                eventName = event?.name,
+                starts_at = event?.starts_at,
+                address = event?.address,
+                latitude = event?.latitude,
+                longitude = event?.longitude,
                 uploadState = UploadState.QUEUED
             )
             val videoDao = db?.videoDao()

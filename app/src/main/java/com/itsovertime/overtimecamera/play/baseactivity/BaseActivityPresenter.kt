@@ -42,6 +42,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     }
 
     fun setUpAdapter() {
+        println("set up presenter..")
         view.setUpAdapter()
     }
 
@@ -151,8 +152,6 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
                     view.displaySignUpPage()
                 } else if (!checkPermissions()) {
                     view.beginPermissionsFlow()
-                } else {
-                    view.allowAccess()
                 }
             }, {
 

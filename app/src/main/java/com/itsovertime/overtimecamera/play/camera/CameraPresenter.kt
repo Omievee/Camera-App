@@ -31,15 +31,19 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
-    fun saveRecordingToDataBase(videoEvent: Event) {
-        println("Saving............")
+    var e:Event?=null
+    fun saveRecordingToDataBase(videoEvent: Event?) {
+
+        e = videoEvent
+        println("Saving............ $e")
         filePath?.let {
             manager.saveHighQualityVideoToDB(
-                    event = videoEvent,
+                    event = e,
                     filePath = it,
                     isFavorite = false
             )
         }
+        println("file... $filePath ++ end")
         view.startPreview()
     }
 

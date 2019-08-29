@@ -25,13 +25,12 @@
       <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/javaCompile.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/javaCompile.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/taskHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/5.1.1/javaCompile/taskHistory.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraFragment.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraFragment.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/db/AppDataBase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/db/AppDataBase.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/model/SavedVideo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/model/SavedVideo.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/uploadsmanager/UploadsManagerImpl.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/uploadsmanager/UploadsManagerImpl.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/fragment_camera.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/fragment_camera.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/upload_button_view.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/upload_button_view.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraPresenter.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraPresenter.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManager.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManager.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManagerImpl.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManagerImpl.kt" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -91,8 +90,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraFragment.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="573" column="32" lean-forward="true" selection-start-line="573" selection-start-column="32" selection-end-line="573" selection-end-column="32" />
+            <state relative-caret-position="257">
+              <caret line="398" column="75" selection-start-line="398" selection-start-column="75" selection-end-line="398" selection-end-column="75" />
             </state>
           </provider>
         </entry>
@@ -109,8 +108,17 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraPresenter.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="473">
-              <caret line="41" column="9" lean-forward="true" selection-start-line="41" selection-start-column="9" selection-end-line="41" selection-end-column="9" />
+            <state relative-caret-position="219">
+              <caret line="37" column="38" selection-start-line="37" selection-start-column="38" selection-end-line="37" selection-end-column="38" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManagerImpl.kt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-115">
+              <caret line="295" column="34" selection-start-line="295" selection-start-column="34" selection-end-line="295" selection-end-column="34" />
             </state>
           </provider>
         </entry>
@@ -133,26 +141,7 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>resume...</find>
-      <find>openca</find>
-      <find>surface listener</find>
-      <find>startpreview()</find>
-      <find>cameraStateCallBack</find>
-      <find>openCamera</find>
-      <find>opening</find>
-      <find>on opened...</find>
-      <find>R.id.pau</find>
-      <find>recording =</find>
-      <find>engagecam</find>
-      <find>uplo</find>
-      <find>OPEN CAMERA&gt;&gt;&gt;&gt;</find>
-      <find>saving</find>
-      <find>sav</find>
-      <find>PROGRESS GONE...</find>
-      <find>R.id.tap</find>
-      <find>view.</find>
       <find>dofinally {</find>
-      <find>savereco</find>
       <find>FINALLY $</find>
       <find>onbackpre</find>
       <find>MEDIA STOP</find>
@@ -162,6 +151,25 @@
       <find>onviewcreat</find>
       <find>setuser</find>
       <find>null</find>
+      <find>resume...</find>
+      <find>ON REUSUME</find>
+      <find>&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; ON REUSUME&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;...</find>
+      <find>TABS</find>
+      <find>setUpAdapter()</find>
+      <find>setupadapter()</find>
+      <find>setupada</find>
+      <find>setupadapter</find>
+      <find>set adapter..</find>
+      <find>s</find>
+      <find>presenter.retrieveFullUser()</find>
+      <find>set up presenter..</find>
+      <find>onresume</find>
+      <find>ACTIVITY?.RUNON</find>
+      <find>CLICKED...</find>
+      <find>PRO</find>
+      <find>event:E</find>
+      <find>FINALLY</find>
+      <find>savereco</find>
       <find>engaging</find>
     </findStrings>
     <replaceStrings>
@@ -180,9 +188,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/onboarding/PhoneVerificationView.kt" />
-        <option value="$PROJECT_DIR$/app/src/main/res/layout/progress_view.xml" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityModule.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/di/AppModule.kt" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/activity_splash.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/network/VerifyNumberRequest.kt" />
@@ -222,14 +227,17 @@
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/uploadsmanager/UploadsManager.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/network/Api.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/network/StaticApiModule.kt" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt" />
-        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/uploads/UploadsPresenter.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/db/AppDataBase.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/model/SavedVideo.kt" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/upload_button_view.xml" />
         <option value="$PROJECT_DIR$/app/src/main/res/layout/fragment_camera.xml" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/uploadsmanager/UploadsManagerImpl.kt" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManager.kt" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManagerImpl.kt" />
+        <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraPresenter.kt" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraFragment.kt" />
       </list>
     </option>
@@ -507,17 +515,17 @@
       <window_info id="Favorites" order="6" sideWeight="0.43975285" side_tool="true" weight="0.09105431" />
       <window_info id="Build Variants" order="7" sideWeight="0.46253747" side_tool="true" weight="0.10543131" />
       <window_info id="Resources Explorer" order="8" />
-      <window_info anchor="bottom" x="1699" y="0" width="1883" height="1080" id="Version Control" order="0" type="FLOATING" weight="0.8881119" />
+      <window_info anchor="bottom" x="0" y="0" width="1680" height="1050" id="Version Control" order="0" type="FLOATING" weight="0.8881119" />
       <window_info anchor="bottom" id="TODO" order="1" weight="0.32967034" />
       <window_info anchor="bottom" id="Event Log" order="2" sideWeight="0.456869" side_tool="true" weight="0.32667333" />
-      <window_info anchor="bottom" id="Terminal" order="3" sideWeight="0.58359957" weight="0.7202797" />
+      <window_info anchor="bottom" id="Terminal" order="3" sideWeight="0.58359957" weight="0.14521112" />
       <window_info anchor="bottom" id="Logcat" order="4" sideWeight="0.63045794" weight="0.32867134" />
       <window_info anchor="bottom" id="Android Profiler" order="5" weight="0.57942057" />
       <window_info anchor="bottom" id="Build" order="6" sideWeight="0.543131" weight="0.55444556" />
       <window_info anchor="bottom" id="Debug" order="7" weight="0.24975026" />
       <window_info anchor="bottom" id="Find" order="8" weight="0.21478522" />
       <window_info anchor="bottom" id="Messages" order="9" weight="0.32967034" />
-      <window_info active="true" anchor="bottom" x="0" y="23" width="1680" height="1027" id="Run" order="10" visible="true" weight="0.44799176" />
+      <window_info active="true" anchor="bottom" x="0" y="23" width="1680" height="1027" id="Run" order="10" visible="true" weight="0.5777549" />
       <window_info anchor="right" id="Capture Analysis" order="0" />
       <window_info anchor="right" id="Theme Preview" order="1" />
       <window_info anchor="right" id="Palette&#9;" order="2" />
@@ -569,20 +577,6 @@
     </option>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/network/TokenResponse.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="10" column="1" lean-forward="true" selection-start-line="10" selection-start-column="1" selection-end-line="10" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/network/NetworkStatusReceiver.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="24" column="54" lean-forward="true" selection-start-line="24" selection-start-column="54" selection-end-line="24" selection-end-column="54" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/onboarding/OnBoardingPresenter.kt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="63">
@@ -646,13 +640,6 @@
           <folding>
             <element signature="e#49#363#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/viewpager/CustomViewpager.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="273">
-          <caret line="17" column="16" lean-forward="true" selection-start-line="17" selection-start-column="16" selection-end-line="17" selection-end-column="16" />
         </state>
       </provider>
     </entry>
@@ -868,24 +855,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManagerImpl.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="193">
-          <caret line="300" column="42" selection-start-line="300" selection-start-column="42" selection-end-line="300" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/uploads/UploadsPresenter.kt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="205">
           <caret line="54" column="45" selection-start-line="54" selection-start-column="45" selection-end-line="54" selection-end-column="45" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="207">
-          <caret line="43" column="8" selection-start-line="43" selection-start-column="8" selection-end-line="43" selection-end-column="8" />
         </state>
       </provider>
     </entry>
@@ -905,30 +878,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/uploadsmanager/UploadsManagerImpl.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="62" column="10" selection-start-line="62" selection-start-column="10" selection-end-line="62" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraPresenter.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="473">
-          <caret line="41" column="9" lean-forward="true" selection-start-line="41" selection-start-column="9" selection-end-line="41" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="439">
-          <caret line="316" column="74" lean-forward="true" selection-start-line="316" selection-start-column="74" selection-end-line="316" selection-end-column="74" />
-          <folding>
-            <element signature="e#58#1491#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/androidx.fragment/fragment/1.0.0/bcd167792ec03e930d5c8345c99ae07b2627de84/fragment-1.0.0-sources.jar!/androidx/fragment/app/Fragment.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="302">
@@ -940,10 +889,73 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/Library/Android/sdk/sources/android-28/android/view/TextureView.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="291">
+          <caret line="787" lean-forward="true" selection-start-line="787" selection-end-line="787" />
+          <folding>
+            <element signature="e#27375#27376#0" expanded="true" />
+            <element signature="e#27411#27412#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/viewpager/CustomViewpager.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="273">
+          <caret line="17" column="16" lean-forward="true" selection-start-line="17" selection-start-column="16" selection-end-line="17" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivityPresenter.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="233">
+          <caret line="153" column="47" lean-forward="true" selection-start-line="153" selection-start-column="47" selection-end-line="153" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/baseactivity/BaseActivity.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="159">
+          <caret line="193" column="9" selection-start-line="193" selection-start-column="9" selection-end-line="193" selection-end-column="9" />
+          <folding>
+            <element signature="e#58#1491#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManagerImpl.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-115">
+          <caret line="295" column="34" selection-start-line="295" selection-start-column="34" selection-end-line="295" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/videomanager/VideosManager.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="298">
+          <caret line="18" column="1" lean-forward="true" selection-start-line="18" selection-start-column="1" selection-end-line="18" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/uploadsmanager/UploadsManagerImpl.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="168">
+          <caret line="62" column="10" selection-start-line="62" selection-start-column="10" selection-end-line="62" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraPresenter.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="219">
+          <caret line="37" column="38" selection-start-line="37" selection-start-column="38" selection-end-line="37" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/itsovertime/overtimecamera/play/camera/CameraFragment.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="573" column="32" lean-forward="true" selection-start-line="573" selection-start-column="32" selection-end-line="573" selection-end-column="32" />
+        <state relative-caret-position="257">
+          <caret line="398" column="75" selection-start-line="398" selection-start-column="75" selection-end-line="398" selection-end-column="75" />
         </state>
       </provider>
     </entry>
