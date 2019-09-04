@@ -39,8 +39,8 @@ class User(
     val rep_actions: String? = null,
     @ColumnInfo(name = "device_secret")
     val device_secret: String? = null,
-    @ColumnInfo(name = "device_ids")
-    val device_ids: String? = null,
+//    @ColumnInfo(name = "device_ids")
+//    val device_ids: Array<String>? = emptyArray(),
     @ColumnInfo(name = "sig")
     val sig: String? = null,
     @ColumnInfo(name = "sig_trk")
@@ -94,5 +94,5 @@ class User(
     @ColumnInfo(name = "updated_at")
     val updated_at: String? = null
 
-    ) : Parcelable
+) : Parcelable
 //TODO: add values from jSon below vvv

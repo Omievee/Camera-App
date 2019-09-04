@@ -36,8 +36,9 @@ class UploadsManagerImpl(
     private var chunkSize = 1 * 1024
     private var uploadRate: Double = 0.0
     private var time = System.currentTimeMillis()
-    private val subject: BehaviorSubject<SavedVideo> = BehaviorSubject.create()
-    private val subjectState: BehaviorSubject<UploadState> = BehaviorSubject.create()
+
+
+    private val subject: BehaviorSubject<CurrentVideoUpload> = BehaviorSubject.create()
 
 
     override fun onUpdateFavoriteVideosList(favoriteVideos: MutableList<SavedVideo>) {
@@ -50,7 +51,6 @@ class UploadsManagerImpl(
     }
 
     override fun beginUploadProcess() {
-        println("Begin PRocess...")
         when (!faveList.isNullOrEmpty()) {
             true -> {
                 faveList?.forEach {
@@ -59,8 +59,6 @@ class UploadsManagerImpl(
                         if (it.uploadState == UploadState.QUEUED) {
                             currentVideo = it
                             if (currentVideo != null) {
-                                subject.onNext(it)
-                                subjectState.onNext(UploadState.REGISTERING)
                             } else return
                         }
                     }
@@ -94,7 +92,13 @@ class UploadsManagerImpl(
                 )
             )
             .doOnSuccess {
-                subjectState.onNext(UploadState.REGISTERED)
+                //                subjectState.onNext(UploadState.REGISTERED)
+                subject.onNext(
+                    CurrentVideoUpload(
+                        currentVideo ?: return@doOnSuccess,
+                        UploadState.REGISTERED
+                    )
+                )
                 println("success from instance...")
             }
             .doOnError {
@@ -146,7 +150,12 @@ class UploadsManagerImpl(
     override fun prepareVideoForUpload(upload: Upload) {
         println("preparing upload... $upload...")
         if (currentVideo?.uploadState == UploadState.QUEUED) {
-            subjectState.onNext(UploadState.UPLOADING_MEDIUM)
+            subject.onNext(
+                CurrentVideoUpload(
+                    currentVideo ?: return
+                    , UploadState.UPLOADING_MEDIUM
+                )
+            )
         }
 
 
@@ -180,7 +189,7 @@ class UploadsManagerImpl(
     @SuppressLint("CheckResult")
     @Synchronized
     override fun uploadVideoToServer(data: Array<ByteArray>, chunkToUpload: Int) {
-        subjectState.onNext(UploadState.UPLOADING_MEDIUM)
+        subject.onNext(CurrentVideoUpload(currentVideo ?: return, UploadState.UPLOADING_MEDIUM))
 
         println("<<<<<<<<<<< UPLOADING TO SERVER >>>>>>>>>>>>>>>... $data")
         println("Offset ... $offSet")
@@ -217,14 +226,7 @@ class UploadsManagerImpl(
     var isUploadComplete: Boolean? = false
 
 
-    override fun onNotifyStateOfCurrentVideo(): Observable<UploadState> {
-        return subjectState
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-    }
-
-
-    override fun onCurrentFileBeingUploaded(): Observable<SavedVideo> {
+    override fun onCurrentFileBeingUploaded(): Observable<CurrentVideoUpload> {
         return subject
             .observeOn(Schedulers.io())
             .subscribeOn(AndroidSchedulers.mainThread())
@@ -261,3 +263,5 @@ class UploadsManagerImpl(
     }
 
 }
+
+class CurrentVideoUpload(val video: SavedVideo, val state: UploadState)

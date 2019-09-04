@@ -8,8 +8,7 @@ import io.reactivex.Single
 import java.io.File
 
 interface UploadsManager {
-    fun onCurrentFileBeingUploaded(): Observable<SavedVideo>
-    fun onNotifyStateOfCurrentVideo(): Observable<UploadState>
+    fun onCurrentFileBeingUploaded(): Observable<CurrentVideoUpload>
     fun getVideoInstance(): Single<VideoInstanceResponse>
     fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse>
     fun getAWSDataForUpload(response: VideoInstanceResponse): Single<TokenResponse>

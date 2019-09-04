@@ -6,6 +6,7 @@ import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
 import com.itsovertime.overtimecamera.play.network.Upload
 import com.itsovertime.overtimecamera.play.network.VideoInstanceResponse
+import com.itsovertime.overtimecamera.play.uploadsmanager.CurrentVideoUpload
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
@@ -30,11 +31,10 @@ class UploadsPresenter(
     fun onResume() {
         view.swipe2RefreshIsTrue()
         subscribeToVideosFromGallery()
-        checkForCurrentVideoState()
     }
 
     var clientIdDisposable: Disposable? = null
-    var currentVideo: SavedVideo? = null
+    var currentVideo: CurrentVideoUpload? = null
     private fun subscribeToCurrentVideoBeingUploaded() {
         clientIdDisposable?.dispose()
         clientIdDisposable =
@@ -47,18 +47,6 @@ class UploadsPresenter(
                 })
     }
 
-    var stateDisposable: Disposable? = null
-    private fun checkForCurrentVideoState() {
-        stateDisposable?.dispose()
-        stateDisposable =
-            uploadManager
-                .onNotifyStateOfCurrentVideo()
-                .subscribe({
-                    updateCurrentVideoStatus(currentVideo, it)
-                }, {
-
-                })
-    }
 
     private fun updateCurrentVideoStatus(currentVideo: SavedVideo?, state: UploadState) {
         currentVideo?.let {
@@ -102,7 +90,7 @@ class UploadsPresenter(
             })
     }
 
-    var instanceDisposable: Disposable? = null
+    private var instanceDisposable: Disposable? = null
     private fun getVideoInstance() {
         instanceDisposable?.dispose()
         instanceDisposable =
@@ -125,14 +113,15 @@ class UploadsPresenter(
     }
 
     var videoInstanceResponse: VideoInstanceResponse? = null
-    var tokenResponse: TokenResponse? = null
-    var tokenDisposable: Disposable? = null
-    fun requestTokenForUpload(response: VideoInstanceResponse?) {
+    private var tokenResponse: TokenResponse? = null
+    private var tokenDisposable: Disposable? = null
+    private fun requestTokenForUpload(response: VideoInstanceResponse?) {
         awsDataDisposable?.dispose()
         awsDataDisposable =
             uploadManager
                 .getAWSDataForUpload(response ?: return)
                 .doOnError {
+
                 }
                 .map {
                     tokenResponse = it
@@ -150,8 +139,8 @@ class UploadsPresenter(
 
     }
 
-    var awsDataDisposable: Disposable? = null
-    var encryptionResponse: EncryptedResponse? = null
+    private var awsDataDisposable: Disposable? = null
+    private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload() {
         tokenDisposable?.dispose()
         tokenDisposable =
@@ -161,19 +150,20 @@ class UploadsPresenter(
                     encryptionResponse = it
                     manager.updateVideoMd5(
                         encryptionResponse?.upload?.md5 ?: "",
-                        currentVideo?.clientId ?: ""
+                        currentVideo?.video?.clientId ?: ""
                     )
                     manager.updateUploadId(
                         encryptionResponse?.upload?.id ?: "",
-                        currentVideo?.clientId ?: ""
+                        currentVideo?.video?.clientId ?: ""
                     )
                 }
                 .doOnError {
 
                 }
                 .doOnSuccess {
-                    println("encryption response success...... ${encryptionResponse?.upload}")
-                    uploadRegisteredVideo(upload = encryptionResponse?.upload ?: return@doOnSuccess
+
+                    uploadRegisteredVideo(
+                        upload = encryptionResponse?.upload ?: return@doOnSuccess
                     )
                 }
                 .subscribe({
@@ -195,7 +185,6 @@ class UploadsPresenter(
     }
 
     fun onDestroy() {
-        stateDisposable?.dispose()
         managerDisposable?.dispose()
         awsDataDisposable?.dispose()
         networkDisposable?.dispose()
