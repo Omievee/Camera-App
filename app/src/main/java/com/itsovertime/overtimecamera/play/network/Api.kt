@@ -33,7 +33,7 @@ interface Api {
         ) videoId: String, @Path(
             "uploadChunk"
         ) uploadChunk: Int, @Body file: RequestBody
-    ): Observable<VideoUploadResponse>
+    ): Single<VideoUploadResponse>
 
     /*Events endpoint*/
     @GET("api/events?")

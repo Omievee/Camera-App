@@ -4,13 +4,10 @@ import android.annotation.SuppressLint
 import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
-import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.network.*
-import com.itsovertime.overtimecamera.play.uploads.UploadState
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import io.reactivex.Observable
-import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers

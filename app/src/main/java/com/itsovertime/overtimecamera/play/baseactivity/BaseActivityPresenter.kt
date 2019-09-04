@@ -52,8 +52,8 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     }
 
 
-    var verifyDisposable: Disposable? = null
-    var numberProvided: String? = ""
+    private var verifyDisposable: Disposable? = null
+    private var numberProvided: String? = ""
     private fun sendCodeToProvidedNumber(number: String) {
         numberProvided = number
         verifyDisposable?.dispose()
@@ -83,7 +83,8 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     }
 
     fun resendAccessCode() {
-        //TODO !
+        view.displayProgress()
+        sendCodeToProvidedNumber(numberProvided ?: return)
     }
 
     fun resetViews() {

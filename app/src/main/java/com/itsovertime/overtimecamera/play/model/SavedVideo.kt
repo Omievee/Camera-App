@@ -2,7 +2,6 @@ package com.itsovertime.overtimecamera.play.model
 
 import android.os.Parcelable
 import androidx.room.*
-import com.itsovertime.overtimecamera.play.uploads.UploadState
 import kotlinx.android.parcel.Parcelize
 
 
@@ -13,7 +12,7 @@ data class SavedVideo(
     @ColumnInfo(name = "clientId")
     val clientId: String,
     @ColumnInfo(name = "id")
-    val id: String?="",
+    val id: String? = "",
     @ColumnInfo(name = "uploadId")
     val uploadId: String? = null,
     @ColumnInfo(name = "vidPath")
@@ -64,13 +63,17 @@ data class SavedVideo(
 
 enum class UploadState {
     QUEUED,
-    PAUSED,
+    REGISTERING,
     REGISTERED,
+    UPLOADING_LOW,
+    UPLOADED_LOW,
+    UPLOADING_MEDIUM,
     UPLOADED_MEDIUM,
+    UPLOADING_HIGH,
     UPLOADED_HIGH,
-    COMPLETE,
-    UNKONWN
+    COMPLETE
 }
+
 
 
 object enumConverter {

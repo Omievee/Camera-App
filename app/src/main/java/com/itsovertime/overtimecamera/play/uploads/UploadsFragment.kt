@@ -18,9 +18,6 @@ import kotlinx.android.synthetic.main.fragment_uploads.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
 import javax.inject.Inject
 
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
 class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     SwipeRefreshLayout.OnRefreshListener {
 
@@ -65,27 +62,16 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         }
     }
 
-    private var param1: String? = null
-
     override fun updateAdapter(videos: List<SavedVideo>) {
-        println("list size... ${videos.size}")
         val adapter = UploadsAdapter(videos)
         uploadsRecycler.adapter = adapter
-        adapter.notifyDataSetChanged()
+        adapter.notifyItemInserted(0)
     }
 
-    private var param2: String? = null
 
     @Inject
     lateinit var presenter: UploadsPresenter
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

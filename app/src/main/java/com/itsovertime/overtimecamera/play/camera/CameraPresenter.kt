@@ -16,14 +16,19 @@ import io.reactivex.disposables.Disposable
 import java.io.File
 
 
-class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val eventsManager: EventManager) {
+class CameraPresenter(
+    val view: CameraFragment,
+    val manager: VideosManager,
+    val eventsManager: EventManager
+) {
 
     private var filePath: String? = null
     private var totalDisposable: Disposable? = null
     private var eventDisposable: Disposable? = null
 
     fun getVideoFilePath(photoFileName: String): File {
-        val mediaStorageDir = File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime1080")
+        val mediaStorageDir =
+            File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime1080")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
         }
 
@@ -31,19 +36,17 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
-    var e:Event?=null
+    var e: Event? = null
     fun saveRecordingToDataBase(videoEvent: Event?) {
-
         e = videoEvent
         println("Saving............ $e")
         filePath?.let {
             manager.saveHighQualityVideoToDB(
-                    event = e,
-                    filePath = it,
-                    isFavorite = false
+                event = e,
+                filePath = it,
+                isFavorite = false
             )
         }
-        println("file... $filePath ++ end")
         view.startPreview()
     }
 
@@ -87,12 +90,12 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
     fun checkGallerySize() {
         totalDisposable?.dispose()
         totalDisposable = manager
-                .subscribeToVideoGallerySize()
-                .subscribe({
-                    view.updateUploadsIconCount(it.toString())
-                }, {
+            .subscribeToVideoGallerySize()
+            .subscribe({
+                view.updateUploadsIconCount(it.toString())
+            }, {
 
-                })
+            })
     }
 
     fun onDestroy() {
@@ -113,17 +116,17 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
     fun getEvents() {
         eventDisposable?.dispose()
         eventDisposable = eventsManager
-                .getEvents()
-                .map {
-                    eventName = it?.events?.get(0).name ?: ""
-                    ev = it.events
-                }
-                .subscribe({
-                    view.setUpEventViewData(ev)
-                    view.updateEventTitle(eventName ?: "")
-                }, {
+            .getEvents()
+            .map {
+                eventName = it?.events?.get(0).name ?: ""
+                ev = it.events
+            }
+            .subscribe({
+                view.setUpEventViewData(ev)
+                view.updateEventTitle(eventName ?: "")
+            }, {
 
-                })
+            })
 
 
     }
@@ -133,7 +136,10 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
     }
 
     fun expand(v: View) {
-        v.measure(ConstraintLayout.LayoutParams.WRAP_CONTENT, ConstraintLayout.LayoutParams.WRAP_CONTENT)
+        v.measure(
+            ConstraintLayout.LayoutParams.WRAP_CONTENT,
+            ConstraintLayout.LayoutParams.WRAP_CONTENT
+        )
         val targetHeight = v.measuredHeight
 
         v.layoutParams.height = 1
@@ -141,7 +147,8 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
 
         val animate = object : Animation() {
             override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                v.layoutParams.height = if (interpolatedTime == 1f) ConstraintLayout.LayoutParams.WRAP_CONTENT else (targetHeight * interpolatedTime).toInt()
+                v.layoutParams.height =
+                    if (interpolatedTime == 1f) ConstraintLayout.LayoutParams.WRAP_CONTENT else (targetHeight * interpolatedTime).toInt()
                 v.requestLayout()
             }
 
@@ -161,7 +168,8 @@ class CameraPresenter(val view: CameraFragment, val manager: VideosManager, val 
                 if (interpolatedTime == 1f) {
                     v.visibility = View.GONE
                 } else {
-                    v.layoutParams.height = initialHeight - (initialHeight * interpolatedTime).toInt()
+                    v.layoutParams.height =
+                        initialHeight - (initialHeight * interpolatedTime).toInt()
                     v.requestLayout()
                 }
             }

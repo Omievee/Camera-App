@@ -31,7 +31,11 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideUploadManager(context: OTApplication, api: Api, wifiManager: WifiManager): UploadsManager {
+    fun provideUploadManager(
+        context: OTApplication,
+        api: Api,
+        wifiManager: WifiManager
+    ): UploadsManager {
         return UploadsManagerImpl(context, api, wifiManager)
     }
 
@@ -57,10 +61,9 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthManager(context: OTApplication, api:Api): AuthenticationManager {
+    fun provideAuthManager(context: OTApplication, api: Api): AuthenticationManager {
         return AuthenticationManagerImpl(context, api)
     }
-
 
 
 }

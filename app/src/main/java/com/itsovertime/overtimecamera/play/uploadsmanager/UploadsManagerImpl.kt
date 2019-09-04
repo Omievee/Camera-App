@@ -1,7 +1,9 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
+import android.annotation.SuppressLint
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.*
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import io.reactivex.Observable
@@ -16,7 +18,6 @@ import okhttp3.RequestBody
 import java.nio.file.Files
 import kotlin.math.ceil
 import java.math.BigInteger
-import java.nio.charset.Charset
 import java.security.MessageDigest
 
 
@@ -27,38 +28,97 @@ class UploadsManagerImpl(
 ) : UploadsManager {
 
 
-    override fun onCurrentVideoId(): Observable<String> {
-        return subject
-            .observeOn(Schedulers.io())
-            .subscribeOn(AndroidSchedulers.mainThread())
-    }
+    var faveList: MutableList<SavedVideo>? = mutableListOf()
+    var standardList: MutableList<SavedVideo>? = mutableListOf()
 
     private var MIN_CHUNK_SIZE = 0.5 * 1024
     private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
     private var chunkSize = 1 * 1024
     private var uploadRate: Double = 0.0
     private var time = System.currentTimeMillis()
-    private val subject: BehaviorSubject<String> = BehaviorSubject.create()
+    private val subject: BehaviorSubject<SavedVideo> = BehaviorSubject.create()
+    private val subjectState: BehaviorSubject<UploadState> = BehaviorSubject.create()
 
+
+    override fun onUpdateFavoriteVideosList(favoriteVideos: MutableList<SavedVideo>) {
+        println("FAVE LIST UPDATE ::: $favoriteVideos")
+        faveList = favoriteVideos
+    }
+
+    override fun onUpdateStandardVideosList(standardVideos: MutableList<SavedVideo>) {
+        standardList = standardVideos
+    }
+
+    override fun beginUploadProcess() {
+        println("Begin PRocess...")
+        when (!faveList.isNullOrEmpty()) {
+            true -> {
+                faveList?.forEach {
+                    synchronized(this) {
+                        println("Begin PRocess... ${it.clientId}")
+                        if (it.uploadState == UploadState.QUEUED) {
+                            currentVideo = it
+                            if (currentVideo != null) {
+                                subject.onNext(it)
+                                subjectState.onNext(UploadState.REGISTERING)
+                            } else return
+                        }
+                    }
+                }
+            }
+            false -> {
+                standardList?.forEach {
+                    //                                        synchronized(this) {
+//                        getVideoInstance(it)
+//                    }
+                }
+            }
+        }
+    }
+
+
+    var currentVideo: SavedVideo? = null
     override fun getVideoInstance(): Single<VideoInstanceResponse> {
-        subject.onNext(favoriteVideos[0].clientId)
+        println("current video... $currentVideo")
+        if (currentVideo == null) {
+
+        }
         return api
             .getVideoInstance(
                 VideoInstanceRequest(
-                    client_id = UUID.fromString(favoriteVideos[0].clientId),
-                    is_favorite = favoriteVideos[0].is_favorite,
-                    is_selfie = favoriteVideos[0].is_selfie,
-                    latitude = favoriteVideos[0].latitude ?: 0.0,
-                    longitude = favoriteVideos[0].longitude ?: 0.0
+                    client_id = UUID.fromString(currentVideo?.clientId),
+                    is_favorite = currentVideo?.is_favorite ?: false,
+                    is_selfie = currentVideo?.is_selfie ?: false,
+                    latitude = currentVideo?.latitude ?: 0.0,
+                    longitude = currentVideo?.longitude ?: 0.0
                 )
             )
+            .doOnSuccess {
+                subjectState.onNext(UploadState.REGISTERED)
+                println("success from instance...")
+            }
+            .doOnError {
+                println("instance error.... ${it.message}")
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
+    override fun getAWSDataForUpload(response: VideoInstanceResponse): Single<TokenResponse> {
+        println("AWS Data response......")
+        return api
+            .uploadToken(response)
+            .doOnSuccess {
+                println("aws data success....")
+            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
 
-    override fun registerUploadForId(data: TokenResponse): Single<EncryptedResponse> {
-        val md5 = hexToString(File(favoriteVideos[0].trimmedVidPath).readBytes())
+    override fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse> {
+        val md5 = hexToString(File(currentVideo?.mediumVidPath).readBytes())
+        println("Register with MD5 $md5...")
         return api
             .uploadDataForMd5(
                 UploadRequest(
@@ -70,59 +130,112 @@ class UploadsManagerImpl(
                     data.SessionToken
                 )
             )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-    }
-
-    override fun getAWSDataForUpload(response: VideoInstanceResponse): Single<TokenResponse> {
-        return api
-            .uploadToken(response)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-    }
-
-
-    private fun toHexString(bytes: ByteArray): String {
-        val hexString = StringBuilder()
-        for (i in bytes.indices) {
-            val hex = Integer.toHexString(0xFF and bytes[i].toInt())
-            if (hex.length == 1) {
-                hexString.append('0')
+            .doOnSuccess {
+                println("register w/ md5 success")
             }
-            hexString.append(hex)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
+
+    var upload: Upload? = null
+    var uploadChunkIndex: Int = 0
+    var array: Array<ByteArray> = emptyArray()
+    var offSet: Int = 0
+
+    override fun prepareVideoForUpload(upload: Upload) {
+        println("preparing upload... $upload...")
+        if (currentVideo?.uploadState == UploadState.QUEUED) {
+            subjectState.onNext(UploadState.UPLOADING_MEDIUM)
         }
-        return hexString.toString()
+
+
+        println("CUrrent id's :::: ${upload.id} ${currentVideo?.uploadId}")
+//        if (upload.id != currentVideo?.uploadId) {
+//            println("Ids didnt match........")
+//            return
+//        }
+
+        this.upload = upload
+        array = when (currentVideo?.uploadState) {
+            UploadState.UPLOADING_MEDIUM -> breakFileIntoChunks(
+                File(currentVideo?.mediumVidPath),
+                chunkSize
+            )
+            UploadState.UPLOADED_MEDIUM -> breakFileIntoChunks(
+                File(currentVideo?.trimmedVidPath),
+                chunkSize
+            )
+            else -> {
+                emptyArray()
+            }
+        }
+        offSet = array.size
+        println("THIS DATA IS..... $array + ${array[0]} ++ ${array[1]} ${currentVideo?.uploadState}")
+        uploadVideoToServer(array, uploadChunkIndex)
     }
 
+    lateinit var request: RequestBody
 
-    @ExperimentalStdlibApi
-    override fun uploadVideo(upload: Upload): Observable<VideoUploadResponse> {
-        val array = divideArray(
-            Files.readAllBytes(File(favoriteVideos[0].trimmedVidPath).toPath()),
-            MIN_CHUNK_SIZE.toInt()
-        )
+    @SuppressLint("CheckResult")
+    @Synchronized
+    override fun uploadVideoToServer(data: Array<ByteArray>, chunkToUpload: Int) {
+        subjectState.onNext(UploadState.UPLOADING_MEDIUM)
 
-        val request = RequestBody.create(
-            MediaType.parse("application/octet-stream"),
-            array[0]
-        )
-        return api
-            .uploadSelectedVideo(
-                md5Header = hexToString(array[0]),
-                videoId = upload.id ?: "",
-                uploadChunk = 0,
-                file = request
-            )
-            .doOnError {
-            }
-            .doOnComplete {
-            }
+        println("<<<<<<<<<<< UPLOADING TO SERVER >>>>>>>>>>>>>>>... $data")
+        println("Offset ... $offSet")
+//        do {
+//            println("inside Do.... $$$$$$$$ ${data.size}")
+//            data?.forEach { it ->
+//                request = RequestBody.create(
+//                    MediaType.parse("application/octet-stream"),
+//                    it
+//                )
+//                synchronized(this) {
+//                    Single.fromCallable {
+//                        api.uploadSelectedVideo(
+//                            md5Header = hexToString(it),
+//                            videoId = upload?.id ?: return@fromCallable,
+//                            uploadChunk = chunkToUpload,
+//                            file = request
+//                        ).doOnSuccess { response ->
+//                            println("made the success...... ")
+//                            println("Success From Video Upload....... ${response.success}")
+//                        }
+//                    }.subscribeOn(Schedulers.io())
+//                        .observeOn(AndroidSchedulers.mainThread())
+//
+//                        .doOnError {
+//                            println("Error from upload ${it.message}")
+//                        }
+//                }
+//            }
+//        } while (data.size in 1 until offSet - 1)
+
+    }
+
+    var isUploadComplete: Boolean? = false
+
+
+    override fun onNotifyStateOfCurrentVideo(): Observable<UploadState> {
+        return subjectState
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-    private var favoriteVideos = mutableListOf<SavedVideo>()
-    private var standardVideos = mutableListOf<SavedVideo>()
+
+    override fun onCurrentFileBeingUploaded(): Observable<SavedVideo> {
+        return subject
+            .observeOn(Schedulers.io())
+            .subscribeOn(AndroidSchedulers.mainThread())
+    }
+
+    private fun breakFileIntoChunks(file: File, size: Int): Array<ByteArray> {
+        return divideArray(
+            Files.readAllBytes(file.toPath()),
+            size
+        )
+    }
 
     private fun divideArray(source: ByteArray, chunksize: Int): Array<ByteArray> {
         val ret =
@@ -147,67 +260,4 @@ class UploadsManagerImpl(
         ).toString(16)
     }
 
-
-    override fun onReadyVideosForUpload(videoList: MutableList<SavedVideo>) {
-        favoriteVideos.clear()
-        standardVideos.clear()
-        videoList.forEach {
-            when (it.is_favorite) {
-                true -> {
-                    favoriteVideos.add(it)
-                }
-                else -> standardVideos.add(it)
-            }
-        }
-
-    }
-
-    override fun onUploadFavoriteMedQualityVideo(): Single<VideoInstanceRequest> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onUploadMediumQualityVideo() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onUploadHighQualityVideo() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 }
-
-
-//val file = splitFile(File(favoriteVideos[0].trimmedVidPath))[0]
-////        val file = divideArray(
-////            File(favoriteVideos[0].trimmedVidPath).readBytes(),
-////            MIN_CHUNK_SIZE.toInt()
-////        )[0].clone()
-//        val l = splitFile(File(favoriteVideos[0].trimmedVidPath))[0].path
-//        val s = divideArray(File(favoriteVideos[0].trimmedVidPath).readBytes(), chunkSize)
-//        val `in` = FileInputStream(File(favoriteVideos[0].trimmedVidPath))
-//        val buf: ByteArray
-//        buf = ByteArray(`in`.available())
-//        while (`in`.read(buf) !== -1);
-//@Throws(IOException::class)
-//fun splitFile(f: File): List<File> {
-//    var partCounter = 1
-//    val result = arrayListOf<File>()
-//    val sizeOfFiles = 1024 * 1024// 1MB
-//    val buffer = ByteArray(sizeOfFiles) // create a buffer of bytes sized as the one chunk size
-//    val bis = BufferedInputStream(FileInputStream(f))
-//    val name = f.name
-//    println("byte.. ${(bis.read(buffer)) > 0}")
-//    while ((bis.read(buffer)) > 0) {
-//        val newFile = File(
-//            f.parent,
-//            name + "." + String.format("%03d", partCounter++)
-//        ) // naming files as <inputFileName>.001, <inputFileName>.002, ...
-//        val out = FileOutputStream(newFile)
-//        out.write(
-//            buffer,
-//            0,
-//            chunkSize
-//        )//tmp is chunk size. Need it for the last chunk, which could be less then 1 mb.
-//        result.add(newFile)
-//    }
-//    return result
-//}

@@ -39,6 +39,9 @@ class OnboardingActivity : OTActivity(), OnBoardingFragment.NextPageClick, View.
             R.id.deny -> {
                 finishAffinity()
             }
+            R.id.resend ->{
+
+            }
         }
     }
 

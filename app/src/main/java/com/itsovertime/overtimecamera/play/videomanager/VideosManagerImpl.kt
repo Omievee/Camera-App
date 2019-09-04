@@ -14,7 +14,7 @@ import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
-import com.itsovertime.overtimecamera.play.uploads.UploadState
+import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -28,6 +28,23 @@ import java.util.*
 
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
+    @SuppressLint("CheckResult")
+    override fun updateVideoStatus(video: SavedVideo, state: UploadState) {
+        Observable.fromCallable {
+            val videoDao = db?.videoDao()
+            with(videoDao) {
+                this?.updateVideoState(state, video.clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorReturn {
+                it.printStackTrace()
+            }
+            .subscribe({
+            }, {
+                it.printStackTrace()
+            })
+    }
 
     @SuppressLint("CheckResult")
     override fun updateUploadId(uploadId: String, clientId: String) {
@@ -162,7 +179,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     }
 
     private fun fileForTrimmedVideo(fileName: String): File {
-        val mediaStorageDir = File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTimeTrimmed")
+        val mediaStorageDir =
+            File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTimeTrimmed")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             println("Failed....")
         }
@@ -189,7 +207,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     }
 
     private fun compressedFile(file: File): File {
-        val mediaStorageDir = File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
+        val mediaStorageDir =
+            File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             Crashlytics.log("Compress File Error")
         }
@@ -250,7 +269,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
-                Toast.makeText(context, "Failed to transcode:: $exception", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Failed to transcode:: $exception", Toast.LENGTH_SHORT)
+                    .show()
             }
 
 
@@ -339,7 +359,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     lastVideoId = listOfVideos[0].clientId
                     lastVideoMaxTime = listOfVideos[0].max_video_length.toString()
                     executeFFMPEG(listOfVideos[0])
-                    manager.onReadyVideosForUpload(listOfVideos)
+                    prepVideosForUploading(listOfVideos)
                 }
             }
             .subscribe({
@@ -350,6 +370,31 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     it.printStackTrace()
                 }
             )
+    }
+
+    val faves: MutableList<SavedVideo>? = mutableListOf()
+    val standard: MutableList<SavedVideo>? = mutableListOf()
+    private fun prepVideosForUploading(listOfVideos: MutableList<SavedVideo>) {
+        if (!listOfVideos.isNullOrEmpty()) {
+            listOfVideos.forEach {
+                println("UPLOAD STATE ::: :${it.uploadState}")
+                if (it.uploadState != UploadState.COMPLETE) {
+                    if (it.uploadState == UploadState.QUEUED) {
+                        if (it.is_favorite) {
+                            faves?.add(it)
+                            println("faves from video manager ... ${faves?.size}")
+                            manager.onUpdateFavoriteVideosList(faves ?: mutableListOf())
+                        } else {
+                            standard?.add(it)
+                            manager.onUpdateStandardVideosList(standard ?: mutableListOf())
+                        }
+                    } else {
+                        updateVideoStatus(it, UploadState.QUEUED)
+                    }
+
+                }
+            }
+        }
     }
 
 

@@ -1,5 +1,7 @@
 package com.itsovertime.overtimecamera.play.uploads
 
+import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
 import com.itsovertime.overtimecamera.play.network.Upload
@@ -20,28 +22,48 @@ class UploadsPresenter(
 
     fun onCreate() {
         manager.loadFromDB()
-    }
-
-    fun onResume() {
-        view.swipe2RefreshIsTrue()
-        subscribeToVideosFromGallery()
         subscribeToNetworkUpdates()
         subscribeToCurrentVideoBeingUploaded()
 
     }
 
+    fun onResume() {
+        view.swipe2RefreshIsTrue()
+        subscribeToVideosFromGallery()
+        checkForCurrentVideoState()
+    }
+
     var clientIdDisposable: Disposable? = null
-    var clientId: String? = ""
+    var currentVideo: SavedVideo? = null
     private fun subscribeToCurrentVideoBeingUploaded() {
         clientIdDisposable?.dispose()
         clientIdDisposable =
             uploadManager
-                .onCurrentVideoId()
+                .onCurrentFileBeingUploaded()
                 .subscribe({
-                    clientId = it
+                    currentVideo = it
                 }, {
 
                 })
+    }
+
+    var stateDisposable: Disposable? = null
+    private fun checkForCurrentVideoState() {
+        stateDisposable?.dispose()
+        stateDisposable =
+            uploadManager
+                .onNotifyStateOfCurrentVideo()
+                .subscribe({
+                    updateCurrentVideoStatus(currentVideo, it)
+                }, {
+
+                })
+    }
+
+    private fun updateCurrentVideoStatus(currentVideo: SavedVideo?, state: UploadState) {
+        currentVideo?.let {
+            manager.updateVideoStatus(it, state)
+        }
     }
 
     private var managerDisposable: Disposable? = null
@@ -52,8 +74,9 @@ class UploadsPresenter(
             .subscribe({
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
-                if (!it?.isNullOrEmpty()!!) {
-                   getVideoInstance()
+                if (!it.isNullOrEmpty()) {
+                    uploadManager?.beginUploadProcess()
+                    getVideoInstance()
                 }
             }, {
                 println("throwable: ${it.printStackTrace()}")
@@ -91,12 +114,14 @@ class UploadsPresenter(
                     videoInstanceResponse = it
                 }
                 .doOnSuccess {
+                    println("Succes from presenter...")
                     requestTokenForUpload(videoInstanceResponse)
                 }
                 .subscribe({
                 }, {
 
                 })
+
     }
 
     var videoInstanceResponse: VideoInstanceResponse? = null
@@ -113,7 +138,7 @@ class UploadsPresenter(
                     tokenResponse = it
                 }
                 .doOnSuccess {
-                    uploadVideo()
+                    beginUpload()
                 }
                 .subscribe({
                 }, {
@@ -127,23 +152,28 @@ class UploadsPresenter(
 
     var awsDataDisposable: Disposable? = null
     var encryptionResponse: EncryptedResponse? = null
-    private fun uploadVideo() {
+    private fun beginUpload() {
         tokenDisposable?.dispose()
         tokenDisposable =
             uploadManager
-                .registerUploadForId(tokenResponse ?: return)
+                .registerWithMD5(tokenResponse ?: return)
                 .map {
                     encryptionResponse = it
+                    manager.updateVideoMd5(
+                        encryptionResponse?.upload?.md5 ?: "",
+                        currentVideo?.clientId ?: ""
+                    )
+                    manager.updateUploadId(
+                        encryptionResponse?.upload?.id ?: "",
+                        currentVideo?.clientId ?: ""
+                    )
                 }
                 .doOnError {
 
                 }
                 .doOnSuccess {
-                    manager.updateVideoMd5(encryptionResponse?.upload?.md5 ?: "", clientId ?: "")
-                    manager.updateUploadId(encryptionResponse?.upload?.id ?: "", clientId ?: "")
-                    uploadRegisteredVideo(
-                        upload = encryptionResponse?.upload
-                            ?: return@doOnSuccess
+                    println("encryption response success...... ${encryptionResponse?.upload}")
+                    uploadRegisteredVideo(upload = encryptionResponse?.upload ?: return@doOnSuccess
                     )
                 }
                 .subscribe({
@@ -156,23 +186,16 @@ class UploadsPresenter(
 
     var uploadDisposable: Disposable? = null
     private fun uploadRegisteredVideo(upload: Upload) {
+        println("upload registerd video.... $upload")
         uploadDisposable?.dispose()
-        uploadDisposable =
-            uploadManager
-                .uploadVideo(upload)
-                .doOnError {
-                    println("error from upload api... ${it.message}")
-                }
-                .subscribe({
-
-                }, {
-                    println("throwable.... ${it.message}")
-
-                })
-
+        uploadManager
+            .prepareVideoForUpload(
+                upload
+            )
     }
 
     fun onDestroy() {
+        stateDisposable?.dispose()
         managerDisposable?.dispose()
         awsDataDisposable?.dispose()
         networkDisposable?.dispose()

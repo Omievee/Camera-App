@@ -3,6 +3,7 @@ package com.itsovertime.overtimecamera.play.db
 import androidx.room.*
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.model.UploadState
 import java.util.*
 
 
@@ -35,4 +36,7 @@ interface VideoObjectDAO {
 
     @Query("SELECT * FROM SavedVideo")
     fun getVideos(): List<SavedVideo>
+
+    @Query("UPDATE SavedVideo SET uploadState = :uploadState WHERE clientId = :lastID")
+    fun updateVideoState(uploadState: UploadState, lastID: String)
 }

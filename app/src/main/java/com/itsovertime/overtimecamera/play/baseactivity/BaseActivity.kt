@@ -37,6 +37,7 @@ import javax.inject.Inject
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
+
     override fun logOut() {
         viewPager.visibility = View.GONE
         showToast(getString(R.string.auth_logout_not_authorized))
