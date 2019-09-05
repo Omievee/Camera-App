@@ -135,7 +135,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             R.id.tapToSave -> {
                 progress.visibility = View.VISIBLE
                 if (recording) {
-                    stopLiveView(false, selfieCameraEngaged ?: false)
+                    releaseCamera(tapToSave = true)
                 } else {
                     startLiveView()
                 }
@@ -159,7 +159,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 pausedView.visibility = View.VISIBLE
                 paused = true
                 deleteUnsavedFile()
-                releaseCamera()
+                releaseCamera(tapToSave = false)
             }
             R.id.pausedView -> {
                 paused = false
@@ -182,7 +182,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 progress.visibility = View.VISIBLE
                 deleteUnsavedFile()
                 callback?.onUploadsButtonClicked()
-                releaseCamera()
+                releaseCamera(tapToSave = false)
             }
         }
     }
@@ -193,6 +193,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun deleteUnsavedFile() {
+        println("deleting file.... $recording")
+        println("recording... $recording")
+        if (!recording) {
+            startLiveView()
+        }
         presenter.deletePreviousFile()
     }
 
@@ -220,7 +225,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     private var gestureDetector =
         GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent?): Boolean {
-//            presenter.cameraSwitch()
                 return true
             }
         })
@@ -240,7 +244,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
         synchronized(lock = this) {
             Single.fromCallable {
-                releaseCamera()
+                releaseCamera(tapToSave = false)
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doFinally {
@@ -260,7 +264,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         cameraIsClosed = true
         try {
             cameraOpenCloseLock.acquire()
-            closePreviewSession()
+
             cameraDevice?.close()
             cameraDevice = null
             mediaRecorder?.release()
@@ -303,109 +307,85 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             setVideoEncodingBitRate(profile.videoBitRate)
             setAudioEncodingBitRate(profile.audioBitRate)
             setVideoFrameRate(profile.videoFrameRate)
-            prepare()
         }
         mediaRecorder = recorder
     }
+
     @SuppressLint("CheckResult")
     override fun startRecording() {
         recording = true
         if (cameraDevice == null || txView?.isAvailable == false) {
+            println("Null camera device...... $cameraDevice && ${txView?.isAvailable}")
             return
         }
         try {
-            closePreviewSession()
-            Single.fromCallable {
-                setUpMediaRecorder()
-            }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally {
-                    progress.visibility = View.GONE
+
+            setUpMediaRecorder()
+            mediaRecorder?.prepare()
+            val texture = txView?.surfaceTexture.apply {
+                this?.setDefaultBufferSize(
+                    videoSize?.width ?: 0, videoSize?.height
+                        ?: 0
+                )
+            }
+
+            val previewSurface = Surface(texture)
+            val recorderSurface = mediaRecorder?.surface
+            val surfaces = ArrayList<Surface>().apply {
+                add(previewSurface)
+                recorderSurface?.let { s ->
+                    add(s)
                 }
-                .doOnSuccess {
-                    mediaRecorder?.start()
+            }
+            surfaces.forEach {
+                println("surfaces.... $it")
+            }
+            println("is camera closed..... $cameraIsClosed")
+            if (!cameraIsClosed) {
+                synchronized(this) {
+                    previewRequestBuilder =
+                        cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                            this?.addTarget(previewSurface)
+                            recorderSurface?.let { s ->
+                                this?.addTarget(s)
+                            }
+                        } ?: return
+                    println("Preview builder .... $previewRequestBuilder")
+                    cameraDevice?.createCaptureSession(
+                        surfaces, object : CameraCaptureSession.StateCallback() {
+                            override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                                captureSession = cameraCaptureSession
+                                println("camera capsure session... $captureSession")
+                                previewRequestBuilder.set(
+                                    CaptureRequest.CONTROL_MODE,
+                                    CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
+                                )
+                                try {
+                                    setUpCaptureRequestBuilder(previewRequestBuilder)
+                                    HandlerThread("CameraPreview").start()
+                                    startRecordingThread()
+                                    captureSession?.setRepeatingRequest(
+                                        previewRequestBuilder.build(),
+                                        null, recordHandler
+                                    )
+                                    mediaRecorder?.start()
+                                    activity?.runOnUiThread {
+                                        progress.visibility = View.GONE
+                                    }
+
+                                } catch (e: CameraAccessException) {
+                                    Log.e("CameraMain", e.toString())
+                                } catch (ise: IllegalStateException) {
+                                }
+                            }
+
+                            override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
+                                showToast("Failed $cameraCaptureSession")
+                            }
+                        }, null
+                    )
                 }
-                .doOnError {
-                    println("ERROR FROM RECORDER>>>>>>>>>>>>>>>>>>>> ${it.message}")
-
-                }
-                .subscribe({
-                    if (mediaRecorder == null) Toast.makeText(
-                        context,
-                        "Null",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    println("Subscribe.......>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                    println("Video size >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.... ${videoSize?.width} ^^ ${videoSize?.height}")
-                    val texture = txView?.surfaceTexture.apply {
-                        this?.setDefaultBufferSize(
-                            videoSize?.width ?: 0, videoSize?.height
-                                ?: 0
-                        )
-                    }
-
-                    val previewSurface = Surface(texture)
-                    val recorderSurface = mediaRecorder?.surface
-                    val surfaces = ArrayList<Surface>().apply {
-                        add(previewSurface)
-                        recorderSurface?.let { s ->
-                            add(s)
-                        }
-                    }
-                    println("Previewsurface... $previewSurface")
-                    surfaces.forEach {
-                        println("Surfaces... $it")
-                    }
-
-
-                    if (!cameraIsClosed) {
-                        synchronized(this) {
-                            previewRequestBuilder =
-                                cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-                                    this?.addTarget(previewSurface)
-                                    recorderSurface?.let { s ->
-                                        this?.addTarget(s)
-                                    }
-                                } ?: return@subscribe
-
-                            cameraDevice?.createCaptureSession(
-                                surfaces, object : CameraCaptureSession.StateCallback() {
-                                    override fun onClosed(session: CameraCaptureSession) {
-                                        super.onClosed(session)
-                                    }
-
-                                    override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                                        captureSession = cameraCaptureSession
-                                        previewRequestBuilder.set(
-                                            CaptureRequest.CONTROL_MODE,
-                                            CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
-                                        )
-                                        try {
-                                            setUpCaptureRequestBuilder(previewRequestBuilder)
-                                            HandlerThread("CameraPreview").start()
-                                            startRecordingThread()
-                                            captureSession?.setRepeatingRequest(
-                                                previewRequestBuilder.build(),
-                                                null, recordHandler
-                                            )
-
-                                        } catch (e: CameraAccessException) {
-                                            Log.e("CameraMain", e.toString())
-                                        } catch (ise: IllegalStateException) {
-                                        }
-                                    }
-
-
-                                    override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
-                                        showToast("Failed $cameraCaptureSession")
-                                    }
-                                }, null
-                            )
-                        }
-                    }
-                }, {
-                    it.printStackTrace()
-                })
+            }
 
 
         } catch (e: CameraAccessException) {
@@ -420,30 +400,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         stopRecordingThread()
         recording = false
         try {
-            Single.fromCallable {
-                mediaRecorder?.apply {
-                    stop()
-                    reset()
+            mediaRecorder?.stop()
+            mediaRecorder?.reset()
+            mediaRecorder = null
+            println("IS PAUSED>>> $isPaused")
+            when (isPaused) {
+                false -> {
+                    presenter.saveRecordingToDataBase(selectedEvent)
                 }
-            }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnError {
-                }
-                .doOnSuccess {
-                    mediaRecorder = null
-                }
-                .doFinally {
-                    when (isPaused) {
-                        false -> {
-                            presenter.saveRecordingToDataBase(selectedEvent)
-                        }
-                        else -> deleteUnsavedFile()
-                    }
-                }
-                .subscribe({
-                }, {
-                    it.printStackTrace()
-                })
+                else -> deleteUnsavedFile()
+            }
         } catch (r: RuntimeException) {
             r.printStackTrace()
         } catch (e: java.lang.IllegalStateException) {
@@ -482,76 +448,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun onAttach(context: Context?) {
         AndroidSupportInjection.inject(this)
         super.onAttach(context)
-    }
-
-    override fun startPreview() {
-        try {
-            closePreviewSession()
-
-            val texture = txView?.surfaceTexture
-            texture?.setDefaultBufferSize(videoSize?.width ?: 0, videoSize?.height ?: 0)
-
-            if (!cameraIsClosed) {
-                cameraDevice?.let {
-                    previewRequestBuilder = it.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-                }
-                val previewSurface = Surface(texture)
-                previewRequestBuilder.addTarget(previewSurface)
-
-                cameraDevice?.createCaptureSession(
-                    listOf(previewSurface),
-                    object : CameraCaptureSession.StateCallback() {
-                        override fun onConfigured(session: CameraCaptureSession) {
-                            captureSession = session
-                            updatePreview()
-                        }
-
-                        override fun onConfigureFailed(session: CameraCaptureSession) {
-                        }
-                    }, backgroundHandler
-                )
-            }
-
-
-            if (CAMERA == 0) {
-                startLiveView()
-            }
-
-
-        } catch (e: CameraAccessException) {
-            e.printStackTrace()
-        }
-    }
-
-    override fun closePreviewSession() {
-        try {
-            captureSession?.abortCaptures()
-            captureSession?.close()
-            captureSession = null
-        } catch (i: java.lang.IllegalStateException) {
-            i.printStackTrace()
-        }
-
-    }
-
-    @Synchronized
-    override fun updatePreview() {
-        activity?.runOnUiThread {
-            selfieButton.isEnabled = true
-        }
-
-        if (cameraDevice == null) return
-        try {
-            setUpCaptureRequestBuilder(previewRequestBuilder)
-            HandlerThread("CameraPreview").start()
-            captureSession?.setRepeatingRequest(
-                previewRequestBuilder.build(),
-                null, backgroundHandler
-            )
-        } catch (e: CameraAccessException) {
-            Log.e("CameraMain", e.toString())
-        } catch (ise: IllegalStateException) {
-        }
     }
 
     fun setUpCaptureRequestBuilder(builder: CaptureRequest.Builder?) {
@@ -609,7 +505,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
 
-    private fun engageCamera() {
+    fun engageCamera() {
         startBackgroundThread()
         println("TXVIEW :$txView")
         txView?.let {
@@ -624,7 +520,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     override fun onPause() {
-        releaseCamera()
+        releaseCamera(tapToSave = false)
         super.onPause()
     }
 
@@ -641,7 +537,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var selfieCameraEngaged: Boolean? = false
     private var paused: Boolean = false
     @SuppressLint("CheckResult")
-    private fun releaseCamera() {
+    private fun releaseCamera(tapToSave: Boolean) {
+        println("releasing camera..... $recording")
         Single.fromCallable {
             closeCamera()
             stopBackgroundThread()
@@ -650,7 +547,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             .doFinally {
                 if (recording) {
                     presenter.clearProgressAnimation()
-                    paused = true
+                    paused = !tapToSave
+
                     stopLiveView(paused, selfieCameraEngaged ?: false)
                 }
             }
@@ -677,6 +575,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun stopLiveView(isPaused: Boolean, isSelfieCamera: Boolean) {
+        println("STOPING LIVE VIEW....>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         stopRecording(isPaused)
         hideViews(isSelfieCamera)
         if (!isSelfieCamera) {
@@ -703,13 +602,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var manager: CameraManager? = null
     @SuppressLint("MissingPermission")
     override fun openCamera(width: Int, height: Int, camera: Int) {
+        println("OPENING CAMERA>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         manager = context?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw RuntimeException("Time out waiting to lock overtimecamera opening.")
             }
-
-
             val cameraId = when (camera) {
                 0 -> manager?.cameraIdList?.get(0)
                 else -> manager?.cameraIdList?.get(1)
@@ -776,7 +674,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
 
-
     var fragmentIsVisibleToUser: Boolean? = false
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
@@ -791,7 +688,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         override fun onOpened(cameraDevice: CameraDevice) {
             cameraOpenCloseLock.release()
             this@CameraFragment.cameraDevice = cameraDevice
-            startPreview()
+            startLiveView()
         }
 
         override fun onDisconnected(cameraDevice: CameraDevice) {

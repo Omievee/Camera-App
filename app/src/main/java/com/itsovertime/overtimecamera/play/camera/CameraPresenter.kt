@@ -46,7 +46,7 @@ class CameraPresenter(
                 isFavorite = false
             )
         }
-        view.startPreview()
+        view.engageCamera()
     }
 
     fun onCreate() {
@@ -83,6 +83,7 @@ class CameraPresenter(
             previousFile.delete()
         }
         filePath = null
+
     }
 
 
