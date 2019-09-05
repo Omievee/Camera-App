@@ -17,6 +17,7 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
@@ -28,9 +29,27 @@ import java.util.*
 
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
+
+    @SuppressLint("CheckResult")
+    override fun updateUploadId(uplaodId: String, clientId: String) {
+        Single.fromCallable {
+            val videoDao = db?.videoDao()
+            with(videoDao) {
+                this?.updateVideoInstanceId(uplaodId, clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorReturn {
+                it.printStackTrace()
+            }
+            .subscribe({}, {
+                it.printStackTrace()
+            })
+    }
+
     @SuppressLint("CheckResult")
     override fun updateVideoStatus(video: SavedVideo, state: UploadState) {
-        Observable.fromCallable {
+        Single.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateVideoState(state, video.clientId)
@@ -47,27 +66,25 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     }
 
     @SuppressLint("CheckResult")
-    override fun updateUploadId(uploadId: String, clientId: String) {
-        Observable.fromCallable {
+    override fun updateVideoInstanceId(videoId: String, clientId: String) {
+        Single.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
-                this?.updateUploadId(uploadId, clientId)
+                this?.updateVideoInstanceId(videoId, clientId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorReturn {
                 it.printStackTrace()
             }
-            .subscribe({
-
-            }, {
+            .subscribe({}, {
                 it.printStackTrace()
             })
     }
 
     @SuppressLint("CheckResult")
     override fun updateVideoMd5(md5: String, clientId: String) {
-        Observable.fromCallable {
+        Single.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateVideoMd5(md5, clientId)
@@ -161,7 +178,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     @SuppressLint("CheckResult")
     private fun updateMediumFilePath(absolutePath: String) {
-        Observable.fromCallable {
+        println("updating medium path :$absolutePath")
+        Single.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateMediumQualityPath(absolutePath, lastVideoId)
@@ -180,7 +198,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     private fun fileForTrimmedVideo(fileName: String): File {
         val mediaStorageDir =
-            File(context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTimeTrimmed")
+            File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTimeTrimmed")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             println("Failed....")
         }
@@ -190,7 +208,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     @SuppressLint("CheckResult")
     private fun updateTrimmedVidPathInDB(path: String) {
-        Observable.fromCallable {
+        Single.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateTrimVideoPath(path, lastVideoId)
@@ -219,7 +237,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
     override fun updateVideoFunny(isFunny: Boolean) {
-        Observable.fromCallable {
+        Single.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.setVideoAsFunny(is_funny = isFunny, lastID = lastVideoId)
@@ -240,7 +258,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     @SuppressLint("CheckResult")
     override fun updateVideoFavorite(isFavorite: Boolean) {
-        Observable.fromCallable {
+        Single.fromCallable {
             val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = lastVideoId)
@@ -250,9 +268,11 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             .onErrorReturn {
                 it.printStackTrace()
             }
-            .subscribe {
+            .subscribe({
                 loadFromDB()
-            }
+            }, {
+                it.printStackTrace()
+            })
     }
 
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
@@ -302,7 +322,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     override fun saveHighQualityVideoToDB(event: Event?, filePath: String, isFavorite: Boolean) {
         this.lastVideoMaxTime = event?.max_video_length.toString()
         println("Max time::: $lastVideoMaxTime")
-        Observable.fromCallable {
+        Single.fromCallable {
             val clientId = UUID.randomUUID().toString()
             val video = SavedVideo(
                 clientId = clientId,
@@ -341,7 +361,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
         listOfVideos.clear()
-        Observable.fromCallable {
+        Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
             it.forEach {
@@ -359,7 +379,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     lastVideoId = listOfVideos[0].clientId
                     lastVideoMaxTime = listOfVideos[0].max_video_length.toString()
                     executeFFMPEG(listOfVideos[0])
-                    prepVideosForUploading(listOfVideos)
+
                 }
             }
             .subscribe({
@@ -372,31 +392,21 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             )
     }
 
-    val faves: MutableList<SavedVideo>? = mutableListOf()
-    val standard: MutableList<SavedVideo>? = mutableListOf()
+
     private fun prepVideosForUploading(listOfVideos: MutableList<SavedVideo>) {
         if (!listOfVideos.isNullOrEmpty()) {
             listOfVideos.forEach {
-                println("UPLOAD STATE ::: :${it.uploadState}")
                 if (it.uploadState != UploadState.COMPLETE) {
-                    if (it.uploadState == UploadState.QUEUED) {
-                        if (it.is_favorite) {
-                            faves?.add(it)
-                            println("faves from video manager ... ${faves?.size}")
-                            manager.onUpdateFavoriteVideosList(faves ?: mutableListOf())
-                        } else {
-                            standard?.add(it)
-                            manager.onUpdateStandardVideosList(standard ?: mutableListOf())
-                        }
-                    } else {
-                        updateVideoStatus(it, UploadState.QUEUED)
-                    }
-
+                    manager?.onProcessUploadQue(listOfVideos)
                 }
             }
         }
     }
 
+
+    override fun resetUploadState() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     override fun subscribeToVideoGallery(): Observable<List<SavedVideo>> {
         return subject

@@ -14,7 +14,7 @@ data class SavedVideo(
     @ColumnInfo(name = "id")
     val id: String? = "",
     @ColumnInfo(name = "uploadId")
-    val uploadId: String? = null,
+    val uploadId: String? = "",
     @ColumnInfo(name = "vidPath")
     val vidPath: String?,
     @ColumnInfo(name = "mediumVidPath")
@@ -77,8 +77,6 @@ enum class UploadState {
 
 
 object enumConverter {
-
-
     @TypeConverter
     @JvmStatic
     fun toOrdinal(type: UploadState): Int = type.ordinal

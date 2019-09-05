@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
@@ -28,6 +29,20 @@ class UploadsManagerImpl(
 ) : UploadsManager {
 
 
+    var updatedQue: MutableList<SavedVideo>? = mutableListOf()
+    override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
+        list.sortedWith(compareBy { it.is_favorite })
+
+        list.forEach {
+            println("videos....... $it")
+        }
+    }
+
+    override fun resetUploadStateForCurrentVideo() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+
     var faveList: MutableList<SavedVideo>? = mutableListOf()
     var standardList: MutableList<SavedVideo>? = mutableListOf()
 
@@ -40,44 +55,40 @@ class UploadsManagerImpl(
 
     private val subject: BehaviorSubject<CurrentVideoUpload> = BehaviorSubject.create()
 
-
-    override fun onUpdateFavoriteVideosList(favoriteVideos: MutableList<SavedVideo>) {
-        println("FAVE LIST UPDATE ::: $favoriteVideos")
-        faveList = favoriteVideos
-    }
-
-    override fun onUpdateStandardVideosList(standardVideos: MutableList<SavedVideo>) {
-        standardList = standardVideos
-    }
-
     override fun beginUploadProcess() {
-        when (!faveList.isNullOrEmpty()) {
-            true -> {
-                faveList?.forEach {
-                    synchronized(this) {
-                        println("Begin PRocess... ${it.clientId}")
-                        if (it.uploadState == UploadState.QUEUED) {
-                            currentVideo = it
-                            if (currentVideo != null) {
-                            } else return
-                        }
-                    }
-                }
-            }
-            false -> {
-                standardList?.forEach {
-                    //                                        synchronized(this) {
-//                        getVideoInstance(it)
+//        when (!faveList.isNullOrEmpty()) {
+//            true -> {
+//                faveList?.forEach {
+//                    synchronized(this) {
+//                        println("Begin PRocess... ${it.clientId}")
+//                        if (it.uploadState == UploadState.QUEUED) {
+//                            currentVideo = it
+//                            if (currentVideo != null) {
+//                            } else Toast.makeText(
+//                                context,
+//                                "video is null",
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+//                        }
 //                    }
-                }
-            }
-        }
+//                }
+//            }
+//            false -> {
+//                standardList?.forEach {
+//                    println("path:: ${it.th}")
+//                    //                                        synchronized(this) {
+////                        getVideoInstance(it)
+////                    }
+//                }
+//            }
+//        }
     }
 
 
     var currentVideo: SavedVideo? = null
     override fun getVideoInstance(): Single<VideoInstanceResponse> {
         println("current video... $currentVideo")
+        subject.onNext(CurrentVideoUpload(currentVideo, UploadState.REGISTERING))
         if (currentVideo == null) {
 
         }
@@ -92,10 +103,9 @@ class UploadsManagerImpl(
                 )
             )
             .doOnSuccess {
-                //                subjectState.onNext(UploadState.REGISTERED)
                 subject.onNext(
                     CurrentVideoUpload(
-                        currentVideo ?: return@doOnSuccess,
+                        currentVideo,
                         UploadState.REGISTERED
                     )
                 )
@@ -121,6 +131,7 @@ class UploadsManagerImpl(
 
 
     override fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse> {
+        println("register... $currentVideo")
         val md5 = hexToString(File(currentVideo?.mediumVidPath).readBytes())
         println("Register with MD5 $md5...")
         return api
@@ -134,9 +145,6 @@ class UploadsManagerImpl(
                     data.SessionToken
                 )
             )
-            .doOnSuccess {
-                println("register w/ md5 success")
-            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
@@ -158,12 +166,10 @@ class UploadsManagerImpl(
             )
         }
 
-
-        println("CUrrent id's :::: ${upload.id} ${currentVideo?.uploadId}")
-//        if (upload.id != currentVideo?.uploadId) {
-//            println("Ids didnt match........")
-//            return
-//        }
+        if (upload.id != currentVideo?.uploadId) {
+            println("Ids didnt match........")
+            return
+        }
 
         this.upload = upload
         array = when (currentVideo?.uploadState) {
@@ -180,7 +186,7 @@ class UploadsManagerImpl(
             }
         }
         offSet = array.size
-        println("THIS DATA IS..... $array + ${array[0]} ++ ${array[1]} ${currentVideo?.uploadState}")
+//        println("THIS DATA IS..... $array + ${array[0]} ++ ${array[1]} ${currentVideo?.uploadState}")
         uploadVideoToServer(array, uploadChunkIndex)
     }
 
@@ -191,8 +197,9 @@ class UploadsManagerImpl(
     override fun uploadVideoToServer(data: Array<ByteArray>, chunkToUpload: Int) {
         subject.onNext(CurrentVideoUpload(currentVideo ?: return, UploadState.UPLOADING_MEDIUM))
 
-        println("<<<<<<<<<<< UPLOADING TO SERVER >>>>>>>>>>>>>>>... $data")
+        println("<<<<<<<<<<< UPLOADING TO SERVER >>>>>>>>>>>>>>>... ")
         println("Offset ... $offSet")
+        println("data ... $data")
 //        do {
 //            println("inside Do.... $$$$$$$$ ${data.size}")
 //            data?.forEach { it ->
@@ -264,4 +271,4 @@ class UploadsManagerImpl(
 
 }
 
-class CurrentVideoUpload(val video: SavedVideo, val state: UploadState)
+class CurrentVideoUpload(val video: SavedVideo? = null, val state: UploadState? = null)

@@ -62,9 +62,9 @@ dependencies {
     implementation("com.google.dagger:dagger:2.16")
     kapt("com.google.dagger:dagger-compiler:2.16")
     //Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.5.0")
-    implementation("com.squareup.retrofit2:adapter-rxjava2:2.5.0")
-    implementation("com.squareup.retrofit2:converter-moshi:2.5.0")
+    implementation("com.squareup.retrofit2:retrofit:2.6.1")
+    implementation("com.squareup.retrofit2:adapter-rxjava2:2.6.1")
+    implementation("com.squareup.retrofit2:converter-moshi:2.6.1")
     //Moshi
     implementation("com.squareup.moshi:moshi:1.8.0")
     implementation("com.squareup.moshi:moshi-adapters:1.8.0")

@@ -1,7 +1,5 @@
 package com.itsovertime.overtimecamera.play.uploads
 
-import com.itsovertime.overtimecamera.play.model.SavedVideo
-import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
 import com.itsovertime.overtimecamera.play.network.Upload
@@ -16,8 +14,8 @@ import io.reactivex.disposables.Disposable
 class UploadsPresenter(
     val view: UploadsFragment,
     val manager: VideosManager,
-    val wifiManager: WifiManager,
-    val uploadManager: UploadsManager
+    private val wifiManager: WifiManager,
+    private val uploadManager: UploadsManager
 ) {
 
 
@@ -25,7 +23,6 @@ class UploadsPresenter(
         manager.loadFromDB()
         subscribeToNetworkUpdates()
         subscribeToCurrentVideoBeingUploaded()
-
     }
 
     fun onResume() {
@@ -43,15 +40,7 @@ class UploadsPresenter(
                 .subscribe({
                     currentVideo = it
                 }, {
-
                 })
-    }
-
-
-    private fun updateCurrentVideoStatus(currentVideo: SavedVideo?, state: UploadState) {
-        currentVideo?.let {
-            manager.updateVideoStatus(it, state)
-        }
     }
 
     private var managerDisposable: Disposable? = null
@@ -63,7 +52,7 @@ class UploadsPresenter(
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
                 if (!it.isNullOrEmpty()) {
-                    uploadManager?.beginUploadProcess()
+                    uploadManager.beginUploadProcess()
                     getVideoInstance()
                 }
             }, {
@@ -96,13 +85,15 @@ class UploadsPresenter(
         instanceDisposable =
             uploadManager
                 .getVideoInstance()
-                .doOnError {
-                }
+                .doOnError {}
                 .map {
                     videoInstanceResponse = it
                 }
                 .doOnSuccess {
-                    println("Succes from presenter...")
+                    manager.updateVideoInstanceId(
+                        videoInstanceResponse?.video?.id ?: "",
+                        currentVideo?.video?.clientId ?: ""
+                    )
                     requestTokenForUpload(videoInstanceResponse)
                 }
                 .subscribe({
@@ -127,6 +118,7 @@ class UploadsPresenter(
                     tokenResponse = it
                 }
                 .doOnSuccess {
+                    println("success from aws data....")
                     beginUpload()
                 }
                 .subscribe({
@@ -135,13 +127,11 @@ class UploadsPresenter(
                 })
     }
 
-    fun updateUploadId() {
-
-    }
 
     private var awsDataDisposable: Disposable? = null
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload() {
+        println("Begin upload presenter.... $tokenResponse")
         tokenDisposable?.dispose()
         tokenDisposable =
             uploadManager
@@ -149,34 +139,37 @@ class UploadsPresenter(
                 .map {
                     encryptionResponse = it
                     manager.updateVideoMd5(
-                        encryptionResponse?.upload?.md5 ?: "",
-                        currentVideo?.video?.clientId ?: ""
+                        md5 = encryptionResponse?.upload?.md5 ?: "",
+                        clientId = currentVideo?.video?.clientId ?: ""
                     )
+                    println("MAP:: ${encryptionResponse?.upload?.id.toString()}")
                     manager.updateUploadId(
-                        encryptionResponse?.upload?.id ?: "",
-                        currentVideo?.video?.clientId ?: ""
+                        uplaodId = encryptionResponse?.upload?.id.toString(),
+                        clientId = currentVideo?.video?.clientId.toString()
                     )
+
                 }
                 .doOnError {
-
+                    println("Begin upload error...... ${it.message}")
                 }
-                .doOnSuccess {
-
-                    uploadRegisteredVideo(
-                        upload = encryptionResponse?.upload ?: return@doOnSuccess
-                    )
+                .doFinally {
+                    if(encryptionResponse != null && currentVideo?.video?.uploadId != null){
+                        uploadRegisteredVideo(
+                            upload = encryptionResponse?.upload ?: return@doFinally
+                        )
+                    }
                 }
                 .subscribe({
 
                 }, {
-
+                    println("Final throw:::: ${it.message}")
                 })
 
     }
 
-    var uploadDisposable: Disposable? = null
+    private var uploadDisposable: Disposable? = null
     private fun uploadRegisteredVideo(upload: Upload) {
-        println("upload registerd video.... $upload")
+        println("upload registered video...")
         uploadDisposable?.dispose()
         uploadManager
             .prepareVideoForUpload(

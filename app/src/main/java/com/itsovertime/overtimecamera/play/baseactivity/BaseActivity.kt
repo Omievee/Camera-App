@@ -110,13 +110,18 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.submit -> {
+                println("access code :: $accessCodeSent")
                 if (accessCodeSent) {
                     submitAccessCode()
                 } else {
+                    println("else?")
                     submitNumberForCode()
                 }
             }
-            R.id.resend -> presenter.resendAccessCode()
+            R.id.resend -> {
+
+                presenter.resendAccessCode()
+            }
             R.id.changeNum -> presenter.resetViews()
             R.id.allowPermissions -> if (!presenter.checkPermissions()) {
                 displayAlert()

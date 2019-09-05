@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
+import com.itsovertime.overtimecamera.play.network.AccessResponse
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import io.reactivex.disposables.Disposable
 
@@ -43,7 +44,10 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
 
     fun setUpAdapter() {
         println("set up presenter..")
-        view.setUpAdapter()
+        if (!checkPermissions()) {
+            view.beginPermissionsFlow()
+        } else view.setUpAdapter()
+
     }
 
     fun submitClicked(number: String) {
@@ -83,6 +87,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     }
 
     fun resendAccessCode() {
+        verifyDisposable?.dispose()
         view.displayProgress()
         sendCodeToProvidedNumber(numberProvided ?: return)
     }
@@ -102,7 +107,8 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
                 refreshAuth()
             }
             .doOnError {
-                println("Stacktrace :: ${it.message}")
+                view.hideDisplayProgress()
+                view.showToast(view.applicationContext.getString(R.string.auth_invalid_access_code))
             }
             .subscribe({
 
@@ -117,6 +123,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
         authDis = auth
             .onRefreshAuth()
             .doOnSuccess {
+                println("Successful refresh... $it")
                 UserPreference.userId = it.data.user.id
                 retrieveFullUser()
             }
@@ -146,6 +153,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             .subscribe({
                 auth.saveUserToDB(it.user)
                 UserPreference.accessAllowed = it.user.is_camera_authorized ?: false
+                println("we are here..... ${it.user.is_camera_authorized}")
                 if (!UserPreference.accessAllowed) {
                     if (it.user.is_banned == true || it.user.is_suspended == true || it.user.is_camera_rejected == true) {
                         logOut()

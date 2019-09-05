@@ -39,7 +39,6 @@ class CameraPresenter(
     var e: Event? = null
     fun saveRecordingToDataBase(videoEvent: Event?) {
         e = videoEvent
-        println("Saving............ $e")
         filePath?.let {
             manager.saveHighQualityVideoToDB(
                 event = e,

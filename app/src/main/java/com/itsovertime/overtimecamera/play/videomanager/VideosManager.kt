@@ -16,7 +16,9 @@ interface VideosManager {
     fun updateVideoFavorite(isFavorite: Boolean)
     fun updateVideoFunny(isFunny: Boolean)
     fun updateVideoMd5(md5: String, clientId: String)
-    fun updateUploadId(uploadId: String, clientId: String)
-
+    fun updateUploadId(uplaodId:String, clientId: String)
+    fun updateVideoInstanceId(videoId: String, clientId: String)
     fun updateVideoStatus(video: SavedVideo, state: UploadState)
+    fun resetUploadState()
+
 }

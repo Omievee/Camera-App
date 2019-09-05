@@ -272,6 +272,41 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
+    @Throws(IOException::class)
+    private fun setUpMediaRecorder() {
+        val videoTimeStamp = System.currentTimeMillis().toString()
+        videoFile = presenter.getVideoFilePath(videoTimeStamp)
+        val rotation = activity?.windowManager?.defaultDisplay?.rotation
+        val recorder = MediaRecorder()
+
+
+        val profile =
+            when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
+                true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
+                else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
+            }
+
+        when (sensorOrientation) {
+            SENSOR_ORIENTATION_DEFAULT_DEGREES ->
+                recorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
+            SENSOR_ORIENTATION_INVERSE_DEGREES ->
+                recorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
+        }
+        recorder?.apply {
+            setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
+            setVideoSource(MediaRecorder.VideoSource.SURFACE)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(MediaRecorder.AudioEncoder.HE_AAC)
+            setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+            setOutputFile(videoFile?.absolutePath)
+            setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight)
+            setVideoEncodingBitRate(profile.videoBitRate)
+            setAudioEncodingBitRate(profile.audioBitRate)
+            setVideoFrameRate(profile.videoFrameRate)
+            prepare()
+        }
+        mediaRecorder = recorder
+    }
     @SuppressLint("CheckResult")
     override fun startRecording() {
         recording = true
@@ -287,19 +322,28 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 .doFinally {
                     progress.visibility = View.GONE
                 }
-                .map {
-                    mediaRecorder = it
-                }
                 .doOnSuccess {
                     mediaRecorder?.start()
                 }
+                .doOnError {
+                    println("ERROR FROM RECORDER>>>>>>>>>>>>>>>>>>>> ${it.message}")
+
+                }
                 .subscribe({
+                    if (mediaRecorder == null) Toast.makeText(
+                        context,
+                        "Null",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    println("Subscribe.......>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    println("Video size >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.... ${videoSize?.width} ^^ ${videoSize?.height}")
                     val texture = txView?.surfaceTexture.apply {
                         this?.setDefaultBufferSize(
                             videoSize?.width ?: 0, videoSize?.height
                                 ?: 0
                         )
                     }
+
                     val previewSurface = Surface(texture)
                     val recorderSurface = mediaRecorder?.surface
                     val surfaces = ArrayList<Surface>().apply {
@@ -308,6 +352,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                             add(s)
                         }
                     }
+                    println("Previewsurface... $previewSurface")
+                    surfaces.forEach {
+                        println("Surfaces... $it")
+                    }
+
 
                     if (!cameraIsClosed) {
                         synchronized(this) {
@@ -371,15 +420,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         stopRecordingThread()
         recording = false
         try {
-            Observable.fromCallable {
+            Single.fromCallable {
                 mediaRecorder?.apply {
                     stop()
                     reset()
                 }
-                mediaRecorder = null
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError {
+                }
+                .doOnSuccess {
+                    mediaRecorder = null
                 }
                 .doFinally {
                     when (isPaused) {
@@ -436,6 +487,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun startPreview() {
         try {
             closePreviewSession()
+
             val texture = txView?.surfaceTexture
             texture?.setDefaultBufferSize(videoSize?.width ?: 0, videoSize?.height ?: 0)
 
@@ -723,40 +775,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
-    @Throws(IOException::class)
-    private fun setUpMediaRecorder(): MediaRecorder? {
-        val videoTimeStamp = System.currentTimeMillis().toString()
-        videoFile = presenter.getVideoFilePath(videoTimeStamp)
-        val rotation = activity?.windowManager?.defaultDisplay?.rotation
 
-        when (sensorOrientation) {
-            SENSOR_ORIENTATION_DEFAULT_DEGREES ->
-                mediaRecorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
-            SENSOR_ORIENTATION_INVERSE_DEGREES ->
-                mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
-        }
-
-        val profile =
-            when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
-                true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
-                else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
-            }
-
-        mediaRecorder?.apply {
-            setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
-            setVideoSource(MediaRecorder.VideoSource.SURFACE)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.HE_AAC)
-            setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-            setOutputFile(videoFile?.absolutePath)
-            setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight)
-            setVideoEncodingBitRate(profile.videoBitRate)
-            setAudioEncodingBitRate(profile.audioBitRate)
-            setVideoFrameRate(profile.videoFrameRate)
-            prepare()
-        }
-        return mediaRecorder
-    }
 
     var fragmentIsVisibleToUser: Boolean? = false
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
