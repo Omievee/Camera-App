@@ -57,7 +57,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         if (isVisibleToUser && view != null) {
-            onResume()
+            adapter?.notifyDataSetChanged()
         }
     }
 
@@ -69,10 +69,11 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         }
     }
 
+    var adapter: UploadsAdapter? = null
     override fun updateAdapter(videos: List<SavedVideo>) {
-        val adapter = UploadsAdapter(videos)
+        adapter = UploadsAdapter(videos)
         uploadsRecycler.adapter = adapter
-        adapter.notifyItemInserted(0)
+        adapter?.notifyItemInserted(0)
     }
 
 
