@@ -54,6 +54,13 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
             .commit()
     }
 
+    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
+        super.setUserVisibleHint(isVisibleToUser)
+        if (isVisibleToUser && view != null) {
+            onResume()
+        }
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.settingsButton -> {

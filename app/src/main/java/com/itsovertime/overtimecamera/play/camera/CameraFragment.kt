@@ -237,11 +237,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             selfieButton.isEnabled = false
         }
 
-        CAMERA = if (CAMERA == 0) {
-            1
-        } else {
-            0
-        }
+        CAMERA = if (CAMERA == 0) 1 else 0
+
         synchronized(lock = this) {
             Single.fromCallable {
                 releaseCamera(tapToSave = false)
@@ -254,9 +251,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 }, {
                 })
         }
-
         presenter.determineViewsForCameraId()
-
     }
 
     var cameraIsClosed: Boolean = false
@@ -264,7 +259,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         cameraIsClosed = true
         try {
             cameraOpenCloseLock.acquire()
-
             cameraDevice?.close()
             cameraDevice = null
             mediaRecorder?.release()
@@ -315,11 +309,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun startRecording() {
         recording = true
         if (cameraDevice == null || txView?.isAvailable == false) {
-            println("Null camera device...... $cameraDevice && ${txView?.isAvailable}")
             return
         }
         try {
-
             setUpMediaRecorder()
             mediaRecorder?.prepare()
             val texture = txView?.surfaceTexture.apply {
@@ -328,7 +320,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                         ?: 0
                 )
             }
-
             val previewSurface = Surface(texture)
             val recorderSurface = mediaRecorder?.surface
             val surfaces = ArrayList<Surface>().apply {
@@ -337,10 +328,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     add(s)
                 }
             }
-            surfaces.forEach {
-                println("surfaces.... $it")
-            }
-            println("is camera closed..... $cameraIsClosed")
+
             if (!cameraIsClosed) {
                 synchronized(this) {
                     previewRequestBuilder =
@@ -350,12 +338,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                 this?.addTarget(s)
                             }
                         } ?: return
-                    println("Preview builder .... $previewRequestBuilder")
                     cameraDevice?.createCaptureSession(
                         surfaces, object : CameraCaptureSession.StateCallback() {
                             override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                                 captureSession = cameraCaptureSession
-                                println("camera capsure session... $captureSession")
                                 previewRequestBuilder.set(
                                     CaptureRequest.CONTROL_MODE,
                                     CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
@@ -370,7 +356,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                     )
                                     mediaRecorder?.start()
                                     activity?.runOnUiThread {
-                                        progress.visibility = View.GONE
+
+                                        selfieCameraEngaged?.let { hideViews(it) }
+
                                     }
 
                                 } catch (e: CameraAccessException) {
@@ -386,7 +374,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     )
                 }
             }
-
 
         } catch (e: CameraAccessException) {
             e.printStackTrace()
@@ -405,9 +392,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             mediaRecorder = null
             println("IS PAUSED>>> $isPaused")
             when (isPaused) {
-                false -> {
-                    presenter.saveRecordingToDataBase(selectedEvent)
-                }
+                false -> presenter.saveRecordingToDataBase(selectedEvent)
                 else -> deleteUnsavedFile()
             }
         } catch (r: RuntimeException) {
@@ -418,6 +403,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun hideViews(isSelfieCamera: Boolean) {
+        progress.visibility = View.GONE
         if (!isSelfieCamera) {
             favoriteIcon?.let {
                 it.visibility = View.VISIBLE
@@ -425,11 +411,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             hahaIcon?.let {
                 it.visibility = View.VISIBLE
             }
-
             val timer = Timer()
             val timerTask = object : TimerTask() {
                 override fun run() {
-
                     activity?.runOnUiThread {
                         favoriteIcon?.let {
                             it.visibility = View.INVISIBLE
@@ -441,8 +425,30 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
                 }
             }
-            timer.schedule(timerTask, 7000)
+            timer.schedule(timerTask, TIMEOUT)
+            if (!isSelfieCamera) {
+                favoriteIcon.setImageDrawable(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.favebutton,
+                        null
+                    )
+                )
+                hahaIcon.setImageDrawable(
+                    ResourcesCompat.getDrawable(
+                        resources,
+                        R.drawable.haha,
+                        null
+                    )
+                )
+            }
+
         }
+    }
+
+    companion object {
+        // Splash screen timer
+        private const val TIMEOUT = 10000L
     }
 
     override fun onAttach(context: Context?) {
@@ -577,17 +583,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     private fun stopLiveView(isPaused: Boolean, isSelfieCamera: Boolean) {
         println("STOPING LIVE VIEW....>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         stopRecording(isPaused)
-        hideViews(isSelfieCamera)
-        if (!isSelfieCamera) {
-            favoriteIcon.setImageDrawable(
-                ResourcesCompat.getDrawable(
-                    resources,
-                    R.drawable.favebutton,
-                    null
-                )
-            )
-            hahaIcon.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.haha, null))
-        }
+
     }
 
     fun showToast(message: String) {
@@ -602,7 +598,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var manager: CameraManager? = null
     @SuppressLint("MissingPermission")
     override fun openCamera(width: Int, height: Int, camera: Int) {
-        println("OPENING CAMERA>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         manager = context?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {

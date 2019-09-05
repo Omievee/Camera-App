@@ -56,32 +56,6 @@ class UploadsManagerImpl(
     private val subject: BehaviorSubject<CurrentVideoUpload> = BehaviorSubject.create()
 
     override fun beginUploadProcess() {
-//        when (!faveList.isNullOrEmpty()) {
-//            true -> {
-//                faveList?.forEach {
-//                    synchronized(this) {
-//                        println("Begin PRocess... ${it.clientId}")
-//                        if (it.uploadState == UploadState.QUEUED) {
-//                            currentVideo = it
-//                            if (currentVideo != null) {
-//                            } else Toast.makeText(
-//                                context,
-//                                "video is null",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-//                        }
-//                    }
-//                }
-//            }
-//            false -> {
-//                standardList?.forEach {
-//                    println("path:: ${it.th}")
-//                    //                                        synchronized(this) {
-////                        getVideoInstance(it)
-////                    }
-//                }
-//            }
-//        }
     }
 
 
@@ -170,7 +144,6 @@ class UploadsManagerImpl(
             println("Ids didnt match........")
             return
         }
-
         this.upload = upload
         array = when (currentVideo?.uploadState) {
             UploadState.UPLOADING_MEDIUM -> breakFileIntoChunks(
@@ -197,7 +170,6 @@ class UploadsManagerImpl(
     override fun uploadVideoToServer(data: Array<ByteArray>, chunkToUpload: Int) {
         subject.onNext(CurrentVideoUpload(currentVideo ?: return, UploadState.UPLOADING_MEDIUM))
 
-        println("<<<<<<<<<<< UPLOADING TO SERVER >>>>>>>>>>>>>>>... ")
         println("Offset ... $offSet")
         println("data ... $data")
 //        do {
@@ -229,9 +201,6 @@ class UploadsManagerImpl(
 //        } while (data.size in 1 until offSet - 1)
 
     }
-
-    var isUploadComplete: Boolean? = false
-
 
     override fun onCurrentFileBeingUploaded(): Observable<CurrentVideoUpload> {
         return subject
