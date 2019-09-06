@@ -1,7 +1,6 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
 import android.annotation.SuppressLint
-import android.widget.Toast
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
@@ -13,13 +12,13 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import okhttp3.MediaType
-import java.io.*
-import java.util.*
 import okhttp3.RequestBody
-import java.nio.file.Files
-import kotlin.math.ceil
+import java.io.File
 import java.math.BigInteger
+import java.nio.file.Files
 import java.security.MessageDigest
+import java.util.*
+import kotlin.math.ceil
 
 
 class UploadsManagerImpl(
@@ -27,21 +26,6 @@ class UploadsManagerImpl(
     val api: Api,
     val manager: WifiManager
 ) : UploadsManager {
-
-
-    override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
-        list.forEach {
-            println("videos....... ID: ${it.clientId} ++ ${it.is_favorite}")
-        }
-    }
-
-    override fun resetUploadStateForCurrentVideo() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    var faveList: MutableList<SavedVideo>? = mutableListOf()
-    var standardList: MutableList<SavedVideo>? = mutableListOf()
-
     private var MIN_CHUNK_SIZE = 0.5 * 1024
     private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
     private var chunkSize = 1 * 1024
@@ -49,38 +33,46 @@ class UploadsManagerImpl(
     private var time = System.currentTimeMillis()
 
 
-    private val subject: BehaviorSubject<CurrentVideoUpload> = BehaviorSubject.create()
+    override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
+        println("Updating Que..... ${list.size}")
+        subject.onNext(list)
+    }
+
+    override fun resetUploadStateForCurrentVideo() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+
+    private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
 
     override fun beginUploadProcess() {
 
     }
 
 
-    var currentVideo: SavedVideo? = null
-    override fun getVideoInstance(): Single<VideoInstanceResponse> {
-        println("current video... $currentVideo")
-        subject.onNext(CurrentVideoUpload(currentVideo, UploadState.REGISTERING))
-        if (currentVideo == null) {
+    private var currentVideo: SavedVideo? = null
 
-        }
+
+    @Synchronized
+    override fun getVideoInstance(video: SavedVideo): Single<VideoInstanceResponse> {
+        currentVideo = video
         return api
             .getVideoInstance(
                 VideoInstanceRequest(
-                    client_id = UUID.fromString(currentVideo?.clientId),
-                    is_favorite = currentVideo?.is_favorite ?: false,
-                    is_selfie = currentVideo?.is_selfie ?: false,
-                    latitude = currentVideo?.latitude ?: 0.0,
-                    longitude = currentVideo?.longitude ?: 0.0
+                    client_id = UUID.fromString(video?.clientId),
+                    is_favorite = video?.is_favorite,
+                    is_selfie = video?.is_selfie,
+                    latitude = video?.latitude ?: 0.0,
+                    longitude = video?.longitude ?: 0.0
                 )
             )
             .doOnSuccess {
-                subject.onNext(
-                    CurrentVideoUpload(
-                        currentVideo,
-                        UploadState.REGISTERED
-                    )
-                )
-                println("success from instance...")
+                //                subject.onNext(
+//                    CurrentVideoUpload(
+//                        currentVideo,
+//                        UploadState.REGISTERED
+//                    )
+//                )
             }
             .doOnError {
                 println("instance error.... ${it.message}")
@@ -89,20 +81,19 @@ class UploadsManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
     }
 
+    @Synchronized
     override fun getAWSDataForUpload(response: VideoInstanceResponse): Single<TokenResponse> {
         println("AWS Data response......")
         return api
             .uploadToken(response)
-            .doOnSuccess {
-                println("aws data success....")
-            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-
+    @Synchronized
     override fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse> {
         println("register... $currentVideo")
+
         val md5 = hexToString(File(currentVideo?.mediumRes).readBytes())
         println("Register with MD5 $md5...")
         return api
@@ -126,80 +117,81 @@ class UploadsManagerImpl(
     var array: Array<ByteArray> = emptyArray()
     var offSet: Int = 0
 
-    override fun prepareVideoForUpload(upload: Upload) {
-        println("preparing upload... $upload...")
-        if (currentVideo?.uploadState == UploadState.QUEUED) {
-            subject.onNext(
-                CurrentVideoUpload(
-                    currentVideo ?: return
-                    , UploadState.UPLOADING_MEDIUM
-                )
-            )
-        }
-
-        if (upload.id != currentVideo?.uploadId) {
-            println("Ids didnt match........")
-            return
-        }
-        this.upload = upload
-        array = when (currentVideo?.uploadState) {
-            UploadState.UPLOADING_MEDIUM -> breakFileIntoChunks(
-                File(currentVideo?.mediumRes),
-                chunkSize
-            )
-            UploadState.UPLOADED_MEDIUM -> breakFileIntoChunks(
-                File(currentVideo?.trimmedVidPath),
-                chunkSize
-            )
-            else -> {
-                emptyArray()
-            }
-        }
-        offSet = array.size
-//        println("THIS DATA IS..... $array + ${array[0]} ++ ${array[1]} ${currentVideo?.uploadState}")
-        uploadVideoToServer(array, uploadChunkIndex)
+    @Synchronized
+    override fun prepareVideoForUpload(upload: Upload, savedVideo: SavedVideo) {
+        //uploadVideoToServer(array, uploadChunkIndex)
     }
 
+    //        array = when (savedVideo?.uploadState) {
+//            UploadState.UPLOADING_MEDIUM ->
+//            UploadState.UPLOADED_MEDIUM -> breakFileIntoChunks(
+//                File(savedVideo?.trimmedVidPath),
+//                chunkSize
+//            )
+//            else -> {
+//                emptyArray()
+//            }
+//        }
     lateinit var request: RequestBody
 
     @SuppressLint("CheckResult")
     @Synchronized
-    override fun uploadVideoToServer(data: Array<ByteArray>, chunkToUpload: Int) {
-        subject.onNext(CurrentVideoUpload(currentVideo ?: return, UploadState.UPLOADING_MEDIUM))
+    override fun uploadVideoToServer(
+        upload: Upload,
+        savedVideo: SavedVideo
+    ): Single<VideoUploadResponse> {
+//        if (upload.id != savedVideo?.uploadId) {
+//            println("Ids didnt match........")
+//        } else println("matchy matchy...")
 
-        println("Offset ... $offSet")
-        println("data ... $data")
-//        do {
-//            println("inside Do.... $$$$$$$$ ${data.size}")
-//            data?.forEach { it ->
-//                request = RequestBody.create(
-//                    MediaType.parse("application/octet-stream"),
-//                    it
-//                )
-//                synchronized(this) {
-//                    Single.fromCallable {
-//                        api.uploadSelectedVideo(
-//                            md5Header = hexToString(it),
-//                            videoId = upload?.id ?: return@fromCallable,
-//                            uploadChunk = chunkToUpload,
-//                            file = request
-//                        ).doOnSuccess { response ->
-//                            println("made the success...... ")
-//                            println("Success From Video Upload....... ${response.success}")
-//                        }
-//                    }.subscribeOn(Schedulers.io())
-//                        .observeOn(AndroidSchedulers.mainThread())
+        array = breakFileIntoChunks(
+            File(savedVideo?.mediumRes),
+            chunkSize
+        )
+        offSet = array.size
+
+        request = RequestBody.create(
+            MediaType.parse("application/octet-stream"),
+            array[0]
+        )
+        return api
+            .uploadSelectedVideo(
+                md5Header = hexToString(array[0]),
+                videoId = upload?.id ?: "",
+                uploadChunk = 0,
+                file = request
+            )
+            .doOnSuccess {
+                println("SUCCES FROM UPLOAD::::::: $it")
+            }
+            .doOnError {
+                println("FAILURE FROM UPLOAD ::::: ${it.message}")
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+//        synchronized(this) {
+//            Single.fromCallable {
+//                api.uploadSelectedVideo(
 //
-//                        .doOnError {
-//                            println("Error from upload ${it.message}")
-//                        }
+//                ).doOnSuccess { response ->
+//                    println("made the success...... ")
+//                    println("Success From Video Upload....... ${response.success}")
+//                }.doOnError {
+//                    println("Error from upload ${it.message}")
 //                }
-//            }
-//        } while (data.size in 1 until offSet - 1)
-
+//            }.subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe({
+//
+//                }, {
+//                    it.printStackTrace()
+//
+//                })
+//
+//        }
     }
 
-    override fun onCurrentFileBeingUploaded(): Observable<CurrentVideoUpload> {
+    override fun onUpdatedQue(): Observable<List<SavedVideo>> {
         return subject
             .observeOn(Schedulers.io())
             .subscribeOn(AndroidSchedulers.mainThread())
@@ -212,6 +204,7 @@ class UploadsManagerImpl(
         )
     }
 
+    @Synchronized
     private fun divideArray(source: ByteArray, chunksize: Int): Array<ByteArray> {
         val ret =
             Array(ceil(source.size / chunksize.toDouble()).toInt()) { ByteArray(chunksize) }
@@ -227,6 +220,7 @@ class UploadsManagerImpl(
         return ret
     }
 
+    @Synchronized
     private fun hexToString(byte: ByteArray): String {
         val md5 = MessageDigest.getInstance("MD5")
         return BigInteger(

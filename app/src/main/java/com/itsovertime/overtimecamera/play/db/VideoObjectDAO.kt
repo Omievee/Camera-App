@@ -40,6 +40,9 @@ interface VideoObjectDAO {
     @Query("SELECT * FROM SavedVideo")
     fun getVideos(): List<SavedVideo>
 
+    @Query("SELECT * FROM SavedVideo WHERE clientId= :clientId")
+    fun getVideoForUpload(clientId: String): SavedVideo
+
     @Query("UPDATE SavedVideo SET uploadState = :uploadState WHERE clientId = :lastID")
     fun updateVideoState(uploadState: UploadState, lastID: String)
 

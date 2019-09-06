@@ -1,15 +1,19 @@
 package com.itsovertime.overtimecamera.play.uploads
 
+import android.annotation.SuppressLint
+import com.itsovertime.overtimecamera.play.db.AppDatabase
+import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
-import com.itsovertime.overtimecamera.play.network.Upload
 import com.itsovertime.overtimecamera.play.network.VideoInstanceResponse
-import com.itsovertime.overtimecamera.play.uploadsmanager.CurrentVideoUpload
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 
 class UploadsPresenter(
     val view: UploadsFragment,
@@ -22,23 +26,29 @@ class UploadsPresenter(
     fun onCreate() {
         manager.loadFromDB()
         subscribeToNetworkUpdates()
-        subscribeToCurrentVideoBeingUploaded()
+
     }
 
     fun onResume() {
         view.swipe2RefreshIsTrue()
         subscribeToVideosFromGallery()
+        subscribeToCurrentVideoBeingUploaded()
     }
 
     var clientIdDisposable: Disposable? = null
-    var currentVideo: CurrentVideoUpload? = null
+    var currentVideoQue: List<SavedVideo>? = null
     private fun subscribeToCurrentVideoBeingUploaded() {
         clientIdDisposable?.dispose()
         clientIdDisposable =
             uploadManager
-                .onCurrentFileBeingUploaded()
+                .onUpdatedQue()
                 .subscribe({
-                    currentVideo = it
+                    currentVideoQue = it
+                    println("+++++++QueSize ${currentVideoQue?.size}+++++++++")
+                    currentVideoQue?.forEach {
+                        getVideoInstance(it)
+                        println("QUE CHECK ::::::: ${it.is_favorite} && ${it.clientId}")
+                    }
                 }, {
                 })
     }
@@ -51,10 +61,6 @@ class UploadsPresenter(
             .subscribe({
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
-                if (!it.isNullOrEmpty()) {
-                    uploadManager.beginUploadProcess()
-                    getVideoInstance()
-                }
             }, {
                 println("throwable: ${it.printStackTrace()}")
             })
@@ -72,7 +78,6 @@ class UploadsPresenter(
 //                    NETWORK_TYPE.MOBILE_EDGE -> view.display
                     else -> view.displayNoNetworkConnection()
                 }
-                //  getVideoInstance()
 
             }, {
                 it.printStackTrace()
@@ -80,19 +85,24 @@ class UploadsPresenter(
     }
 
     private var instanceDisposable: Disposable? = null
-    private fun getVideoInstance() {
+
+    var currentVideo: SavedVideo? = null
+    @Synchronized
+    private fun getVideoInstance(it: SavedVideo) {
+        currentVideo = it
         instanceDisposable?.dispose()
         instanceDisposable =
             uploadManager
-                .getVideoInstance()
+                .getVideoInstance(currentVideo ?: return)
                 .doOnError {}
                 .map {
                     videoInstanceResponse = it
                 }
                 .doOnSuccess {
                     manager.updateVideoInstanceId(
-                        videoInstanceResponse?.video?.id ?: "",
-                        currentVideo?.video?.clientId ?: ""
+                        videoInstanceResponse?.video?.id.toString() ?: "",
+                        currentVideo?.clientId.toString() ?: ""
+
                     )
                     requestTokenForUpload(videoInstanceResponse)
                 }
@@ -139,43 +149,65 @@ class UploadsPresenter(
                 .map {
                     encryptionResponse = it
                     manager.updateVideoMd5(
-                        md5 = encryptionResponse?.upload?.md5 ?: "",
-                        clientId = currentVideo?.video?.clientId ?: ""
-                    )
-                    println("MAP:: ${encryptionResponse?.upload?.id.toString()}")
-                    manager.updateUploadId(
-                        uplaodId = encryptionResponse?.upload?.id.toString(),
-                        clientId = currentVideo?.video?.clientId.toString()
+                        md5 = encryptionResponse?.upload?.md5.toString(),
+                        clientId = currentVideo?.clientId.toString()
                     )
 
+                    manager.updateUploadId(
+                        uplaodId = encryptionResponse?.upload?.id.toString(),
+                        clientId = currentVideo?.clientId.toString()
+                    )
+
+                }
+                .doOnSuccess {
+                    getVideoForUpload(currentVideo ?: return@doOnSuccess)
                 }
                 .doOnError {
                     println("Begin upload error...... ${it.message}")
                 }
-                .doFinally {
-                    if(encryptionResponse != null && currentVideo?.video?.uploadId != null){
-                        uploadRegisteredVideo(
-                            upload = encryptionResponse?.upload ?: return@doFinally
-                        )
-                    }
-                }
                 .subscribe({
-
                 }, {
                     println("Final throw:::: ${it.message}")
                 })
 
     }
 
-    private var uploadDisposable: Disposable? = null
-    private fun uploadRegisteredVideo(upload: Upload) {
-        println("upload registered video...")
-        uploadDisposable?.dispose()
-        uploadManager
-            .prepareVideoForUpload(
-                upload
-            )
+    var vid: SavedVideo? = null
+    @SuppressLint("CheckResult")
+    private fun getVideoForUpload(savedVideo: SavedVideo) {
+        var db = view?.context?.let { AppDatabase.getAppDataBase(context = it) }
+        var videoDao = db?.videoDao()
+        Single.fromCallable {
+            with(videoDao) {
+                this?.getVideoForUpload(savedVideo?.clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map {
+                vid = it
+            }
+            .subscribe({
+                upload(vid)
+            }, {
+                it.printStackTrace()
+            })
     }
+
+    var up: Disposable? = null
+    private fun upload(vid: SavedVideo?) {
+        up?.dispose()
+        up = uploadManager
+            .uploadVideoToServer(
+                upload = encryptionResponse?.upload ?: return,
+                savedVideo = vid ?: return
+            )
+            .subscribe({
+                println("response... $it")
+            }, {
+                it.printStackTrace()
+            })
+    }
+
 
     fun onDestroy() {
         managerDisposable?.dispose()

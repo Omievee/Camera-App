@@ -16,6 +16,7 @@ import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
+import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -37,14 +38,20 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     override fun updateUploadId(uplaodId: String, clientId: String) {
         Single.fromCallable {
             with(videoDao) {
-                this?.updateVideoInstanceId(uplaodId, clientId)
+                this?.updateUploadId(uplaodId, clientId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({}, {
+            .subscribe({
+
+            }, {
                 it.printStackTrace()
             })
     }
+
+
+    lateinit var vid: SavedVideo
+
 
     @SuppressLint("CheckResult")
     override fun updateVideoStatus(video: SavedVideo, state: UploadState) {
@@ -129,7 +136,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         val retriever = MediaMetadataRetriever();
         try {
             retriever.setDataSource(context, Uri.fromFile(File(file.highRes)));
-            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: ""
             val timeInMillisec = time.toLong() / 1000
             retriever.release()
             return timeInMillisec > file.max_video_length
@@ -250,6 +257,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     @SuppressLint("CheckResult")
     override fun updateVideoFunny(isFunny: Boolean) {
+        println("VIDEO UPDATE FUNNY :::::: $isFunny && $lastVideoId")
         Single.fromCallable {
             with(videoDao) {
                 this?.setVideoAsFunny(is_funny = isFunny, lastID = lastVideoId)
@@ -300,8 +308,10 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
-                Toast.makeText(context, "Failed to transcode:: $exception", Toast.LENGTH_SHORT)
-                    .show()
+                exception?.printStackTrace()
+                println("FAILED TO TRANSCODE ::::: ${exception?.message} && ${exception?.cause}")
+//                Toast.makeText(context, "Failed to transcode:: $exception", Toast.LENGTH_SHORT)
+//                    .show()
             }
 
             override fun onTranscodeCompleted() {
@@ -401,12 +411,16 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 }
                 if (!listOfVideos.isNullOrEmpty()) {
                     lastVideoId = listOfVideos[0].clientId
+                    println("Gallery size :: ${listOfVideos.size}")
                     listOfVideos.forEach {
-                        if (!it.isProcessed) determineTrim(it) else {
-                            println("prepped... ${it.isProcessed}")
-                            if (it.is_favorite) {
-                                preppedVideos.add(0, it)
-                            }else preppedVideos.add(it)
+                        println("Gallery Is Processed? ${it.isProcessed}")
+                        if (!it.isProcessed) {
+                            determineTrim(it)
+                        } else {
+                            when (it.is_favorite) {
+                                true -> preppedVideos.add(0, it)
+                                else -> preppedVideos.add(it)
+                            }
                             prepVideosForUploading(preppedVideos)
                         }
                     }
@@ -426,7 +440,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
 
     private fun prepVideosForUploading(preppedVideos: MutableList<SavedVideo>) {
-        println("HOW MANY ARE PREPPED:::::: ${preppedVideos.size}")
+        println("Videos Ready for que..... ${preppedVideos.size}")
         if (!preppedVideos.isNullOrEmpty()) {
             preppedVideos.forEach {
                 if (it.uploadState != UploadState.COMPLETE) {

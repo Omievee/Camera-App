@@ -10,14 +10,17 @@ import java.io.File
 interface UploadsManager {
     fun onProcessUploadQue(list: MutableList<SavedVideo>)
 
-    fun getVideoInstance(): Single<VideoInstanceResponse>
+    fun getVideoInstance(video: SavedVideo): Single<VideoInstanceResponse>
     fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse>
     fun getAWSDataForUpload(response: VideoInstanceResponse): Single<TokenResponse>
-    fun prepareVideoForUpload(upload: Upload)
-    fun uploadVideoToServer(data: Array<ByteArray>, chunkToUpload: Int)
+    fun prepareVideoForUpload(upload: Upload, savedVideo: SavedVideo)
+    fun uploadVideoToServer(
+        upload: Upload,
+        savedVideo: SavedVideo
+    ): Single<VideoUploadResponse>
 
     fun resetUploadStateForCurrentVideo()
     fun beginUploadProcess()
 
-    fun onCurrentFileBeingUploaded(): Observable<CurrentVideoUpload>
+    fun onUpdatedQue(): Observable<List<SavedVideo>>
 }
