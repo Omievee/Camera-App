@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.videomanager
 
 import android.annotation.SuppressLint
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
 import android.widget.Toast
@@ -29,19 +30,17 @@ import java.util.*
 
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
+    var db = AppDatabase.getAppDataBase(context = context)
+    private var videoDao = db?.videoDao()
 
     @SuppressLint("CheckResult")
     override fun updateUploadId(uplaodId: String, clientId: String) {
         Single.fromCallable {
-            val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateVideoInstanceId(uplaodId, clientId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .onErrorReturn {
-                it.printStackTrace()
-            }
             .subscribe({}, {
                 it.printStackTrace()
             })
@@ -50,7 +49,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     @SuppressLint("CheckResult")
     override fun updateVideoStatus(video: SavedVideo, state: UploadState) {
         Single.fromCallable {
-            val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateVideoState(state, video.clientId)
             }
@@ -68,7 +66,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     @SuppressLint("CheckResult")
     override fun updateVideoInstanceId(videoId: String, clientId: String) {
         Single.fromCallable {
-            val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateVideoInstanceId(videoId, clientId)
             }
@@ -85,7 +82,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     @SuppressLint("CheckResult")
     override fun updateVideoMd5(md5: String, clientId: String) {
         Single.fromCallable {
-            val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateVideoMd5(md5, clientId)
             }
@@ -106,7 +102,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
                 override fun onSuccess() {
                     super.onSuccess()
-                    println("Success from ffmpeg")
                 }
 
                 override fun onFailure() {
@@ -129,10 +124,31 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     var commandCCopy = "-c"
     var copyVideo = "copy"
 
-    private fun executeFFMPEG(savedVideo: SavedVideo) {
-        println("execute started...")
-        val newFile = fileForTrimmedVideo(File(savedVideo.vidPath).name)
-        val maxVideoLengthFromEvent = "-$lastVideoMaxTime"
+
+    private fun isVideoDurationLongerThanMaxTime(file: SavedVideo): Boolean {
+        val retriever = MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(context, Uri.fromFile(File(file.highRes)));
+            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            val timeInMillisec = time.toLong() / 1000
+            retriever.release()
+            return timeInMillisec > file.max_video_length
+
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
+    private fun determineTrim(savedVideo: SavedVideo) {
+        if (isVideoDurationLongerThanMaxTime(savedVideo)) {
+            trimVideo(savedVideo)
+        } else transcodeVideo(savedVideo, File(savedVideo.highRes))
+    }
+
+    private fun trimVideo(savedVideo: SavedVideo) {
+        val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name)
+        val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
         val complexCommand = arrayOf(
             //seek to end of video
             seekToEndOf,
@@ -143,7 +159,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             // I command reads from designated input file
             readInput,
             // file input
-            File(savedVideo.vidPath).absolutePath,
+            File(savedVideo.highRes).absolutePath,
             // video codec to write to
             videoCodec,
             // value of codec - H264
@@ -160,7 +176,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                 override fun onSuccess(message: String?) {
                     super.onSuccess(message)
-                    transcodeVideo(newFile)
+                    transcodeVideo(savedVideo, newFile)
                 }
 
                 override fun onFailure(message: String?) {
@@ -178,9 +194,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     @SuppressLint("CheckResult")
     private fun updateMediumFilePath(absolutePath: String) {
-        println("updating medium path :$absolutePath")
         Single.fromCallable {
-            val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateMediumQualityPath(absolutePath, lastVideoId)
             }
@@ -209,7 +223,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     @SuppressLint("CheckResult")
     private fun updateTrimmedVidPathInDB(path: String) {
         Single.fromCallable {
-            val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.updateTrimVideoPath(path, lastVideoId)
             }
@@ -234,11 +247,10 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         return File(mediaStorageDir.path + File.separator + file.name)
     }
 
-    var db = AppDatabase.getAppDataBase(context = context)
+
     @SuppressLint("CheckResult")
     override fun updateVideoFunny(isFunny: Boolean) {
         Single.fromCallable {
-            val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.setVideoAsFunny(is_funny = isFunny, lastID = lastVideoId)
             }
@@ -259,7 +271,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     @SuppressLint("CheckResult")
     override fun updateVideoFavorite(isFavorite: Boolean) {
         Single.fromCallable {
-            val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = lastVideoId)
             }
@@ -278,7 +289,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
 
-    override fun transcodeVideo(videoFile: File) {
+    override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
@@ -293,12 +304,10 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     .show()
             }
 
-
             override fun onTranscodeCompleted() {
-                println("complete :::")
+                updateVideoIsProcessed(savedVideo)
             }
         }
-
         try {
             MediaTranscoder.getInstance().transcodeVideo(
                 fileDescriptor, compressedFile(videoFile).absolutePath,
@@ -316,17 +325,32 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         }
     }
 
+    @SuppressLint("CheckResult")
+    private fun updateVideoIsProcessed(savedVideo: SavedVideo) {
+        Single.fromCallable {
+            with(videoDao) {
+                this?.updateVideoIsProcessed(isProcessed = true, lastID = savedVideo?.clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doFinally {
+                loadFromDB()
+            }
+            .subscribe({}, {
+                it.printStackTrace()
+            })
+    }
+
 
     private var lastVideoId: String = ""
     @SuppressLint("CheckResult")
     override fun saveHighQualityVideoToDB(event: Event?, filePath: String, isFavorite: Boolean) {
         this.lastVideoMaxTime = event?.max_video_length.toString()
-        println("Max time::: $lastVideoMaxTime")
         Single.fromCallable {
             val clientId = UUID.randomUUID().toString()
             val video = SavedVideo(
                 clientId = clientId,
-                vidPath = filePath,
+                highRes = filePath,
                 is_favorite = isFavorite,
                 eventId = event?.id ?: "",
                 eventName = event?.name,
@@ -334,9 +358,9 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 address = event?.address,
                 latitude = event?.latitude,
                 longitude = event?.longitude,
-                uploadState = UploadState.QUEUED
+                uploadState = UploadState.QUEUED,
+                max_video_length = event?.max_video_length ?: 12
             )
-            val videoDao = db?.videoDao()
             with(videoDao) {
                 this?.saveVideoData(video)
             }
@@ -354,13 +378,14 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             })
     }
 
-    var listOfVideos = mutableListOf<SavedVideo>()
-    var lastVideoMaxTime: String? = ""
+    private var listOfVideos = mutableListOf<SavedVideo>()
+    private var lastVideoMaxTime: String? = ""
     private var isFirstRun: Boolean = true
 
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
         listOfVideos.clear()
+        preppedVideos?.clear()
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
@@ -370,16 +395,21 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
-                println("is first run $isFirstRun")
                 if (isFirstRun) {
                     loadFFMPEG()
                     isFirstRun = false
                 }
                 if (!listOfVideos.isNullOrEmpty()) {
                     lastVideoId = listOfVideos[0].clientId
-                    lastVideoMaxTime = listOfVideos[0].max_video_length.toString()
-                    executeFFMPEG(listOfVideos[0])
-
+                    listOfVideos.forEach {
+                        if (!it.isProcessed) determineTrim(it) else {
+                            println("prepped... ${it.isProcessed}")
+                            if (it.is_favorite) {
+                                preppedVideos.add(0, it)
+                            }else preppedVideos.add(it)
+                            prepVideosForUploading(preppedVideos)
+                        }
+                    }
                 }
             }
             .subscribe({
@@ -392,12 +422,15 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             )
     }
 
+    private var preppedVideos = mutableListOf<SavedVideo>()
 
-    private fun prepVideosForUploading(listOfVideos: MutableList<SavedVideo>) {
-        if (!listOfVideos.isNullOrEmpty()) {
-            listOfVideos.forEach {
+
+    private fun prepVideosForUploading(preppedVideos: MutableList<SavedVideo>) {
+        println("HOW MANY ARE PREPPED:::::: ${preppedVideos.size}")
+        if (!preppedVideos.isNullOrEmpty()) {
+            preppedVideos.forEach {
                 if (it.uploadState != UploadState.COMPLETE) {
-                    manager?.onProcessUploadQue(listOfVideos)
+                    manager.onProcessUploadQue(preppedVideos)
                 }
             }
         }

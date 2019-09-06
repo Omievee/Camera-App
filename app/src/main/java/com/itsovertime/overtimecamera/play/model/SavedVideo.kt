@@ -15,10 +15,10 @@ data class SavedVideo(
     val id: String? = "",
     @ColumnInfo(name = "uploadId")
     val uploadId: String? = "",
-    @ColumnInfo(name = "vidPath")
-    val vidPath: String?,
-    @ColumnInfo(name = "mediumVidPath")
-    val mediumVidPath: String? = null,
+    @ColumnInfo(name = "highRes")
+    val highRes: String?,
+    @ColumnInfo(name = "mediumRes")
+    val mediumRes: String? = null,
     @ColumnInfo(name = "trimmedVidPath")
     val trimmedVidPath: String? = null,
     @ColumnInfo(name = "md5")
@@ -58,7 +58,9 @@ data class SavedVideo(
     @ColumnInfo(name = "isVideographer")
     val isVideographer: Boolean = false,
     @ColumnInfo(name = "uploadState")
-    val uploadState: UploadState
+    val uploadState: UploadState,
+    @ColumnInfo(name = "isProcessed")
+    val isProcessed: Boolean = false
 ) : Parcelable
 
 enum class UploadState {

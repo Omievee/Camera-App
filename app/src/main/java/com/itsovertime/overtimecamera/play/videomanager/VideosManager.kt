@@ -12,7 +12,7 @@ interface VideosManager {
     fun subscribeToVideoGallerySize(): Observable<Int>
     fun loadFromDB()
     fun saveHighQualityVideoToDB(event: Event? = null, filePath: String, isFavorite: Boolean)
-    fun transcodeVideo(videoFile: File)
+    fun transcodeVideo(savedVideo: SavedVideo,videoFile: File)
     fun updateVideoFavorite(isFavorite: Boolean)
     fun updateVideoFunny(isFunny: Boolean)
     fun updateVideoMd5(md5: String, clientId: String)

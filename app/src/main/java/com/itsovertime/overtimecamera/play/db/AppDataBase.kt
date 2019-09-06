@@ -10,7 +10,7 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.model.enumConverter
 
-@Database(entities = [SavedVideo::class, User::class], version = 4)
+@Database(entities = [SavedVideo::class, User::class], version = 6)
 @TypeConverters(value = [enumConverter::class])
 abstract class AppDatabase : RoomDatabase() {
 
@@ -18,7 +18,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserObjectDAO
 
     companion object {
-        var databaseInstance: AppDatabase? = null
+        private var databaseInstance: AppDatabase? = null
 
         fun getAppDataBase(context: Context): AppDatabase? {
             if (databaseInstance == null) {

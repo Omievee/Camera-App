@@ -11,6 +11,4 @@ interface UserObjectDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun saveUserData(user: User)
 
-
-
 }

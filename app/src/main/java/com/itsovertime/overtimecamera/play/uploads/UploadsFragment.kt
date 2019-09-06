@@ -73,7 +73,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     override fun updateAdapter(videos: List<SavedVideo>) {
         adapter = UploadsAdapter(videos)
         uploadsRecycler.adapter = adapter
-        adapter?.notifyItemInserted(0)
+        adapter?.notifyDataSetChanged()
     }
 
 

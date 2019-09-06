@@ -29,19 +29,15 @@ class UploadsManagerImpl(
 ) : UploadsManager {
 
 
-    var updatedQue: MutableList<SavedVideo>? = mutableListOf()
     override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
-        list.sortedWith(compareBy { it.is_favorite })
-
         list.forEach {
-            println("videos....... $it")
+            println("videos....... ID: ${it.clientId} ++ ${it.is_favorite}")
         }
     }
 
     override fun resetUploadStateForCurrentVideo() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
 
     var faveList: MutableList<SavedVideo>? = mutableListOf()
     var standardList: MutableList<SavedVideo>? = mutableListOf()
@@ -56,6 +52,7 @@ class UploadsManagerImpl(
     private val subject: BehaviorSubject<CurrentVideoUpload> = BehaviorSubject.create()
 
     override fun beginUploadProcess() {
+
     }
 
 
@@ -106,7 +103,7 @@ class UploadsManagerImpl(
 
     override fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse> {
         println("register... $currentVideo")
-        val md5 = hexToString(File(currentVideo?.mediumVidPath).readBytes())
+        val md5 = hexToString(File(currentVideo?.mediumRes).readBytes())
         println("Register with MD5 $md5...")
         return api
             .uploadDataForMd5(
@@ -147,7 +144,7 @@ class UploadsManagerImpl(
         this.upload = upload
         array = when (currentVideo?.uploadState) {
             UploadState.UPLOADING_MEDIUM -> breakFileIntoChunks(
-                File(currentVideo?.mediumVidPath),
+                File(currentVideo?.mediumRes),
                 chunkSize
             )
             UploadState.UPLOADED_MEDIUM -> breakFileIntoChunks(

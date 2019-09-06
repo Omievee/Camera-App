@@ -19,7 +19,7 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET is_funny = :is_funny WHERE clientId = :lastID")
     fun setVideoAsFunny(is_funny: Boolean, lastID: String)
 
-    @Query("UPDATE SavedVideo SET mediumVidPath = :mediumVidPath WHERE clientId = :lastID")
+    @Query("UPDATE SavedVideo SET mediumRes = :mediumVidPath WHERE clientId = :lastID")
     fun updateMediumQualityPath(mediumVidPath: String, lastID: String)
 
     @Query("UPDATE SavedVideo SET is_selfie = :is_selfie WHERE clientId = :lastID")
@@ -42,4 +42,7 @@ interface VideoObjectDAO {
 
     @Query("UPDATE SavedVideo SET uploadState = :uploadState WHERE clientId = :lastID")
     fun updateVideoState(uploadState: UploadState, lastID: String)
+
+    @Query("UPDATE SavedVideo SET isProcessed = :isProcessed WHERE clientId = :lastID")
+    fun updateVideoIsProcessed(isProcessed: Boolean, lastID: String)
 }

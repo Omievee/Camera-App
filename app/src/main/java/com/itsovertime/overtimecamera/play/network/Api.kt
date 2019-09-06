@@ -28,11 +28,7 @@ interface Api {
     @Headers("Content-Type: application/octet-stream")
     @POST("api/uploads/{videoId}/{uploadChunk}")
     fun uploadSelectedVideo(
-        @Header("Content-MD5") md5Header: String, @Path(
-            "videoId"
-        ) videoId: String, @Path(
-            "uploadChunk"
-        ) uploadChunk: Int, @Body file: RequestBody
+        @Header("Content-MD5") md5Header: String, @Path("videoId") videoId: String, @Path("uploadChunk") uploadChunk: Int, @Body file: RequestBody
     ): Single<VideoUploadResponse>
 
     /*Events endpoint*/

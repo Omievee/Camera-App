@@ -62,7 +62,7 @@ class CameraPresenter(
     }
 
     fun updateFavoriteField() {
-        manager.updateVideoFavorite(true)
+        manager.updateVideoFavorite(isFavorite = true)
     }
 
     fun cameraSwitch() {

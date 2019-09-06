@@ -13,6 +13,7 @@ class TXView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
     private var ratioWidth = 0
     private var ratioHeight = 0
 
+    @Throws(IllegalArgumentException::class)
     fun setAspectRatio(width: Int, height: Int) {
         if (width < 0 || height < 0) {
             throw IllegalArgumentException("Size cannot be negative.")

@@ -26,7 +26,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLa
             else -> View.INVISIBLE
         }
 
-        val uri = Uri.fromFile(File(video.vidPath))
+        val uri = Uri.fromFile(File(video.highRes))
         val request = ImageRequestBuilder
             .newBuilderWithSource(uri)
             .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)

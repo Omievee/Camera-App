@@ -13,6 +13,8 @@ object UserPreference {
         sPrefs = context.getSharedPreferences(Constants.PREFS_FILE, Context.MODE_PRIVATE)
     }
 
+
+
     var accessAllowed: Boolean
         get() {
             return sPrefs.getBoolean(Constants.ACCESS, false)

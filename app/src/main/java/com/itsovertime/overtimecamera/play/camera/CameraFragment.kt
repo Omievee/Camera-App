@@ -193,11 +193,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun deleteUnsavedFile() {
-        println("deleting file.... $recording")
-        println("recording... $recording")
-        if (!recording) {
-            startLiveView()
-        }
         presenter.deletePreviousFile()
     }
 
@@ -209,7 +204,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         favoriteIcon.setOnClickListener(this)
         selfieButton.setOnClickListener(this)
         pauseButton.setOnClickListener(this)
-        txView?.setOnTouchListener(this)
         pausedView.setOnClickListener(this)
         hahaIcon.setOnClickListener(this)
         eventSpace.setOnClickListener(this)
