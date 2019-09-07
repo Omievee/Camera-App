@@ -8,19 +8,23 @@ import io.reactivex.Single
 import java.io.File
 
 interface UploadsManager {
+    fun beginUploadProcess()
     fun onProcessUploadQue(list: MutableList<SavedVideo>)
-
     fun getVideoInstance(video: SavedVideo): Single<VideoInstanceResponse>
     fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse>
     fun getAWSDataForUpload(response: VideoInstanceResponse): Single<TokenResponse>
     fun prepareVideoForUpload(upload: Upload, savedVideo: SavedVideo)
     fun uploadVideoToServer(
         upload: Upload,
-        savedVideo: SavedVideo
+        array: ByteArray,
+        chunk: Int
     ): Single<VideoUploadResponse>
+    fun onCompleteUpload(uploadId:String) : Single<CompleteResponse>
+
 
     fun resetUploadStateForCurrentVideo()
-    fun beginUploadProcess()
+
 
     fun onUpdatedQue(): Observable<List<SavedVideo>>
+    fun onResponseFromUpload(): Observable<Boolean>
 }

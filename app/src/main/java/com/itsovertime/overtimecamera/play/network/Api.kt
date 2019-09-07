@@ -31,6 +31,10 @@ interface Api {
         @Header("Content-MD5") md5Header: String, @Path("videoId") videoId: String, @Path("uploadChunk") uploadChunk: Int, @Body file: RequestBody
     ): Single<VideoUploadResponse>
 
+    /*Step 5: Check For completed upload*/
+    @POST("api/uploads/{uploadId}/complete")
+    fun checkStatusForComplete(@Path("uploadId") vidId: String) : Single<CompleteResponse>
+
     /*Events endpoint*/
     @GET("api/events?")
     fun getEventData(@Query("starts_after=") time: Date): Single<EventsResponse?>

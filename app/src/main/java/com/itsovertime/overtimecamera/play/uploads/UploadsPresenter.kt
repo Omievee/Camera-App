@@ -14,6 +14,9 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import java.io.File
+import java.nio.file.Files
+import kotlin.math.ceil
 
 class UploadsPresenter(
     val view: UploadsFragment,
@@ -33,7 +36,9 @@ class UploadsPresenter(
         view.swipe2RefreshIsTrue()
         subscribeToVideosFromGallery()
         subscribeToCurrentVideoBeingUploaded()
+
     }
+
 
     var clientIdDisposable: Disposable? = null
     var currentVideoQue: List<SavedVideo>? = null
@@ -187,27 +192,123 @@ class UploadsPresenter(
                 vid = it
             }
             .subscribe({
-                upload(vid)
+                continueUploadProcess()
+                //   continueUploadProcess(true)
             }, {
                 it.printStackTrace()
             })
     }
 
+    var uploadChunk = 0
+    var uploadChunkIndex = 0
+    var currentByteArray: Array<ByteArray>? = emptyArray()
+
+    private fun continueUploadProcess() {
+        val currentByteArray = breakFileIntoChunks(File(vid?.mediumRes), MAX_CHUNK_SIZE)
+
+
+        var sizePlus1 = 0
+        currentByteArray.forEachIndexed { index, bytes ->
+            sizePlus1 = index + 1
+            println("size? $sizePlus1")
+        }
+        println("index is : $uploadChunkIndex")
+        println("chunk is : $uploadChunk")
+
+        if (uploadChunkIndex < sizePlus1) {
+            println("If statement::: $uploadChunkIndex && $sizePlus1 && $uploadChunk")
+            synchronized(this) {
+                upload(
+                    chunkIndex = uploadChunk,
+                    bytes = currentByteArray.elementAt(uploadChunkIndex)
+                )
+            }
+        } else {
+            checkForComplete()
+        }
+    }
+
+    @SuppressLint("CheckResult")
+    private var MIN_CHUNK_SIZE = 0.5 * 1024
+    private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
+    private var chunkSize = 1 * 1024
     var up: Disposable? = null
-    private fun upload(vid: SavedVideo?) {
-        up?.dispose()
-        up = uploadManager
-            .uploadVideoToServer(
-                upload = encryptionResponse?.upload ?: return,
-                savedVideo = vid ?: return
-            )
+    private fun upload(chunkIndex: Int, bytes: ByteArray) {
+        synchronized(this) {
+            up = uploadManager
+                .uploadVideoToServer(
+                    upload = encryptionResponse?.upload ?: return@synchronized,
+                    array = bytes,
+                    chunk = chunkIndex
+                )
+                .doOnSuccess {
+
+                    if (it.success) {
+                        uploadChunk++
+                        uploadChunkIndex++
+                        continueUploadProcess()
+                    }
+                }
+                .doOnError {
+                    uploadChunk = 0
+                    uploadChunkIndex = 0
+                }
+                .subscribe({
+                }, {
+                    it.printStackTrace()
+                })
+
+        }
+    }
+
+
+    var complete: Disposable? = null
+    private fun checkForComplete() {
+        complete = uploadManager
+            .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
             .subscribe({
-                println("response... $it")
+                println("status is :::: ${it.status}")
             }, {
-                it.printStackTrace()
+
             })
     }
 
+//    var success: Boolean = false
+//    var ping: Disposable? = null
+//    private fun subscribeToUploadResponse() {
+//        ping?.dispose()
+//        ping = uploadManager
+//            .onResponseFromUpload()
+//            .subscribe({
+//
+//            }, {
+//                it.printStackTrace()
+//            })
+//    }
+
+
+    private fun breakFileIntoChunks(file: File, size: Int): Array<ByteArray> {
+        return divideArray(
+            Files.readAllBytes(file.toPath()),
+            size
+        )
+    }
+
+    @Synchronized
+    private fun divideArray(source: ByteArray, chunksize: Int): Array<ByteArray> {
+        val ret =
+            Array(ceil(source.size / chunksize.toDouble()).toInt()) { ByteArray(chunksize) }
+        var start = 0
+        for (i in ret.indices) {
+            if (start + chunksize > source.size) {
+                System.arraycopy(source, start, ret[i], 0, source.size - start)
+            } else {
+                System.arraycopy(source, start, ret[i], 0, chunksize)
+            }
+            start += chunksize
+        }
+        return ret
+    }
 
     fun onDestroy() {
         managerDisposable?.dispose()

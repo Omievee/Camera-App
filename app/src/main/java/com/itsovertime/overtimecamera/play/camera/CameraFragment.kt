@@ -350,7 +350,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                     )
                                     mediaRecorder?.start()
                                     activity?.runOnUiThread {
-
                                         selfieCameraEngaged?.let { hideViews(it) }
 
                                     }

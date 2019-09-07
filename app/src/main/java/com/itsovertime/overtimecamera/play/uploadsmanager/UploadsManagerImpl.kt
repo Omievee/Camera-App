@@ -26,9 +26,15 @@ class UploadsManagerImpl(
     val api: Api,
     val manager: WifiManager
 ) : UploadsManager {
-    private var MIN_CHUNK_SIZE = 0.5 * 1024
-    private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
-    private var chunkSize = 1 * 1024
+
+    private val uploadSubject: BehaviorSubject<Boolean> = BehaviorSubject.create()
+    override fun onResponseFromUpload(): Observable<Boolean> {
+        return uploadSubject
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+
+    }
+
     private var uploadRate: Double = 0.0
     private var time = System.currentTimeMillis()
 
@@ -92,8 +98,6 @@ class UploadsManagerImpl(
 
     @Synchronized
     override fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse> {
-        println("register... $currentVideo")
-
         val md5 = hexToString(File(currentVideo?.mediumRes).readBytes())
         println("Register with MD5 $md5...")
         return api
@@ -114,7 +118,7 @@ class UploadsManagerImpl(
 
     var upload: Upload? = null
     var uploadChunkIndex: Int = 0
-    var array: Array<ByteArray> = emptyArray()
+
     var offSet: Int = 0
 
     @Synchronized
@@ -122,74 +126,42 @@ class UploadsManagerImpl(
         //uploadVideoToServer(array, uploadChunkIndex)
     }
 
-    //        array = when (savedVideo?.uploadState) {
-//            UploadState.UPLOADING_MEDIUM ->
-//            UploadState.UPLOADED_MEDIUM -> breakFileIntoChunks(
-//                File(savedVideo?.trimmedVidPath),
-//                chunkSize
-//            )
-//            else -> {
-//                emptyArray()
-//            }
-//        }
     lateinit var request: RequestBody
-
+    var array: Array<ByteArray> = emptyArray()
     @SuppressLint("CheckResult")
     @Synchronized
     override fun uploadVideoToServer(
         upload: Upload,
-        savedVideo: SavedVideo
+        array: ByteArray,
+        chunk: Int
     ): Single<VideoUploadResponse> {
 //        if (upload.id != savedVideo?.uploadId) {
 //            println("Ids didnt match........")
 //        } else println("matchy matchy...")
 
-        array = breakFileIntoChunks(
-            File(savedVideo?.mediumRes),
-            chunkSize
-        )
-        offSet = array.size
-
         request = RequestBody.create(
             MediaType.parse("application/octet-stream"),
-            array[0]
+            array
         )
         return api
             .uploadSelectedVideo(
-                md5Header = hexToString(array[0]),
-                videoId = upload?.id ?: "",
-                uploadChunk = 0,
+                md5Header = "${hexToString(array)}",
+                videoId = upload.id ?: "",
+                uploadChunk = chunk,
                 file = request
             )
-            .doOnSuccess {
-                println("SUCCES FROM UPLOAD::::::: $it")
-            }
-            .doOnError {
-                println("FAILURE FROM UPLOAD ::::: ${it.message}")
-            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-//        synchronized(this) {
-//            Single.fromCallable {
-//                api.uploadSelectedVideo(
-//
-//                ).doOnSuccess { response ->
-//                    println("made the success...... ")
-//                    println("Success From Video Upload....... ${response.success}")
-//                }.doOnError {
-//                    println("Error from upload ${it.message}")
-//                }
-//            }.subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe({
-//
-//                }, {
-//                    it.printStackTrace()
-//
-//                })
-//
-//        }
     }
+
+    override fun onCompleteUpload(uploadId: String): Single<CompleteResponse> {
+        return api
+            .checkStatusForComplete(uploadId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+
+    }
+
 
     override fun onUpdatedQue(): Observable<List<SavedVideo>> {
         return subject
@@ -197,28 +169,6 @@ class UploadsManagerImpl(
             .subscribeOn(AndroidSchedulers.mainThread())
     }
 
-    private fun breakFileIntoChunks(file: File, size: Int): Array<ByteArray> {
-        return divideArray(
-            Files.readAllBytes(file.toPath()),
-            size
-        )
-    }
-
-    @Synchronized
-    private fun divideArray(source: ByteArray, chunksize: Int): Array<ByteArray> {
-        val ret =
-            Array(ceil(source.size / chunksize.toDouble()).toInt()) { ByteArray(chunksize) }
-        var start = 0
-        for (i in ret.indices) {
-            if (start + chunksize > source.size) {
-                System.arraycopy(source, start, ret[i], 0, source.size - start)
-            } else {
-                System.arraycopy(source, start, ret[i], 0, chunksize)
-            }
-            start += chunksize
-        }
-        return ret
-    }
 
     @Synchronized
     private fun hexToString(byte: ByteArray): String {
@@ -228,7 +178,6 @@ class UploadsManagerImpl(
             md5.digest(byte)
         ).toString(16)
     }
-
 }
 
 class CurrentVideoUpload(val video: SavedVideo? = null, val state: UploadState? = null)
