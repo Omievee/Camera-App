@@ -18,7 +18,6 @@ import java.math.BigInteger
 import java.nio.file.Files
 import java.security.MessageDigest
 import java.util.*
-import kotlin.math.ceil
 
 
 class UploadsManagerImpl(
@@ -27,17 +26,8 @@ class UploadsManagerImpl(
     val manager: WifiManager
 ) : UploadsManager {
 
-    private val uploadSubject: BehaviorSubject<Boolean> = BehaviorSubject.create()
-    override fun onResponseFromUpload(): Observable<Boolean> {
-        return uploadSubject
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-
-    }
-
-    private var uploadRate: Double = 0.0
-    private var time = System.currentTimeMillis()
-
+    private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
+    private var currentVideo: SavedVideo? = null
 
     override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
         println("Updating Que..... ${list.size}")
@@ -48,17 +38,6 @@ class UploadsManagerImpl(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-
-    private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
-
-    override fun beginUploadProcess() {
-
-    }
-
-
-    private var currentVideo: SavedVideo? = null
-
-
     @Synchronized
     override fun getVideoInstance(video: SavedVideo): Single<VideoInstanceResponse> {
         currentVideo = video
@@ -66,10 +45,10 @@ class UploadsManagerImpl(
             .getVideoInstance(
                 VideoInstanceRequest(
                     client_id = UUID.fromString(video?.clientId),
-                    is_favorite = video?.is_favorite,
-                    is_selfie = video?.is_selfie,
-                    latitude = video?.latitude ?: 0.0,
-                    longitude = video?.longitude ?: 0.0
+                    is_favorite = video.is_favorite,
+                    is_selfie = video.is_selfie,
+                    latitude = video.latitude ?: 0.0,
+                    longitude = video.longitude ?: 0.0
                 )
             )
             .doOnSuccess {
@@ -81,7 +60,6 @@ class UploadsManagerImpl(
 //                )
             }
             .doOnError {
-                println("instance error.... ${it.message}")
             }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -96,10 +74,11 @@ class UploadsManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
     }
 
+
     @Synchronized
     override fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse> {
-        val md5 = hexToString(File(currentVideo?.mediumRes).readBytes())
-        println("Register with MD5 $md5...")
+        println("BYTES::::: ${File(currentVideo?.mediumRes).readBytes().size}")
+        val md5 = md5(File(currentVideo?.mediumRes).readBytes())
         return api
             .uploadDataForMd5(
                 UploadRequest(
@@ -115,19 +94,23 @@ class UploadsManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-
-    var upload: Upload? = null
-    var uploadChunkIndex: Int = 0
-
-    var offSet: Int = 0
-
-    @Synchronized
-    override fun prepareVideoForUpload(upload: Upload, savedVideo: SavedVideo) {
-        //uploadVideoToServer(array, uploadChunkIndex)
+    //6,291,456 -- 4,664,153 -- 4,664,320
+    fun md5(plaintext: ByteArray): String? {
+        val m = MessageDigest.getInstance("MD5")
+        m.reset()
+        m.update(plaintext)
+        val digest = m.digest()
+        val bigInt = BigInteger(1, digest)
+        var hashtext = bigInt.toString(16)
+// Now we need to zero pad it if you actually want the full 32 chars.
+        while (hashtext.length < 32) {
+            hashtext = "0$hashtext"
+        }
+        return hashtext
     }
 
+    var upload: Upload? = null
     lateinit var request: RequestBody
-    var array: Array<ByteArray> = emptyArray()
     @SuppressLint("CheckResult")
     @Synchronized
     override fun uploadVideoToServer(
@@ -138,14 +121,13 @@ class UploadsManagerImpl(
 //        if (upload.id != savedVideo?.uploadId) {
 //            println("Ids didnt match........")
 //        } else println("matchy matchy...")
-
         request = RequestBody.create(
             MediaType.parse("application/octet-stream"),
             array
         )
         return api
             .uploadSelectedVideo(
-                md5Header = "${hexToString(array)}",
+                md5Header = md5(array) ?: "",
                 videoId = upload.id ?: "",
                 uploadChunk = chunk,
                 file = request
@@ -170,14 +152,11 @@ class UploadsManagerImpl(
     }
 
 
-    @Synchronized
-    private fun hexToString(byte: ByteArray): String {
-        val md5 = MessageDigest.getInstance("MD5")
-        return BigInteger(
-            1,
-            md5.digest(byte)
-        ).toString(16)
-    }
+//    @Synchronized
+//    private fun hexToString(byte: ByteArray): String {
+//        val md5 = MessageDigest.getInstance("MD5")
+//        return BigInteger(1, md5.digest(byte)).toString(16)
+//    }
 }
 
 class CurrentVideoUpload(val video: SavedVideo? = null, val state: UploadState? = null)

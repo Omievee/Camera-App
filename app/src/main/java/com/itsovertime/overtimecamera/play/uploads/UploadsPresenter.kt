@@ -15,8 +15,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.io.File
-import java.nio.file.Files
 import kotlin.math.ceil
+import kotlin.math.max
+import kotlin.math.min
 
 class UploadsPresenter(
     val view: UploadsFragment,
@@ -199,28 +200,38 @@ class UploadsPresenter(
             })
     }
 
-    var uploadChunk = 0
     var uploadChunkIndex = 0
-    var currentByteArray: Array<ByteArray>? = emptyArray()
-
+    private var MIN_CHUNK_SIZE = 0.5 * 1024
+    private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
+    private var chunkSize = 1024
+    var chunk: Int = 0
+    var offset = 0
     private fun continueUploadProcess() {
-        val currentByteArray = breakFileIntoChunks(File(vid?.mediumRes), MAX_CHUNK_SIZE)
+        chunk = MAX_CHUNK_SIZE
+        val fullBytes = File(vid?.mediumRes).readBytes().size
 
-
-        var sizePlus1 = 0
-        currentByteArray.forEachIndexed { index, bytes ->
-            sizePlus1 = index + 1
-            println("size? $sizePlus1")
+        val remainder = fullBytes - offset
+        println("Remainder is $remainder Offset is: $offset Chunk is: $chunk")
+        var endRange = offset + chunk - 1
+        if (remainder < chunk) {
+            println("inside iff..")
+            endRange = offset + remainder - 1
         }
-        println("index is : $uploadChunkIndex")
-        println("chunk is : $uploadChunk")
-
-        if (uploadChunkIndex < sizePlus1) {
-            println("If statement::: $uploadChunkIndex && $sizePlus1 && $uploadChunk")
+        val sliceFromBytes = File(vid?.mediumRes).readBytes().sliceArray(
+            IntRange(
+                offset,
+                endRange
+            )
+        )
+        println("Full bytes?? $fullBytes")
+        println("slice size:: ${sliceFromBytes.size}")
+        println("offset is ::: $offset")
+        println("Index :: $uploadChunkIndex")
+        if (offset <= fullBytes) {
             synchronized(this) {
                 upload(
-                    chunkIndex = uploadChunk,
-                    bytes = currentByteArray.elementAt(uploadChunkIndex)
+                    chunkIndex = uploadChunkIndex,
+                    bytes = sliceFromBytes
                 )
             }
         } else {
@@ -229,10 +240,8 @@ class UploadsPresenter(
     }
 
     @SuppressLint("CheckResult")
-    private var MIN_CHUNK_SIZE = 0.5 * 1024
-    private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
-    private var chunkSize = 1 * 1024
     var up: Disposable? = null
+
     private fun upload(chunkIndex: Int, bytes: ByteArray) {
         synchronized(this) {
             up = uploadManager
@@ -242,22 +251,19 @@ class UploadsPresenter(
                     chunk = chunkIndex
                 )
                 .doOnSuccess {
-
                     if (it.success) {
-                        uploadChunk++
                         uploadChunkIndex++
+                        offset += chunk
                         continueUploadProcess()
                     }
                 }
                 .doOnError {
-                    uploadChunk = 0
                     uploadChunkIndex = 0
                 }
                 .subscribe({
                 }, {
                     it.printStackTrace()
                 })
-
         }
     }
 
@@ -269,35 +275,20 @@ class UploadsPresenter(
             .subscribe({
                 println("status is :::: ${it.status}")
             }, {
-
+                it.printStackTrace()
             })
     }
 
-//    var success: Boolean = false
-//    var ping: Disposable? = null
-//    private fun subscribeToUploadResponse() {
-//        ping?.dispose()
-//        ping = uploadManager
-//            .onResponseFromUpload()
-//            .subscribe({
-//
-//            }, {
-//                it.printStackTrace()
-//            })
-//    }
-
-
     private fun breakFileIntoChunks(file: File, size: Int): Array<ByteArray> {
         return divideArray(
-            Files.readAllBytes(file.toPath()),
+            file.readBytes(),
             size
         )
     }
 
     @Synchronized
     private fun divideArray(source: ByteArray, chunksize: Int): Array<ByteArray> {
-        val ret =
-            Array(ceil(source.size / chunksize.toDouble()).toInt()) { ByteArray(chunksize) }
+        val ret = Array(ceil(source.size / chunksize.toDouble()).toInt()) { ByteArray(chunksize) }
         var start = 0
         for (i in ret.indices) {
             if (start + chunksize > source.size) {
