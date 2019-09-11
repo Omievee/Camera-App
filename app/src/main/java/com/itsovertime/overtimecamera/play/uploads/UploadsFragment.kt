@@ -5,12 +5,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.itsovertime.overtimecamera.play.R
+import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
+import com.itsovertime.overtimecamera.play.itemsame.ItemSame
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
 import dagger.android.support.AndroidSupportInjection
@@ -21,10 +23,15 @@ import javax.inject.Inject
 class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     SwipeRefreshLayout.OnRefreshListener {
 
+    override fun updateProgressBar(start: Int, end: Int, highQuality: Boolean, clientId: String) {
+        progressData = ProgressData(start, end, highQuality, clientId)
+        presenter.notifyOfProgress(progressData)
+    }
+
+
     override fun displayNoNetworkConnection() {
         uploadsIcon.visibility = View.INVISIBLE
         uploadsMessage.text = "No active connection..."
-
     }
 
     override fun displayWifiReady() {
@@ -69,17 +76,22 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         }
     }
 
-    var adapter: UploadsAdapter? = null
-    override fun updateAdapter(videos: List<SavedVideo>) {
-        adapter = UploadsAdapter(videos)
-        uploadsRecycler.adapter = adapter
-        adapter?.notifyDataSetChanged()
+    var progressData = ProgressData()
+    var adapter: UploadsAdapter = UploadsAdapter()
+    override fun updateAdapter(videos: List<SavedVideo>, data: ProgressData?) {
+        if (data != null) {
+            progressData = data
+        }
+        val old = adapter.data?.data ?: emptyList()
+        val newD = mutableListOf<UploadsPresentation>()
+        if (!videos.isNullOrEmpty()) {
+            newD.add(UploadsPresentation(videos, progressData))
+        }
+        adapter.data = UploadsViewData(newD, DiffUtil.calculateDiff(BasicDiffCallback(old, newD)))
     }
-
 
     @Inject
     lateinit var presenter: UploadsPresenter
-
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -106,6 +118,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         settingsButton.setOnClickListener(this)
         debug.setOnClickListener(this)
         swipe2refresh.setOnRefreshListener(this)
+        uploadsRecycler.adapter = adapter
         swipe2refresh.setColorSchemeResources(
             R.color.OT_Orange,
             R.color.OT_White,
@@ -126,5 +139,29 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
             UploadsFragment()
 
     }
+}
 
+class UploadsViewData(
+    val data: List<UploadsPresentation>,
+    val diffResult: DiffUtil.DiffResult
+)
+
+data class ProgressData(
+    val start: Int = 0,
+    val end: Int = 0,
+    val isHighQuality: Boolean = false,
+    val id: String = ""
+)
+
+data class UploadsPresentation(
+    val list: List<SavedVideo>,
+    val progressData: ProgressData
+) : ItemSame<UploadsPresentation> {
+    override fun sameAs(same: UploadsPresentation): Boolean {
+        return equals(same)
+    }
+
+    override fun contentsSameAs(same: UploadsPresentation): Boolean {
+        return hashCode() == same.hashCode()
+    }
 }

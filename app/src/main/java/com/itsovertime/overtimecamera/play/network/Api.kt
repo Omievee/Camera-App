@@ -6,6 +6,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.Response
 import retrofit2.http.*
 import java.io.File
 import java.util.*
@@ -18,7 +19,7 @@ interface Api {
 
     /*Step 2: Post for video upload token*/
     @POST("/api/media/upload_token")
-    fun uploadToken(@Body request: VideoInstanceResponse): Single<TokenResponse>
+    fun uploadToken(@Body request: VideoSourceRequest): Single<TokenResponse>
 
     /*Step 3:  md5 for given video*/
     @POST("api/uploads")
@@ -29,11 +30,15 @@ interface Api {
     @POST("api/uploads/{videoId}/{uploadChunk}")
     fun uploadSelectedVideo(
         @Header("Content-MD5") md5Header: String, @Path("videoId") videoId: String, @Path("uploadChunk") uploadChunk: Int, @Body file: RequestBody
-    ): Single<VideoUploadResponse>
+    ): Observable<retrofit2.Response<VideoUploadResponse>>
 
-    /*Step 5: Check For completed upload*/
+    /*Step 5: Check For completed upload-- ping ever 5 seconds until COMPLETED is returned. */
     @POST("api/uploads/{uploadId}/complete")
-    fun checkStatusForComplete(@Path("uploadId") vidId: String) : Single<CompleteResponse>
+    fun checkStatusForComplete(@Path("uploadId") vidId: String, @Body request: CompleteRequest): Single<CompleteResponse>
+
+    /*Step 6: Write to server after a COMPLETE response from previous step...*/
+    @PUT("/api/writer/videos/{uploadId}")
+    fun writeToSeverAfterComplete(@Path("uploadId") uploadId: String, @Body request: ServerRequest): Single<ServerResponse>
 
     /*Events endpoint*/
     @GET("api/events?")

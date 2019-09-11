@@ -132,7 +132,6 @@
             android:layout_width="65dp"
             android:layout_height="65dp"
             android:background="@drawable/circular_shape"
-            android:max="18"
             android:progress="0"
             android:progressDrawable="@drawable/circular_progress"
             app:layout_constraintBottom_toBottomOf="parent"

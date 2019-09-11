@@ -28,6 +28,16 @@ data class VideoInstanceResponse(
         val video: Video
 ) : Parcelable
 
+@JsonClass(generateAdapter = true)
+@Parcelize
+data class VideoSourceRequest(
+        val type: String?=""
+) : Parcelable
+
+
+
+
+
 @Parcelize
 data class Video(
         val id: String? = "",

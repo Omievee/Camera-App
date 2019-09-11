@@ -50,7 +50,6 @@ class StaticApiModule {
             add(object {
                 @ToJson
                 fun toJson(uuid: UUID) = uuid.toString()
-
                 @FromJson
                 fun fromJson(s: String) = UUID.fromString(s)
             })

@@ -5,6 +5,7 @@ import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.*
+import com.itsovertime.overtimecamera.play.utils.Constants
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -15,7 +16,6 @@ import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
 import java.math.BigInteger
-import java.nio.file.Files
 import java.security.MessageDigest
 import java.util.*
 
@@ -26,11 +26,11 @@ class UploadsManagerImpl(
     val manager: WifiManager
 ) : UploadsManager {
 
+
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private var currentVideo: SavedVideo? = null
 
     override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
-        println("Updating Que..... ${list.size}")
         subject.onNext(list)
     }
 
@@ -44,7 +44,7 @@ class UploadsManagerImpl(
         return api
             .getVideoInstance(
                 VideoInstanceRequest(
-                    client_id = UUID.fromString(video?.clientId),
+                    client_id = UUID.fromString(video.clientId),
                     is_favorite = video.is_favorite,
                     is_selfie = video.is_selfie,
                     latitude = video.latitude ?: 0.0,
@@ -52,24 +52,19 @@ class UploadsManagerImpl(
                 )
             )
             .doOnSuccess {
-                //                subject.onNext(
-//                    CurrentVideoUpload(
-//                        currentVideo,
-//                        UploadState.REGISTERED
-//                    )
-//                )
+                println("success.. .? ${it.video}")
             }
             .doOnError {
+                println("error... ? ${it.message}")
             }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
     @Synchronized
-    override fun getAWSDataForUpload(response: VideoInstanceResponse): Single<TokenResponse> {
-        println("AWS Data response......")
+    override fun getAWSDataForUpload(): Single<TokenResponse> {
         return api
-            .uploadToken(response)
+            .uploadToken(VideoSourceRequest(type = Constants.Source))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
@@ -77,24 +72,23 @@ class UploadsManagerImpl(
 
     @Synchronized
     override fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse> {
-        println("BYTES::::: ${File(currentVideo?.mediumRes).readBytes().size}")
         val md5 = md5(File(currentVideo?.mediumRes).readBytes())
         return api
             .uploadDataForMd5(
                 UploadRequest(
                     md5,
-                    data.S3Bucket,
-                    data.S3Key,
                     data.AccessKeyId,
                     data.SecretAccessKey,
-                    data.SessionToken
+                    data.SessionToken,
+                    data.S3Bucket,
+                    data.S3Key
                 )
             )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-    //6,291,456 -- 4,664,153 -- 4,664,320
+
     fun md5(plaintext: ByteArray): String? {
         val m = MessageDigest.getInstance("MD5")
         m.reset()
@@ -102,7 +96,6 @@ class UploadsManagerImpl(
         val digest = m.digest()
         val bigInt = BigInteger(1, digest)
         var hashtext = bigInt.toString(16)
-// Now we need to zero pad it if you actually want the full 32 chars.
         while (hashtext.length < 32) {
             hashtext = "0$hashtext"
         }
@@ -117,7 +110,7 @@ class UploadsManagerImpl(
         upload: Upload,
         array: ByteArray,
         chunk: Int
-    ): Single<VideoUploadResponse> {
+    ): Observable<retrofit2.Response<VideoUploadResponse>> {
 //        if (upload.id != savedVideo?.uploadId) {
 //            println("Ids didnt match........")
 //        } else println("matchy matchy...")
@@ -132,16 +125,25 @@ class UploadsManagerImpl(
                 uploadChunk = chunk,
                 file = request
             )
+            .doOnNext {
+                it.code()
+            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
     override fun onCompleteUpload(uploadId: String): Single<CompleteResponse> {
         return api
-            .checkStatusForComplete(uploadId)
+            .checkStatusForComplete(uploadId, CompleteRequest(async = true))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+    }
 
+    override fun writerToServerAfterComplete(): Single<ServerResponse> {
+        return api
+            .writeToSeverAfterComplete(uploadId = "", request = ServerRequest())
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
     }
 
 
@@ -150,13 +152,6 @@ class UploadsManagerImpl(
             .observeOn(Schedulers.io())
             .subscribeOn(AndroidSchedulers.mainThread())
     }
-
-
-//    @Synchronized
-//    private fun hexToString(byte: ByteArray): String {
-//        val md5 = MessageDigest.getInstance("MD5")
-//        return BigInteger(1, md5.digest(byte)).toString(16)
-//    }
 }
 
 class CurrentVideoUpload(val video: SavedVideo? = null, val state: UploadState? = null)

@@ -5,12 +5,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.baseviewholder.BaseViewHolder
 
-class UploadsAdapter(
-    val savedVideos: List<SavedVideo>?
-) : RecyclerView.Adapter<BaseViewHolder>() {
+class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
+
+    var data: UploadsViewData? = null
+        set(value) {
+            field = value
+            field?.diffResult?.dispatchUpdatesTo(this)
+        }
+
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-
-
         return BaseViewHolder(UploadsView(parent.context).apply {
             layoutParams =
                 ViewGroup.MarginLayoutParams(
@@ -21,14 +25,13 @@ class UploadsAdapter(
     }
 
     override fun getItemCount(): Int {
-        return savedVideos?.size ?: 0
+        return data?.data?.size ?: 0
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-        (
-                savedVideos?.get(position)?.let {
-                    (holder.itemView as UploadsView).bind(it)
-                }
-                )
+        data?.data?.get(position)?.let {
+            (holder.itemView as UploadsView).bind(it.list[position], it.progressData)
+        }
+
     }
 }

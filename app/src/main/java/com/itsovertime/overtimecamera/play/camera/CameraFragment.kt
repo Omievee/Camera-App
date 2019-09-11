@@ -383,7 +383,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             mediaRecorder?.stop()
             mediaRecorder?.reset()
             mediaRecorder = null
-            println("IS PAUSED>>> $isPaused")
             when (isPaused) {
                 false -> presenter.saveRecordingToDataBase(selectedEvent)
                 else -> deleteUnsavedFile()

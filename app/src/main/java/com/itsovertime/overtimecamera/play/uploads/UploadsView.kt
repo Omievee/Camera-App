@@ -10,23 +10,35 @@ import com.facebook.imagepipeline.request.ImageRequest
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import kotlinx.android.synthetic.main.upload_item_view.view.*
 import java.io.File
 
-class UploadsView(context: Context?, attrs: AttributeSet? = null) : ConstraintLayout(context, attrs) {
+class UploadsView(context: Context?, attrs: AttributeSet? = null) :
+    ConstraintLayout(context, attrs) {
 
 
     init {
         View.inflate(context, R.layout.upload_item_view, this)
     }
 
-    fun bind(video: SavedVideo) {
-        faveIcon.visibility = when (video.is_favorite) {
+    fun bind(savedVideo: SavedVideo, progress: ProgressData) {
+        faveIcon.visibility = when (savedVideo.is_favorite) {
             true -> View.VISIBLE
             else -> View.INVISIBLE
         }
 
-        val uri = Uri.fromFile(File(video.highRes))
+        println("Progress:: ${savedVideo.clientId} && ${progress.id}")
+
+        if (savedVideo.clientId == progress.id) {
+            val anim = ProgressBarAnimation(medQProgressBar, 0, progress.end * 1000)
+            anim.duration = (progress.end * 1000).toLong()
+            medQProgressBar.max = progress.end * 1000
+            medQProgressBar.startAnimation(anim)
+        }
+
+
+        val uri = Uri.fromFile(File(savedVideo.mediumRes))
         val request = ImageRequestBuilder
             .newBuilderWithSource(uri)
             .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)

@@ -3,6 +3,7 @@ package com.itsovertime.overtimecamera.play.utils
 class Constants {
 
     companion object {
+        const val Source = "video_source"
         const val TOKEN = "token"
         const val USER = "user"
         const val Authorization = "Authorization"
