@@ -31,26 +31,7 @@ import java.util.*
 
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
-    @SuppressLint("CheckResult")
-    override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
-        Single.fromCallable {
-            with(videoDao) {
-                this?.resetUploadDataForVideo(
-                    isProcessed = false,
-                    uploadState = UploadState.QUEUED,
-                    uploadId = "",
-                    id = "",
-                    lastID = currentVideo.clientId
-                )
-            }
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
 
-            }, {
-                it.printStackTrace()
-            })
-    }
 
     var db = AppDatabase.getAppDataBase(context = context)
     private var videoDao = db?.videoDao()
@@ -416,7 +397,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
         listOfVideos.clear()
-        preppedVideos?.clear()
+        preppedVideos.clear()
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
@@ -471,6 +452,27 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         }
     }
 
+
+    @SuppressLint("CheckResult")
+    override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
+        Single.fromCallable {
+            with(videoDao) {
+                this?.resetUploadDataForVideo(
+                    isProcessed = false,
+                    uploadState = UploadState.QUEUED,
+                    uploadId = "",
+                    id = "",
+                    lastID = currentVideo.clientId
+                )
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+                loadFromDB()
+            }, {
+                it.printStackTrace()
+            })
+    }
 
     override fun subscribeToVideoGallery(): Observable<List<SavedVideo>> {
         return subject

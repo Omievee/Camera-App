@@ -53,7 +53,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
         val uri = Uri.fromFile(File(savedVideo.highRes))
         val request = ImageRequestBuilder
             .newBuilderWithSource(uri)
-            .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
+            .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.DISK_CACHE    )
             .setProgressiveRenderingEnabled(true)
             .build()
 

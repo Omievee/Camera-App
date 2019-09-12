@@ -1,14 +1,12 @@
 package com.itsovertime.overtimecamera.play.uploads
 
 import android.annotation.SuppressLint
-import android.widget.ProgressBar
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
 import com.itsovertime.overtimecamera.play.network.VideoInstanceResponse
-import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
@@ -125,7 +123,7 @@ class UploadsPresenter(
                 }
                 .doOnError {
                     println("ERROR FROM INSTANCE::: ${it.message}")
-                    uploadManager.resetUploadStateForCurrentVideo(
+                    manager.resetUploadStateForCurrentVideo(
                         currentVideo = currentVideo ?: return@doOnError
                     )
                 }
@@ -180,7 +178,7 @@ class UploadsPresenter(
                     getVideoForUpload(currentVideo ?: return@doOnSuccess)
                 }
                 .doOnError {
-                    uploadManager.resetUploadStateForCurrentVideo(
+                    manager.resetUploadStateForCurrentVideo(
                         currentVideo = currentVideo ?: return@doOnError
                     )
                 }
@@ -193,11 +191,11 @@ class UploadsPresenter(
     private var vid: SavedVideo? = null
     @SuppressLint("CheckResult")
     private fun getVideoForUpload(savedVideo: SavedVideo) {
-        val db = view?.context?.let { AppDatabase.getAppDataBase(context = it) }
+        val db = view.context?.let { AppDatabase.getAppDataBase(context = it) }
         val videoDao = db?.videoDao()
         Single.fromCallable {
             with(videoDao) {
-                this?.getVideoForUpload(savedVideo?.clientId)
+                this?.getVideoForUpload(savedVideo.clientId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -206,7 +204,6 @@ class UploadsPresenter(
             }
             .subscribe({
                 firstRun = true
-                doOnce = true
                 continueUploadProcess()
             }, {
                 it.printStackTrace()
@@ -214,16 +211,16 @@ class UploadsPresenter(
     }
 
 
-    private var MIN_CHUNK_SIZE = 0.5 * 1024
-    private var MAX_CHUNK_SIZE = 2 * 1024 * 1024
-    private var chunkSize = 1024
-    var chunk: Int = 0
-    var startRange = 0
+    private var minChunkSize = (0.5 * 1024).toInt()
+    private var maxChunkSize = 2 * 1024 * 1024
+    private var baseChunkSize = 1024
+    private var chunkBasedOffResponseTime: Int = 0
+    private var startRange = 0
     private var uploadChunkIndex = 0
     private var firstRun: Boolean = true
-    var maxProgress: Int = 0
 
     private fun continueUploadProcess() {
+
         when (vid?.uploadState) {
             UploadState.REGISTERED -> manager.updateVideoStatus(
                 vid ?: return,
@@ -248,28 +245,33 @@ class UploadsPresenter(
                 fullBytes = File(vid?.mediumRes).readBytes().size
             }
         }
-        maxProgress = fullBytes
 
-        chunk = if (!firstRun) {
+
+        chunkBasedOffResponseTime = if (!firstRun) {
             when (diffInSec) {
-                in 0..1 -> MAX_CHUNK_SIZE
-                in 1..2 -> chunkSize
-                else -> MIN_CHUNK_SIZE.toInt()
+                in 0..1 -> maxChunkSize
+                in 1..2 -> baseChunkSize
+                else -> minChunkSize
             }
         } else {
-            chunkSize
+            baseChunkSize
         }
+
         view.updateAdapter(
-            videoList ?: emptyList(),
-            ProgressData(0, startRange, isHighQuality, vid?.clientId.toString())
+            videos = videoList ?: emptyList(),
+            data = ProgressData(
+                start = 0,
+                end = startRange,
+                isHighQuality = isHighQuality,
+                id = vid?.clientId.toString()
+            )
         )
-        println("RESPONSE TIME::::::::: $diffInSec")
 
         firstRun = false
         val remainder = fullBytes - startRange
-        val endRange = when (remainder < chunk) {
+        val endRange = when (remainder < chunkBasedOffResponseTime) {
             true -> startRange + remainder - 1
-            else -> startRange + chunk - 1
+            else -> startRange + chunkBasedOffResponseTime - 1
         }
         val dynamicDataSlice = File(vid?.mediumRes).readBytes().sliceArray(
             IntRange(
@@ -289,18 +291,15 @@ class UploadsPresenter(
                 //checkForComplete()
             }
         }
-        println("Remainder is $remainder Offset is: $startRange Chunk is: $chunk")
+        println("Remainder is $remainder Offset is: $startRange Chunk is: $chunkBasedOffResponseTime")
     }
 
     var isHighQuality: Boolean = false
-    var doOnce: Boolean = false
 
     @SuppressLint("CheckResult")
     var up: Disposable? = null
 
     private fun upload(chunkIndex: Int, bytes: ByteArray) {
-
-
         synchronized(this) {
             up = uploadManager
                 .uploadVideoToServer(
@@ -315,14 +314,14 @@ class UploadsPresenter(
                             timeReceived = it.raw().receivedResponseAtMillis()
                         )
                         uploadChunkIndex++
-                        startRange += chunk
+                        startRange += chunkBasedOffResponseTime
                         continueUploadProcess()
                     }
                 }
                 .doOnError {
                     startRange = 0
                     uploadChunkIndex = 0
-                    uploadManager.resetUploadStateForCurrentVideo(
+                    manager.resetUploadStateForCurrentVideo(
                         currentVideo = currentVideo ?: return@doOnError
                     )
                 }
@@ -348,26 +347,25 @@ class UploadsPresenter(
             vid?.uploadState == UploadState.UPLOADING_HIGH -> manager.updateVideoStatus(
                 vid ?: return, UploadState.UPLOADED_HIGH
             )
-            else -> uploadManager.resetUploadStateForCurrentVideo(
-                currentVideo = currentVideo ?: return
-            )
+            else -> {
+            }
         }
         complete = uploadManager
             .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
             .doOnError {
-                uploadManager.resetUploadStateForCurrentVideo(
+                manager.resetUploadStateForCurrentVideo(
                     currentVideo = currentVideo ?: return@doOnError
                 )
             }
             .subscribe({
                 when (it.status) {
-                    COMPLETE_RESPONSE.COMPLETING.name -> pingServerForStatus()
-                    COMPLETE_RESPONSE.COMPLETED.name -> {
+                    CompleteResponse.COMPLETING.name -> pingServerForStatus()
+                    CompleteResponse.COMPLETED.name -> {
                         firstRun = true
                         manager.updateVideoStatus(vid ?: return@subscribe, UploadState.COMPLETE)
                         finalizeUpload()
                     }
-                    else -> uploadManager.resetUploadStateForCurrentVideo(
+                    else -> manager.resetUploadStateForCurrentVideo(
                         currentVideo = vid ?: return@subscribe
                     )
                 }
@@ -384,7 +382,8 @@ class UploadsPresenter(
             .subscribe({
 
             }, {
-
+                it.printStackTrace()
+                manager.resetUploadStateForCurrentVideo(vid ?: return@subscribe)
             })
 
     }
@@ -414,11 +413,9 @@ class UploadsPresenter(
     fun displayBottomSheetSettings() {
         view.displaySettings()
     }
-
-
 }
 
-enum class COMPLETE_RESPONSE {
+enum class CompleteResponse {
     COMPLETING,
     COMPLETED,
     FAILED
