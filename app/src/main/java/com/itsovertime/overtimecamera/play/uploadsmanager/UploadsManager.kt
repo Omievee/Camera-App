@@ -19,7 +19,5 @@ interface UploadsManager {
     fun onCompleteUpload(uploadId: String): Single<CompleteResponse>
     fun writerToServerAfterComplete(): Single<ServerResponse>
 
-
-    fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo)
     fun onUpdatedQue(): Observable<List<SavedVideo>>
 }

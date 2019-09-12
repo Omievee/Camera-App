@@ -34,10 +34,6 @@ class UploadsManagerImpl(
         subject.onNext(list)
     }
 
-    override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
-
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     @Synchronized
     override fun getVideoInstance(video: SavedVideo): Single<VideoInstanceResponse> {

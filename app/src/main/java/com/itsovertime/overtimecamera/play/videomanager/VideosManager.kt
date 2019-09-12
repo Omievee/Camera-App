@@ -21,7 +21,6 @@ interface VideosManager {
     fun updateUploadId(uplaodId: String, clientId: String)
     fun updateVideoInstanceId(videoId: String, clientId: String)
     fun updateVideoStatus(video: SavedVideo, state: UploadState)
-    fun resetUploadState()
-//    fun getVideoForUpload(clientId: String): SavedVideo?
+    fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo)
 
 }
