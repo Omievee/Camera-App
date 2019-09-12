@@ -24,14 +24,20 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         })
     }
 
+    var list: List<SavedVideo>? = null
+    var progress: ProgressData? = null
     override fun getItemCount(): Int {
-        return data?.data?.size ?: 0
+        data?.data?.forEach {
+            list = it.list
+            progress = it.progressData
+        }
+        return list?.size ?: 0
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-        data?.data?.get(position)?.let {
-            (holder.itemView as UploadsView).bind(it.list[position], it.progressData)
-        }
-
+        (holder.itemView as UploadsView).bind(
+            list?.get(position) ?: return,
+            progress = progress ?: return
+        )
     }
 }

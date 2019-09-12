@@ -29,7 +29,7 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
 
     }
 
-    override fun onTermsClicked(urlIntent:Intent) {
+    override fun onTermsClicked(urlIntent: Intent) {
         startActivity(urlIntent)
     }
 
@@ -37,7 +37,11 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
         startActivity(emailIntent)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
         view.setOnTouchListener { v, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
@@ -64,12 +68,12 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
             }
         }
     }
-
-
+    val adapter = SettingsAdapter(clickListener = clickListener)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val adapter = SettingsAdapter(clickListener = clickListener)
-        settingsRecycler.layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+
+        settingsRecycler.layoutManager =
+            LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         adapter.data = SettingsAdapter.createData(context ?: return, adapter.data)
         settingsRecycler.setOnTouchListener { v, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
@@ -80,11 +84,11 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
         settingsRecycler.adapter = adapter
         val itemDecorator = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
         ContextCompat.getDrawable(
-                this.context
-                        ?: return, R.drawable.divider
+            this.context
+                ?: return, R.drawable.divider
         )?.let {
             itemDecorator.setDrawable(
-                    it
+                it
             )
         }
         settingsRecycler.addItemDecoration(itemDecorator)
@@ -93,19 +97,19 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
     companion object {
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
-                SettingsFragment()
+            SettingsFragment()
     }
 }
 
 
 class SettingsViewData(
-        val data: List<SettingsPresentation>,
-        val diffResult: DiffUtil.DiffResult
+    val data: List<SettingsPresentation>,
+    val diffResult: DiffUtil.DiffResult
 )
 
 data class SettingsPresentation(
-        val type: Settings,
-        val title: String
+    val type: Settings,
+    val title: String
 ) : ItemSame<SettingsPresentation> {
 
     override fun sameAs(same: SettingsPresentation): Boolean {

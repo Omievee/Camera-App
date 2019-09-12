@@ -10,6 +10,7 @@ import com.facebook.imagepipeline.request.ImageRequest
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import kotlinx.android.synthetic.main.upload_item_view.view.*
 import java.io.File
@@ -27,18 +28,29 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
             true -> View.VISIBLE
             else -> View.INVISIBLE
         }
-
-        println("Progress:: ${savedVideo.clientId} && ${progress.id}")
-
-        if (savedVideo.clientId == progress.id) {
-            val anim = ProgressBarAnimation(medQProgressBar, 0, progress.end * 1000)
-            anim.duration = (progress.end * 1000).toLong()
-            medQProgressBar.max = progress.end * 1000
-            medQProgressBar.startAnimation(anim)
+        when (savedVideo.uploadState) {
+            UploadState.UPLOADED_MEDIUM -> medQProgressBar.setProgress(100, false)
+            UploadState.UPLOADED_HIGH -> highQProgressBar.setProgress(100, false)
+            else -> {
+                println("------ELSE------ ${savedVideo.uploadState}")
+                if (savedVideo.clientId == progress.id) {
+                    val anim = ProgressBarAnimation(medQProgressBar, 0, progress.end)
+                    anim.duration = (progress.end).toLong()
+                    when (progress.isHighQuality) {
+                        true -> {
+                            highQProgressBar.max = progress.end
+                            highQProgressBar.startAnimation(anim)
+                        }
+                        else -> {
+                            medQProgressBar.max = progress.end
+                            medQProgressBar.startAnimation(anim)
+                        }
+                    }
+                }
+            }
         }
 
-
-        val uri = Uri.fromFile(File(savedVideo.mediumRes))
+        val uri = Uri.fromFile(File(savedVideo.highRes))
         val request = ImageRequestBuilder
             .newBuilderWithSource(uri)
             .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
@@ -47,7 +59,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
 
         val controller = Fresco.newDraweeControllerBuilder()
             .setUri(uri)
-            .setImageRequest(request)
+            .setLowResImageRequest(request)
             .build()
 
         thumbNail.controller = controller

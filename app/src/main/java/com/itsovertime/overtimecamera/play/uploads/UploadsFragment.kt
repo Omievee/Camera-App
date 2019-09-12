@@ -85,9 +85,13 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         val old = adapter.data?.data ?: emptyList()
         val newD = mutableListOf<UploadsPresentation>()
         if (!videos.isNullOrEmpty()) {
-            newD.add(UploadsPresentation(videos, progressData))
+            newD.add(UploadsPresentation(list = videos, progressData = progressData))
+        }
+        newD.forEach {
+            println("Presentation:: ${it.progressData}")
         }
         adapter.data = UploadsViewData(newD, DiffUtil.calculateDiff(BasicDiffCallback(old, newD)))
+
     }
 
     @Inject

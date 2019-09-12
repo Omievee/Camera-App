@@ -205,6 +205,7 @@ class UploadsPresenter(
             }
             .subscribe({
                 firstRun = true
+                doOnce = true
                 continueUploadProcess()
             }, {
                 it.printStackTrace()
@@ -240,6 +241,7 @@ class UploadsPresenter(
         var fullBytes = 0
         if (isWifiEnabled && vid?.uploadState == UploadState.UPLOADED_MEDIUM) {
             fullBytes = File(vid?.highRes).readBytes().size
+            isHighQuality = true
         } else if (!isWifiEnabled && vid?.uploadState == UploadState.UPLOADED_MEDIUM) {
             //TODO account for "waiting to upload high res"
         } else {
@@ -248,6 +250,7 @@ class UploadsPresenter(
             }
         }
         maxProgress = fullBytes
+
         chunk = if (!firstRun) {
             when (diffInSec) {
                 in 0..1 -> MAX_CHUNK_SIZE
@@ -257,6 +260,10 @@ class UploadsPresenter(
         } else {
             chunkSize
         }
+        view.updateAdapter(
+            videoList ?: emptyList(),
+            ProgressData(0, startRange, isHighQuality, vid?.clientId.toString())
+        )
         println("RESPONSE TIME::::::::: $diffInSec")
 
         firstRun = false
@@ -271,11 +278,7 @@ class UploadsPresenter(
                 endRange
             )
         )
-        view.updateAdapter(
-            videoList ?: emptyList(),
-            ProgressData(startRange, endRange, false, vid?.clientId.toString())
-        )
-        //view.updateProgressBar(startRange, endRange, false, vid?.clientId.toString())
+
         when (startRange <= fullBytes) {
             true -> synchronized(this) {
                 upload(
@@ -289,6 +292,9 @@ class UploadsPresenter(
         }
         println("Remainder is $remainder Offset is: $startRange Chunk is: $chunk")
     }
+
+    var isHighQuality: Boolean = false
+    var doOnce: Boolean = false
 
     @SuppressLint("CheckResult")
     var up: Disposable? = null
@@ -312,6 +318,7 @@ class UploadsPresenter(
                         uploadChunkIndex++
                         startRange += chunk
                         continueUploadProcess()
+
                     }
                 }
                 .doOnError {
@@ -326,7 +333,7 @@ class UploadsPresenter(
         }
     }
 
-    var diffInSec: Long = 0
+    private var diffInSec: Long = 0
     private fun checkResponseTimeDifference(timeSent: Long, timeReceived: Long) {
         val timeDif = timeReceived - timeSent
         diffInSec = TimeUnit.MILLISECONDS.toSeconds(timeDif)

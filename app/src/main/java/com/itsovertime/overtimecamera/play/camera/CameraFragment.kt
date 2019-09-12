@@ -414,7 +414,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                             it.visibility = View.INVISIBLE
                         }
                     }
-
                 }
             }
             timer.schedule(timerTask, TIMEOUT)
