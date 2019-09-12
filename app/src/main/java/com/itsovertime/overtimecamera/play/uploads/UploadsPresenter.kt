@@ -49,7 +49,6 @@ class UploadsPresenter(
                 .onUpdatedQue()
                 .subscribe({
                     currentVideoQue = it
-                    println("+++++++QueSize ${currentVideoQue?.size}+++++++++")
                     currentVideoQue?.forEach {
                         manager.updateVideoStatus(it, UploadState.QUEUED)
                         getVideoInstance(it)
@@ -94,7 +93,6 @@ class UploadsPresenter(
                         view.displayNoNetworkConnection()
                     }
                 }
-
             }, {
                 it.printStackTrace()
             })
@@ -115,7 +113,6 @@ class UploadsPresenter(
                     videoInstanceResponse = it
                 }
                 .doOnSuccess {
-                    println("Success on presenter::: $currentVideo")
                     manager.updateVideoInstanceId(
                         videoInstanceResponse?.video?.id.toString(),
                         currentVideo?.clientId.toString()
@@ -128,7 +125,9 @@ class UploadsPresenter(
                 }
                 .doOnError {
                     println("ERROR FROM INSTANCE::: ${it.message}")
-                    uploadManager.resetUploadStateForCurrentVideo()
+                    uploadManager.resetUploadStateForCurrentVideo(
+                        currentVideo = currentVideo ?: return@doOnError
+                    )
                 }
                 .subscribe({
                 }, {
@@ -181,7 +180,9 @@ class UploadsPresenter(
                     getVideoForUpload(currentVideo ?: return@doOnSuccess)
                 }
                 .doOnError {
-                    uploadManager.resetUploadStateForCurrentVideo()
+                    uploadManager.resetUploadStateForCurrentVideo(
+                        currentVideo = currentVideo ?: return@doOnError
+                    )
                 }
                 .subscribe({
                 }, {
@@ -220,9 +221,7 @@ class UploadsPresenter(
     var startRange = 0
     private var uploadChunkIndex = 0
     private var firstRun: Boolean = true
-    private var pauseUploads: Boolean = false
     var maxProgress: Int = 0
-
 
     private fun continueUploadProcess() {
         when (vid?.uploadState) {
@@ -318,13 +317,14 @@ class UploadsPresenter(
                         uploadChunkIndex++
                         startRange += chunk
                         continueUploadProcess()
-
                     }
                 }
                 .doOnError {
                     startRange = 0
                     uploadChunkIndex = 0
-                    uploadManager.resetUploadStateForCurrentVideo()
+                    uploadManager.resetUploadStateForCurrentVideo(
+                        currentVideo = currentVideo ?: return@doOnError
+                    )
                 }
                 .subscribe({
                 }, {
@@ -348,16 +348,16 @@ class UploadsPresenter(
             vid?.uploadState == UploadState.UPLOADING_HIGH -> manager.updateVideoStatus(
                 vid ?: return, UploadState.UPLOADED_HIGH
             )
-            else -> uploadManager.resetUploadStateForCurrentVideo()
+            else -> uploadManager.resetUploadStateForCurrentVideo(
+                currentVideo = currentVideo ?: return
+            )
         }
         complete = uploadManager
             .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
             .doOnError {
-                it.printStackTrace()
-                uploadManager.resetUploadStateForCurrentVideo()
-            }
-            .doOnError {
-                uploadManager.resetUploadStateForCurrentVideo()
+                uploadManager.resetUploadStateForCurrentVideo(
+                    currentVideo = currentVideo ?: return@doOnError
+                )
             }
             .subscribe({
                 when (it.status) {
@@ -367,7 +367,9 @@ class UploadsPresenter(
                         manager.updateVideoStatus(vid ?: return@subscribe, UploadState.COMPLETE)
                         finalizeUpload()
                     }
-                    else -> uploadManager.resetUploadStateForCurrentVideo()
+                    else -> uploadManager.resetUploadStateForCurrentVideo(
+                        currentVideo = vid ?: return@subscribe
+                    )
                 }
             }, {
                 it.printStackTrace()
@@ -394,7 +396,7 @@ class UploadsPresenter(
                 checkForComplete()
             }
         }
-        timer.schedule(timerTask, 5000)
+        timer.schedule(timerTask, 5000L)
     }
 
     fun onDestroy() {
@@ -413,14 +415,11 @@ class UploadsPresenter(
         view.displaySettings()
     }
 
-    fun notifyOfProgress(data: ProgressData) {
-        println("List???? ${videoList?.size} ProgressData:: $data")
-        // view.updateAdapter(videoList ?: emptyList(), data)
-    }
+
 }
 
 enum class COMPLETE_RESPONSE {
     COMPLETING,
     COMPLETED,
-    FAILED,
+    FAILED
 }

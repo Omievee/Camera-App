@@ -25,7 +25,6 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
 
     override fun updateProgressBar(start: Int, end: Int, highQuality: Boolean, clientId: String) {
         progressData = ProgressData(start, end, highQuality, clientId)
-        presenter.notifyOfProgress(progressData)
     }
 
 
@@ -79,13 +78,11 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     var progressData = ProgressData()
     var adapter: UploadsAdapter = UploadsAdapter()
     override fun updateAdapter(videos: List<SavedVideo>, data: ProgressData?) {
-        if (data != null) {
-            progressData = data
-        }
+
         val old = adapter.data?.data ?: emptyList()
         val newD = mutableListOf<UploadsPresentation>()
         if (!videos.isNullOrEmpty()) {
-            newD.add(UploadsPresentation(list = videos, progressData = progressData))
+            newD.add(UploadsPresentation(list = videos, progressData = data ?: ProgressData()))
         }
         newD.forEach {
             println("Presentation:: ${it.progressData}")

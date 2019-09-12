@@ -15,10 +15,11 @@ interface UploadsManager {
         array: ByteArray,
         chunk: Int
     ): Observable<retrofit2.Response<VideoUploadResponse>>
+
     fun onCompleteUpload(uploadId: String): Single<CompleteResponse>
-    fun writerToServerAfterComplete() : Single<ServerResponse>
+    fun writerToServerAfterComplete(): Single<ServerResponse>
 
 
-    fun resetUploadStateForCurrentVideo()
+    fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo)
     fun onUpdatedQue(): Observable<List<SavedVideo>>
 }
