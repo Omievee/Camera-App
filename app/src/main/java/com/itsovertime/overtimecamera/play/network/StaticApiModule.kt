@@ -34,8 +34,9 @@ class StaticApiModule {
                 logging.level = HttpLoggingInterceptor.Level.BODY
                 this.addInterceptor(logging)
             }
-            connectTimeout(1, TimeUnit.MINUTES)
-            readTimeout(1, TimeUnit.MINUTES)
+            connectTimeout(5, TimeUnit.MINUTES)
+            writeTimeout(5, TimeUnit.MINUTES)
+            readTimeout(5, TimeUnit.MINUTES)
             cache(cache)
         }
     }
@@ -50,6 +51,7 @@ class StaticApiModule {
             add(object {
                 @ToJson
                 fun toJson(uuid: UUID) = uuid.toString()
+
                 @FromJson
                 fun fromJson(s: String) = UUID.fromString(s)
             })

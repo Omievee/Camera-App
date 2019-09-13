@@ -52,8 +52,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     }
 
 
-    lateinit var vid: SavedVideo
-
 
     @SuppressLint("CheckResult")
     override fun updateVideoStatus(video: SavedVideo, state: UploadState) {
@@ -67,6 +65,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 it.printStackTrace()
             }
             .subscribe({
+                loadFromDB()
             }, {
                 it.printStackTrace()
             })
@@ -267,7 +266,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
-                loadFromDB()
+
             }
             .onErrorReturn {
                 it.printStackTrace()
@@ -413,9 +412,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 }
                 if (!listOfVideos.isNullOrEmpty()) {
                     lastVideoId = listOfVideos[0].clientId
-                    println("Gallery size :: ${listOfVideos.size}")
                     listOfVideos.forEach {
-                        println("Gallery Is Processed? ${it.isProcessed}")
                         if (!it.isProcessed) {
                             determineTrim(it)
                         } else {

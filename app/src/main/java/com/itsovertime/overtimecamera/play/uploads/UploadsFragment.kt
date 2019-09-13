@@ -78,15 +78,13 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     var progressData = ProgressData()
     var adapter: UploadsAdapter = UploadsAdapter()
     override fun updateAdapter(videos: List<SavedVideo>, data: ProgressData?) {
-
+        println("-------------------------------------------------------UPDATING ADAPTER-------------------------------------------------------")
         val old = adapter.data?.data ?: emptyList()
         val newD = mutableListOf<UploadsPresentation>()
         if (!videos.isNullOrEmpty()) {
             newD.add(UploadsPresentation(list = videos, progressData = data ?: ProgressData()))
         }
-        newD.forEach {
-            println("Presentation:: ${it.progressData}")
-        }
+
         adapter.data = UploadsViewData(newD, DiffUtil.calculateDiff(BasicDiffCallback(old, newD)))
 
     }

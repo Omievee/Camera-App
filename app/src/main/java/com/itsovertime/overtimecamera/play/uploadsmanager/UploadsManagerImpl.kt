@@ -25,13 +25,22 @@ class UploadsManagerImpl(
     val api: Api,
     val manager: WifiManager
 ) : UploadsManager {
+    override fun onUpdatedHighQue(): Observable<MutableList<SavedVideo>> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
 
-    private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
+    private val subjectMed: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
+    private val subjectHigh: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
     private var currentVideo: SavedVideo? = null
 
+    var lastList = mutableListOf<SavedVideo>()
     override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
-        subject.onNext(list)
+        println("List Size:: ${list.size} Last List Size ${lastList.size}")
+        if (list.size > lastList.size) {
+            lastList = list
+            subjectMed.onNext(lastList)
+        }
     }
 
 
@@ -136,16 +145,26 @@ class UploadsManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-    override fun writerToServerAfterComplete(): Single<ServerResponse> {
+    override fun writerToServerAfterComplete(
+        uploadId: String, S3Key: String, vidWidth: Int, vidHeight: Int
+    ): Single<ServerResponse> {
         return api
-            .writeToSeverAfterComplete(uploadId = "", request = ServerRequest())
+            .writeToSeverAfterComplete(
+                uploadId = uploadId,
+                request = ServerRequest(
+                    S3Key = S3Key,
+                    progress = 1.0,
+                    videoWidth = vidWidth,
+                    videoHeight = vidHeight
+                )
+            )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
 
-    override fun onUpdatedQue(): Observable<List<SavedVideo>> {
-        return subject
+    override fun onUpdatedMedQue(): Observable<MutableList<SavedVideo>> {
+        return subjectMed
             .observeOn(Schedulers.io())
             .subscribeOn(AndroidSchedulers.mainThread())
     }

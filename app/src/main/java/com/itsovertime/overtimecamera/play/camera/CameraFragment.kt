@@ -88,7 +88,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     override fun stopProgressAnimation() {
-        progressBar.clearAnimation()
+        progressBar?.let {
+            it.clearAnimation()
+        }
     }
 
     override fun updateUploadsIconCount(count: String) {
