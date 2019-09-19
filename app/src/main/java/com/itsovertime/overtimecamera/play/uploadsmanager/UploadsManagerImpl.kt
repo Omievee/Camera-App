@@ -3,7 +3,6 @@ package com.itsovertime.overtimecamera.play.uploadsmanager
 import android.annotation.SuppressLint
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
-import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.*
 import com.itsovertime.overtimecamera.play.utils.Constants
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
@@ -25,24 +24,18 @@ class UploadsManagerImpl(
     val api: Api,
     val manager: WifiManager
 ) : UploadsManager {
-    override fun onUpdatedHighQue(): Observable<MutableList<SavedVideo>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
-
-    private val subjectMed: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
-    private val subjectHigh: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
+    private val subject: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
     private var currentVideo: SavedVideo? = null
 
-    var lastList = mutableListOf<SavedVideo>()
+    var vid = mutableListOf<SavedVideo>()
     override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
-        println("List Size:: ${list.size} Last List Size ${lastList.size}")
-        if (list.size > lastList.size) {
-            lastList = list
-            subjectMed.onNext(lastList)
+        println("UPDATE QUE LIST --------- ${list.size}")
+        if (list.size > vid.size) {
+            vid = list
+            subject.onNext(vid)
         }
     }
-
 
     @Synchronized
     override fun getVideoInstance(video: SavedVideo): Single<VideoInstanceResponse> {
@@ -71,6 +64,9 @@ class UploadsManagerImpl(
     override fun getAWSDataForUpload(): Single<TokenResponse> {
         return api
             .uploadToken(VideoSourceRequest(type = Constants.Source))
+            .doOnError {
+                println("token error ${it.message}")
+            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
@@ -90,26 +86,15 @@ class UploadsManagerImpl(
                     data.S3Key
                 )
             )
+            .doOnError {
+                println("aws error ${it.message}")
+            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
 
-    fun md5(plaintext: ByteArray): String? {
-        val m = MessageDigest.getInstance("MD5")
-        m.reset()
-        m.update(plaintext)
-        val digest = m.digest()
-        val bigInt = BigInteger(1, digest)
-        var hashtext = bigInt.toString(16)
-        while (hashtext.length < 32) {
-            hashtext = "0$hashtext"
-        }
-        return hashtext
-    }
-
     var upload: Upload? = null
-    lateinit var request: RequestBody
     @SuppressLint("CheckResult")
     @Synchronized
     override fun uploadVideoToServer(
@@ -117,10 +102,7 @@ class UploadsManagerImpl(
         array: ByteArray,
         chunk: Int
     ): Observable<retrofit2.Response<VideoUploadResponse>> {
-//        if (upload.id != savedVideo?.uploadId) {
-//            println("Ids didnt match........")
-//        } else println("matchy matchy...")
-        request = RequestBody.create(
+        val request = RequestBody.create(
             MediaType.parse("application/octet-stream"),
             array
         )
@@ -131,14 +113,24 @@ class UploadsManagerImpl(
                 uploadChunk = chunk,
                 file = request
             )
-            .doOnNext {
-                it.code()
-            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-    override fun onCompleteUpload(uploadId: String): Single<CompleteResponse> {
+    fun md5(array: ByteArray): String? {
+        val m = MessageDigest.getInstance("MD5")
+        m.reset()
+        m.update(array)
+        val digest = m.digest()
+        val bigInt = BigInteger(1, digest)
+        var hashtext = bigInt.toString(16)
+        while (hashtext.length < 32) {
+            hashtext = "0$hashtext"
+        }
+        return hashtext
+    }
+
+    override fun onCompleteUpload(uploadId: String): Observable<retrofit2.Response<CompleteResponse>> {
         return api
             .checkStatusForComplete(uploadId, CompleteRequest(async = true))
             .subscribeOn(Schedulers.io())
@@ -146,28 +138,47 @@ class UploadsManagerImpl(
     }
 
     override fun writerToServerAfterComplete(
-        uploadId: String, S3Key: String, vidWidth: Int, vidHeight: Int
+        uploadId: String, S3Key: String, vidWidth: Int, vidHeight: Int, hq: Boolean, vid: SavedVideo
     ): Single<ServerResponse> {
+        var path = ""
+        val r: ServerRequest
+        when (hq) {
+            true -> {
+                path = vid?.highRes ?: ""
+                r = ServerRequest(
+                    S3Key = S3Key,
+                    source_medium_quality_path = path,
+                    source_medium_quality_height = vidHeight,
+                    source_medium_quality_width = vidWidth,
+                    source_medium_quality_progress = 1.0
+                )
+
+            }
+            else -> {
+                path = vid?.mediumRes ?: ""
+                r = ServerRequest(
+                    S3Key = S3Key,
+                    source_high_quality_path = path,
+                    source_high_quality_height = vidHeight,
+                    source_high_quality_width = vidWidth,
+                    source_high_quality_progress = 1.0
+                )
+            }
+        }
+
         return api
             .writeToSeverAfterComplete(
                 uploadId = uploadId,
-                request = ServerRequest(
-                    S3Key = S3Key,
-                    progress = 1.0,
-                    videoWidth = vidWidth,
-                    videoHeight = vidHeight
-                )
+                request = r
             )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
 
-    override fun onUpdatedMedQue(): Observable<MutableList<SavedVideo>> {
-        return subjectMed
+    override fun onUpdateQue(): Observable<MutableList<SavedVideo>> {
+        return subject
             .observeOn(Schedulers.io())
             .subscribeOn(AndroidSchedulers.mainThread())
     }
 }
-
-class CurrentVideoUpload(val video: SavedVideo? = null, val state: UploadState? = null)

@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.baseactivity
 
 import android.Manifest
+import android.app.Activity
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
@@ -14,6 +15,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.OrientationEventListener
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
@@ -37,6 +39,14 @@ import javax.inject.Inject
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
+    override fun hideKeyboard() {
+        val imm = this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        var view = currentFocus;
+        if (view == null) {
+            view = View(this);
+        }
+        imm.hideSoftInputFromWindow(view.windowToken, 0);
+    }
 
     override fun logOut() {
         viewPager.visibility = View.GONE

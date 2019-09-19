@@ -34,7 +34,7 @@ interface Api {
 
     /*Step 5: Check For completed upload-- ping ever 5 seconds until COMPLETED is returned. */
     @POST("api/uploads/{uploadId}/complete")
-    fun checkStatusForComplete(@Path("uploadId") vidId: String, @Body request: CompleteRequest): Single<CompleteResponse>
+    fun checkStatusForComplete(@Path("uploadId") vidId: String, @Body request: CompleteRequest): Observable<retrofit2.Response<CompleteResponse>>
 
     /*Step 6: Write to server after a COMPLETE response from previous step...*/
     @PUT("/api/writer/videos/{uploadId}")

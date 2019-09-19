@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.DiffUtil.calculateDiff
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.itsovertime.overtimecamera.play.R
@@ -39,7 +40,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     }
 
     override fun onRefresh() {
-        presenter.onResume()
+        presenter.onRefresh()
     }
 
     override fun swipe2RefreshIsTrue() {
@@ -63,7 +64,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         if (isVisibleToUser && view != null) {
-            adapter?.notifyDataSetChanged()
+            presenter.onRefresh()
         }
     }
 
@@ -84,9 +85,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         if (!videos.isNullOrEmpty()) {
             newD.add(UploadsPresentation(list = videos, progressData = data ?: ProgressData()))
         }
-
-        adapter.data = UploadsViewData(newD, DiffUtil.calculateDiff(BasicDiffCallback(old, newD)))
-
+        adapter.data = UploadsViewData(newD, calculateDiff(BasicDiffCallback(old, newD)))
     }
 
     @Inject
@@ -123,8 +122,11 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
             R.color.OT_White,
             android.R.color.black
         )
-        uploadsRecycler.layoutManager =
-            LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+
+        context?.let {
+            uploadsRecycler.layoutManager =
+                CustomLayoutManager(it, LinearLayoutManager.VERTICAL, false)
+        }
     }
 
     override fun onDestroy() {

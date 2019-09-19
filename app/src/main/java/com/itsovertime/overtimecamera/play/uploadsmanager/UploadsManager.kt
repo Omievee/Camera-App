@@ -16,14 +16,15 @@ interface UploadsManager {
         chunk: Int
     ): Observable<retrofit2.Response<VideoUploadResponse>>
 
-    fun onCompleteUpload(uploadId: String): Single<CompleteResponse>
+    fun onCompleteUpload(uploadId: String): Observable<retrofit2.Response<CompleteResponse>>
     fun writerToServerAfterComplete(
         uploadId: String,
         S3Key: String,
         vidWidth: Int,
-        vidHeight: Int
+        vidHeight: Int,
+        hq: Boolean,
+        vid: SavedVideo
     ): Single<ServerResponse>
 
-    fun onUpdatedMedQue(): Observable<MutableList<SavedVideo>>
-    fun onUpdatedHighQue(): Observable<MutableList<SavedVideo>>
+    fun onUpdateQue(): Observable<MutableList<SavedVideo>>
 }

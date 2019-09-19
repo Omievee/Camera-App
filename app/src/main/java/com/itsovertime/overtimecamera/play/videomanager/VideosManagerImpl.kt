@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
-import android.widget.Toast
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
@@ -16,7 +15,6 @@ import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
-import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -27,11 +25,12 @@ import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
-
 
     var db = AppDatabase.getAppDataBase(context = context)
     private var videoDao = db?.videoDao()
@@ -45,12 +44,10 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-
             }, {
                 it.printStackTrace()
             })
     }
-
 
 
     @SuppressLint("CheckResult")
@@ -65,7 +62,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 it.printStackTrace()
             }
             .subscribe({
-                loadFromDB()
+
             }, {
                 it.printStackTrace()
             })
@@ -310,9 +307,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
                 exception?.printStackTrace()
-                println("FAILED TO TRANSCODE ::::: ${exception?.message} && ${exception?.cause}")
-//                Toast.makeText(context, "Failed to transcode:: $exception", Toast.LENGTH_SHORT)
-//                    .show()
+                println("Failed Transcode:::: ${exception?.message}")
+                //resetUploadStateForCurrentVideo(savedVideo)
             }
 
             override fun onTranscodeCompleted() {
@@ -340,13 +336,10 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     private fun updateVideoIsProcessed(savedVideo: SavedVideo) {
         Single.fromCallable {
             with(videoDao) {
-                this?.updateVideoIsProcessed(isProcessed = true, lastID = savedVideo?.clientId)
+                this?.updateVideoIsProcessed(isProcessed = true, lastID = savedVideo.clientId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-                loadFromDB()
-            }
             .subscribe({}, {
                 it.printStackTrace()
             })
@@ -370,19 +363,18 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 latitude = event?.latitude,
                 longitude = event?.longitude,
                 uploadState = UploadState.QUEUED,
-                max_video_length = event?.max_video_length ?: 12
+                max_video_length = event?.max_video_length ?: 12,
+                created_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             )
             with(videoDao) {
                 this?.saveVideoData(video)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-                loadFromDB()
-            }
             .onErrorReturn {
                 it.printStackTrace()
             }
+            .doFinally { loadFromDB() }
             .subscribe({
             }, {
                 it.printStackTrace()
@@ -393,41 +385,26 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     private var lastVideoMaxTime: String? = ""
     private var isFirstRun: Boolean = true
 
+    @Synchronized
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
-        listOfVideos.clear()
         preppedVideos.clear()
         Single.fromCallable {
+            listOfVideos.clear()
             db?.videoDao()?.getVideos()
         }.map {
-            it.forEach {
-                listOfVideos.add(0, it)
-            }
+            listOfVideos.addAll(it.asReversed())
+            determineProcess(listOfVideos)
+            subject.onNext(it)
+            total.onNext(it.size)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
+            .subscribe({
                 if (isFirstRun) {
                     loadFFMPEG()
                     isFirstRun = false
                 }
-                if (!listOfVideos.isNullOrEmpty()) {
-                    lastVideoId = listOfVideos[0].clientId
-                    listOfVideos.forEach {
-                        if (!it.isProcessed) {
-                            determineTrim(it)
-                        } else {
-                            when (it.is_favorite) {
-                                true -> preppedVideos.add(0, it)
-                                else -> preppedVideos.add(it)
-                            }
-                            prepVideosForUploading(preppedVideos)
-                        }
-                    }
-                }
-            }
-            .subscribe({
-                subject.onNext(listOfVideos)
-                total.onNext(listOfVideos.size)
+
             },
                 {
                     it.printStackTrace()
@@ -435,27 +412,36 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             )
     }
 
-    private var preppedVideos = mutableListOf<SavedVideo>()
-
-
-    private fun prepVideosForUploading(preppedVideos: MutableList<SavedVideo>) {
-        println("Videos Ready for que..... ${preppedVideos.size}")
-        if (!preppedVideos.isNullOrEmpty()) {
-            preppedVideos.forEach {
-                if (it.uploadState != UploadState.COMPLETE) {
-                    manager.onProcessUploadQue(preppedVideos)
-                }
+    private fun determineProcess(list: MutableList<SavedVideo>) {
+        if (!list.isNullOrEmpty()) {
+            lastVideoId = list[0].clientId
+            list.sortedBy {
+                it.is_favorite
+            }
+            list.forEach {
+                if (!it.isProcessed) {
+                    determineTrim(it)
+                } else prepVideosForUploading(list)
             }
         }
     }
 
+    private var preppedVideos = mutableListOf<SavedVideo>()
+    @Synchronized
+    private fun prepVideosForUploading(preppedVideos: MutableList<SavedVideo>) {
+        if (!preppedVideos.isNullOrEmpty()) {
+            preppedVideos.removeIf {
+                it.uploadState == UploadState.COMPLETE
+            }
+            manager.onProcessUploadQue(preppedVideos)
+        } else println("Error prepping videos for que...")
+    }
 
     @SuppressLint("CheckResult")
     override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
         Single.fromCallable {
             with(videoDao) {
                 this?.resetUploadDataForVideo(
-                    isProcessed = false,
                     uploadState = UploadState.QUEUED,
                     uploadId = "",
                     id = "",

@@ -149,11 +149,11 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             }
             .doFinally {
                 view.hideDisplayProgress()
+                view.hideKeyboard()
             }
             .subscribe({
                 auth.saveUserToDB(it.user)
                 UserPreference.accessAllowed = it.user.is_camera_authorized ?: false
-                println("we are here..... ${it.user.is_camera_authorized}")
                 if (!UserPreference.accessAllowed) {
                     if (it.user.is_banned == true || it.user.is_suspended == true || it.user.is_camera_rejected == true) {
                         logOut()

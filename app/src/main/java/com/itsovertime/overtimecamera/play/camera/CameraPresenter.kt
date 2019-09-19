@@ -33,6 +33,8 @@ class CameraPresenter(
         }
 
         filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
+        println("Path:: $filePath")
+
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
