@@ -1,5 +1,7 @@
 package com.itsovertime.overtimecamera.play.network
 
+import com.itsovertime.overtimecamera.play.model.Event
+
 data class VideoUploadResponse(val success: Boolean) {
 }
 
@@ -23,9 +25,7 @@ class ServerRequest(
     val source_medium_quality_width: Int = 0,
     val source_medium_quality_height: Int = 0,
     val source_high_quality_width: Int = 0,
-    val source_high_quality_height: Int = 0,
-    val event: String = "",
-    val event_id:String=""
+    val source_high_quality_height: Int = 0
 ) {
 
 }

@@ -79,6 +79,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
 
     @SuppressLint("CheckResult")
     override fun updateVideoStatus(video: SavedVideo, state: UploadState) {
+        println("STATE IS : $state")
         Single.fromCallable {
             with(videoDao) {
                 this?.updateVideoState(state, video.clientId)
@@ -89,7 +90,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 it.printStackTrace()
             }
             .subscribe({
-                if (state == UploadState.UPLOADED_MEDIUM) {
+                if (state == UploadState.UPLOADED_MEDIUM || state == UploadState.REGISTERED) {
                     updateMediumUploaded(true, video?.clientId)
                 } else if (state == UploadState.UPLOADED_HIGH || state == UploadState.COMPLETE) updateHighuploaded(
                     true,
@@ -294,9 +295,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-
-            }
             .onErrorReturn {
                 it.printStackTrace()
             }
@@ -340,7 +338,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             override fun onTranscodeFailed(exception: Exception?) {
                 exception?.printStackTrace()
                 println("Failed Transcode:::: ${exception?.message}")
-                //resetUploadStateForCurrentVideo(savedVideo)
+                resetUploadStateForCurrentVideo(savedVideo)
             }
 
             override fun onTranscodeCompleted() {
@@ -390,11 +388,13 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 clientId = clientId,
                 highRes = filePath,
                 is_favorite = isFavorite,
-                eventId = event?.id ?: "",
+                event_id = event?.id ?: "",
                 eventName = event?.name,
                 starts_at = event?.starts_at,
                 address = event?.address,
                 latitude = event?.latitude,
+                city = event?.city,
+                duration_in_hours = event?.duration_in_hours ?: 0,
                 longitude = event?.longitude,
                 uploadState = UploadState.QUEUED,
                 max_video_length = event?.max_video_length ?: 12,
@@ -481,12 +481,16 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     uploadState = UploadState.QUEUED,
                     uploadId = "",
                     id = "",
+                    mediumRes = "",
+                    trimmedVidPath = "",
+                    isProcessed = false,
                     lastID = currentVideo.clientId
                 )
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
+                println("RESET DONE!")
                 loadFromDB()
             }, {
                 it.printStackTrace()

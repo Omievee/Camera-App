@@ -2,6 +2,7 @@ package com.itsovertime.overtimecamera.play.uploadsmanager
 
 import android.annotation.SuppressLint
 import com.itsovertime.overtimecamera.play.application.OTApplication
+import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.network.*
 import com.itsovertime.overtimecamera.play.utils.Constants
@@ -147,10 +148,7 @@ class UploadsManagerImpl(
                     source_medium_quality_path = S3Key,
                     source_medium_quality_height = vidHeight,
                     source_medium_quality_width = vidWidth,
-                    source_medium_quality_progress = 1.0,
-                    event = vid?.eventName ?: "",
-                    event_id = vid?.eventId
-
+                    source_medium_quality_progress = 1.0
                 )
 
             }
@@ -159,8 +157,7 @@ class UploadsManagerImpl(
                     source_high_quality_path = S3Key,
                     source_high_quality_height = vidHeight,
                     source_high_quality_width = vidWidth,
-                    source_high_quality_progress = 1.0,
-                    event = vid?.eventName ?: ""
+                    source_high_quality_progress = 1.0
                 )
             }
         }

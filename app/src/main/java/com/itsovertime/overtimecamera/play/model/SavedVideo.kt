@@ -29,8 +29,8 @@ data class SavedVideo(
     val is_funny: Boolean = false,
     @ColumnInfo(name = "is_selfie")
     val is_selfie: Boolean = false,
-    @ColumnInfo(name = "eventID")
-    val eventId: String,
+    @ColumnInfo(name = "event_id")
+    val event_id: String,
     @ColumnInfo(name = "lat")
     val latitude: Double?,
     @ColumnInfo(name = "long")
