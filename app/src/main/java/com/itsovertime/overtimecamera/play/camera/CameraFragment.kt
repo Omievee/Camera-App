@@ -102,10 +102,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
 
     private val DEFAULT_ORIENTATIONS = SparseIntArray().apply {
-        append(Surface.ROTATION_0, 90)
-        append(Surface.ROTATION_90, 0)
-        append(Surface.ROTATION_180, 270)
-        append(Surface.ROTATION_270, 180)
+        append(Surface.ROTATION_0, 0)
+        append(Surface.ROTATION_90, 90)
+        append(Surface.ROTATION_180, 180)
+        append(Surface.ROTATION_270, 270)
     }
     private val INVERSE_ORIENTATIONS = SparseIntArray().apply {
         append(Surface.ROTATION_0, 270)

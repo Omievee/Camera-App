@@ -28,11 +28,12 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
             true -> View.VISIBLE
             else -> View.INVISIBLE
         }
+        println("------ELSE------ ${savedVideo.uploadState}")
         when (savedVideo.uploadState) {
             UploadState.UPLOADED_MEDIUM -> medQProgressBar.setProgress(100, false)
             UploadState.UPLOADED_HIGH -> highQProgressBar.setProgress(100, false)
             else -> {
-                println("------ELSE------ ${savedVideo.uploadState}")
+
                 if (savedVideo.clientId == progress.id) {
                     val anim = ProgressBarAnimation(medQProgressBar, 0, progress.end)
                     anim.duration = (progress.end).toLong()

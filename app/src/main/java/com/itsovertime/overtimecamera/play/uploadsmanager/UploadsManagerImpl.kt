@@ -140,32 +140,30 @@ class UploadsManagerImpl(
     override fun writerToServerAfterComplete(
         uploadId: String, S3Key: String, vidWidth: Int, vidHeight: Int, hq: Boolean, vid: SavedVideo
     ): Single<ServerResponse> {
-        var path = ""
         val r: ServerRequest
         when (hq) {
-            true -> {
-                path = vid?.highRes ?: ""
+            false -> {
                 r = ServerRequest(
-                    S3Key = S3Key,
-                    source_medium_quality_path = path,
+                    source_medium_quality_path = S3Key,
                     source_medium_quality_height = vidHeight,
                     source_medium_quality_width = vidWidth,
-                    source_medium_quality_progress = 1.0
+                    source_medium_quality_progress = 1.0,
+                    event = vid?.eventName ?: "",
+                    event_id = vid?.eventId
+
                 )
 
             }
             else -> {
-                path = vid?.mediumRes ?: ""
                 r = ServerRequest(
-                    S3Key = S3Key,
-                    source_high_quality_path = path,
+                    source_high_quality_path = S3Key,
                     source_high_quality_height = vidHeight,
                     source_high_quality_width = vidWidth,
-                    source_high_quality_progress = 1.0
+                    source_high_quality_progress = 1.0,
+                    event = vid?.eventName ?: ""
                 )
             }
         }
-
         return api
             .writeToSeverAfterComplete(
                 uploadId = uploadId,

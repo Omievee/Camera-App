@@ -7,6 +7,7 @@ import android.widget.Toast
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
+import com.itsovertime.overtimecamera.play.model.UploadState.*
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
 import com.itsovertime.overtimecamera.play.network.Upload
@@ -23,6 +24,7 @@ import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
+import kotlin.math.min
 
 class UploadsPresenter(
     val view: UploadsFragment,
@@ -47,7 +49,6 @@ class UploadsPresenter(
     }
 
     var clientIdDisposable: Disposable? = null
-    var mediumUploads = mutableListOf<SavedVideo>()
     private fun subscribeToCurrentVideoBeingUploaded() {
         clientIdDisposable =
             uploadManager
@@ -59,25 +60,17 @@ class UploadsPresenter(
                     }
                     it.forEach {
                         println("UPLOAD STATE FROM QUE:::: ${it.uploadState}")
-                        if (it.uploadState == UploadState.QUEUED) {
+                        if (it.uploadState == QUEUED) {
                             getVideoInstance(it)
-                        } else if (it.uploadState == UploadState.REGISTERED
-                            || it.uploadState == UploadState.REGISTERING
-                            || it.uploadState == UploadState.UPLOADING_MEDIUM
-                            || it.uploadState == UploadState.UPLOADED_MEDIUM
-                            || it.uploadState == UploadState.UPLOADING_HIGH
-                            || it.uploadState == UploadState.UPLOADED_HIGH
-                        ) {
-                            manager.resetUploadStateForCurrentVideo(it)
-                        } else if (it.uploadState == UploadState.UPLOADED_MEDIUM && userEnabledHDUploads) {
+                        } else if (it.uploadState == UPLOADED_MEDIUM && userEnabledHDUploads) {
                             getVideoInstance(it)
-                        }
+                        } else manager.resetUploadStateForCurrentVideo(it)
                     }
                 }, {
                 })
     }
 
-    var videoList: List<SavedVideo>? = null
+
     private var managerDisposable: Disposable? = null
     private fun subscribeToVideosFromGallery() {
         managerDisposable = manager
@@ -122,7 +115,7 @@ class UploadsPresenter(
     private fun getVideoInstance(it: SavedVideo) {
         println("______INSTANCE____")
         currentVideo = it
-        manager.updateVideoStatus(currentVideo ?: return, UploadState.REGISTERING)
+        updateState(currentVideo ?: return)
         instanceDisposable =
             uploadManager
                 .getVideoInstance(currentVideo ?: return)
@@ -134,10 +127,7 @@ class UploadsPresenter(
                         videoInstanceResponse?.video?.id.toString(),
                         currentVideo?.clientId.toString()
                     )
-                    manager.updateVideoStatus(
-                        currentVideo ?: return@doOnSuccess,
-                        UploadState.REGISTERED
-                    )
+                    updateState(currentVideo ?: return@doOnSuccess)
                     requestTokenForUpload()
                 }
                 .doOnError {
@@ -196,7 +186,6 @@ class UploadsPresenter(
                 }
                 .doOnSuccess {
                     getVideoForUpload(currentVideo ?: return@doOnSuccess)
-
                 }
                 .doOnError {
                     manager.resetUploadStateForCurrentVideo(
@@ -212,149 +201,60 @@ class UploadsPresenter(
     var db = view.context?.let { AppDatabase.getAppDataBase(context = it) }
     var videoDao = db?.videoDao()
     private var vid: SavedVideo? = null
-    @SuppressLint("CheckResult")
-    private fun getVideoForUpload(savedVideo: SavedVideo) {
-        Single.fromCallable {
-            with(videoDao) {
-                this?.getVideoForUpload(savedVideo.clientId)
-            }
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .map {
-                vid = it
-                println("vid is :${vid?.clientId}")
-            }
-            .doFinally {
-                continueUploadProcess()
-            }
-            .subscribe({
-            }, {
-                it.printStackTrace()
-            })
-    }
-
 
     private var minChunkSize = (0.5 * 1024).toInt()
-    private var maxChunkSize = 1024 * 2
+    private var maxChunkSize = 1024 * 2 * 1024
     private var baseChunkSize = 1024
-    private var chunkToUpload: Int = 0
     private var uploadChunkIndex = 0
     private var firstRun: Boolean = true
     private var fullBytes = byteArrayOf()
     var remainder: Int = 0
     var count = 0
     private fun continueUploadProcess() {
-        println("This hit... $count++")
         if (vid?.id != "") {
-            println("Status... ${vid?.uploadState}")
-            when (vid?.uploadState) {
-                UploadState.REGISTERED -> {
-                    manager.updateVideoStatus(
-                        vid ?: return,
-                        UploadState.UPLOADING_MEDIUM
-                    )
-                    fullBytes = File(vid?.mediumRes).readBytes()
-                    getSliceOfDataForUpload()
-                    //chunkToUpload = baseChunkSize
-                }
-                UploadState.UPLOADED_MEDIUM -> {
-                    if (userEnabledHDUploads) {
-                        manager.updateVideoStatus(
-                            vid ?: return,
-                            UploadState.UPLOADING_HIGH
-                        )
-                        isHighQuality = true
-                        // getVideoForUpload(vid ?: return)
-                        fullBytes = File(vid?.highRes).readBytes()
-                        //chunkToUpload = baseChunkSize
-                    }
-                }
-                else -> {
-                }
+            updateState(vid ?: return)
+            chunkToUpload = baseChunkSize
+            if (vid?.mediumUploaded == true) {
+                fullBytes = File(vid?.highRes).readBytes()
+                isHighQuality = true
+                getSliceOfDataForUpload()
+            } else {
+                fullBytes = File(vid?.mediumRes).readBytes()
             }
-        }
-
+        } else manager.resetUploadStateForCurrentVideo(vid ?: return)
     }
 
-    var chunkOrRemainder: Int = 0
     private var startRange = 0
+    private var chunkToUpload: Int = 0
     private fun getSliceOfDataForUpload() {
-        remainder = fullBytes.size.minus((startRange + maxChunkSize))
-        // println("FULL DATA : ${fullBytes.size} ++ REMAINDER $remainder")
-        if (remainder > maxChunkSize) {
-            val endRange = startRange + maxChunkSize
-            val slice = fullBytes.sliceArray(
-                IntRange(
-                    startRange,
-                    endRange - 1
-                )
-            )
-            Log.d(
-                "Upload",
-                "FIRST IF---- start $startRange, end $endRange remaining $remainder, slice ${slice.size}"
-            )
-            startRange += maxChunkSize
-            synchronized(this) {
-                upload(
-                    chunkIndex = uploadChunkIndex,
-                    bytes = slice,
-                    finalChunk = false
-                )
-            }
+        chunkToUpload = maxChunkSize
+        val end = minOf(fullBytes.size, startRange + chunkToUpload)
+        println("chunk ? $chunkToUpload")
 
-
-            //getSliceOfDataForUpload()
+        val slice = fullBytes.sliceArray(
+            IntRange(
+                startRange,
+                end - 1
+            )
+        )
+        if (startRange > end) {
+            println("COMPLETE___ ${fullBytes.size} start $startRange end $end sliced--- ${slice.size}")
+            checkForComplete()
+            startRange = 0
+            chunkToUpload = 0
         } else {
-            val endRange = startRange + remainder
-            val slice = fullBytes.sliceArray(
-                IntRange(
-                    startRange,
-                    endRange - 1
-                )
-            )
-            Log.d(
-                "Upload",
-                "Else---- start $startRange, end $endRange remaining $remainder, slice ${slice.size} Full size ${fullBytes.size}"
-            )
-
+            println("Continue....... ${fullBytes.size} start $startRange end $end sliced--- ${slice.size}")
+//            startRange += chunkToUpload
+//            getSliceOfDataForUpload()
             synchronized(this) {
-                upload(
-                    chunkIndex = uploadChunkIndex,
-                    bytes = slice,
-                    finalChunk = false
-                )
-            }
-            if (endRange != fullBytes.size) {
-                val r = fullBytes.size.minus(endRange)
-                val final = fullBytes.sliceArray(
-                    IntRange(
-                        endRange,
-                        fullBytes.size - 1
-                    )
-                )
-                synchronized(this) {
-                    upload(
-                        chunkIndex = uploadChunkIndex,
-                        bytes = final,
-                        finalChunk = true
-                    )
-                }
-                Log.d(
-                    "Upload",
-                    "FINAL---- start $endRange, end ${fullBytes.size - 1} remaining $r, slice ${final.size} Full size ${fullBytes.size}"
-                )
+                upload(chunkIndex = uploadChunkIndex, bytes = slice)
             }
         }
     }
-
-    var f: Boolean = false
-
-
     var isHighQuality: Boolean = false
     @SuppressLint("CheckResult")
     var up: Disposable? = null
-
-    private fun upload(chunkIndex: Int, bytes: ByteArray, finalChunk: Boolean) {
+    private fun upload(chunkIndex: Int, bytes: ByteArray) {
         synchronized(this) {
             up = uploadManager
                 .uploadVideoToServer(
@@ -364,29 +264,30 @@ class UploadsPresenter(
                 )
                 .doAfterNext {
                     if (it.body()?.success == true) {
-                        checkResponseTimeDifference(
-                            timeSent = it.raw().sentRequestAtMillis(),
-                            timeReceived = it.raw().receivedResponseAtMillis()
-                        )
+//                        chunkToUpload = when (checkResponseTimeDifference(
+//                            timeSent = it.raw().sentRequestAtMillis(),
+//                            timeReceived = it.raw().receivedResponseAtMillis()
+//                        )) {
+//                            in 0..1 -> maxChunkSize
+//                            in 1..2 -> baseChunkSize
+//                            else -> minChunkSize
+//                        }
                         if (it.code() == 502) {
                             getSliceOfDataForUpload()
                         }
-                        Log.d("TAG", "final chunk? $finalChunk")
-//                        chunkToUpload = maxChunkSize
-                        if (!finalChunk) {
-                            uploadChunkIndex++
-                            getSliceOfDataForUpload()
-                        } else checkForComplete()
-
+                        chunkToUpload = maxChunkSize
+                        startRange += chunkToUpload
+                        uploadChunkIndex++
+                        getSliceOfDataForUpload()
                     }
                 }
                 .doOnError {
                     Toast.makeText(view.context, "ERROR", Toast.LENGTH_SHORT).show()
 //                    startRange = 0
 //                    uploadChunkIndex = 0
-//                    manager.resetUploadStateForCurrentVideo(
-//                        currentVideo = currentVideo ?: return@doOnError
-//                    )
+                    manager.resetUploadStateForCurrentVideo(
+                        currentVideo = currentVideo ?: return@doOnError
+                    )
                 }
                 .subscribe({
                 }, {
@@ -396,9 +297,9 @@ class UploadsPresenter(
     }
 
     private var diffInSec: Long = 0
-    private fun checkResponseTimeDifference(timeSent: Long, timeReceived: Long) {
+    private fun checkResponseTimeDifference(timeSent: Long, timeReceived: Long): Long {
         val timeDif = timeReceived - timeSent
-        diffInSec = TimeUnit.MILLISECONDS.toSeconds(timeDif)
+        return TimeUnit.MILLISECONDS.toSeconds(timeDif)
     }
 
 
@@ -430,52 +331,114 @@ class UploadsPresenter(
             })
     }
 
-    var serverDis: Disposable? = null
-    private fun finalizeUpload(upload: Upload?) {
-        when {
-            vid?.uploadState == UploadState.UPLOADING_MEDIUM -> {
-                manager.updateVideoStatus(
-                    vid ?: return, UploadState.UPLOADED_MEDIUM
-                )
-                getVideoForUpload(vid ?: return)
+    @SuppressLint("CheckResult")
+    private fun getVideoForUpload(savedVideo: SavedVideo) {
+        Single.fromCallable {
+            with(videoDao) {
+                this?.getVideoForUpload(savedVideo.clientId)
             }
-            vid?.uploadState == UploadState.UPLOADING_HIGH -> {
-                manager.updateVideoStatus(
-                    vid ?: return, UploadState.UPLOADED_HIGH
-                )
-                getVideoForUpload(vid ?: return)
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map {
+                vid = it
             }
-            else -> {
-            }
-        }
-        val path = when (isHighQuality) {
-            true -> vid?.highRes
-            else -> vid?.mediumRes
-        }
-        println("UPLOAD STATE ::: ${vid?.uploadState}")
-        getVideoDimensions(path = path ?: "")
-        serverDis = uploadManager
-            .writerToServerAfterComplete(
-                uploadId = vid?.id ?: "",
-                S3Key = upload?.S3Key ?: "",
-                vidWidth = width,
-                vidHeight = height,
-                hq = isHighQuality,
-                vid = vid ?: return
-            )
-            .doOnSuccess {
-                if (vid?.uploadState == UploadState.UPLOADED_HIGH) manager.updateVideoStatus(
-                    vid ?: return@doOnSuccess, UploadState.COMPLETE
-                )
-
+            .doFinally {
+                continueUploadProcess()
             }
             .subscribe({
-                println("WRITE TO SERVER SUCCESS")
             }, {
-                println("ERROR FROM WRITE TO SERVER")
                 it.printStackTrace()
-                manager.resetUploadStateForCurrentVideo(vid ?: return@subscribe)
             })
+    }
+
+    var vid2: SavedVideo? = null
+    @SuppressLint("CheckResult")
+    private fun finalVideo(savedVideo: SavedVideo): SavedVideo? {
+        Single.fromCallable {
+            with(videoDao) {
+                this?.getVideoForUpload(savedVideo.clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map {
+                vid2 = it
+                println("retrieved video... $vid2")
+            }
+            .subscribe({
+
+            }, {
+                it.printStackTrace()
+            })
+        return vid2
+    }
+
+
+    var serverDis: Disposable? = null
+    private fun finalizeUpload(upload: Upload?) {
+        finalVideo(vid ?: return)
+
+        updateState(vid ?: return)
+//        when {
+//            vid?.uploadState == UPLOADING_MEDIUM || vid?.uploadState == REGISTERED -> {
+//                manager.updateVideoStatus(
+//                    vid ?: return, UPLOADED_MEDIUM
+//                )
+//                finalVideo(vid ?: return)
+//            }
+//            vid?.uploadState == UPLOADING_HIGH || vid?.uploadState == UPLOADED_MEDIUM && userEnabledHDUploads -> {
+//                manager.updateVideoStatus(
+//                    vid ?: return, UPLOADED_HIGH
+//                )
+//
+//            }
+//            else -> {
+//            }
+//        }
+        val path = when (isHighQuality) {
+            true -> vid2?.highRes
+            else -> vid2?.mediumRes
+        }
+        println("Data For Server:: ${vid2?.uploadState}, -- ${vid2?.clientId}, -- ${vid2?.id}, -- ${vid2?.uploadId}, -- ${vid2?.eventName}, -- ${vid2?.eventId}")
+        try {
+            getVideoDimensions(path = path ?: "")
+        } catch (arg: IllegalAccessException) {
+            arg.printStackTrace()
+            manager.resetUploadStateForCurrentVideo(vid2 ?: return)
+        }
+
+//        serverDis = uploadManager
+//            .writerToServerAfterComplete(
+//                uploadId = vid?.id ?: "",
+//                S3Key = upload?.S3Key ?: "",
+//                vidWidth = width,
+//                vidHeight = height,
+//                hq = isHighQuality,
+//                vid = vid ?: return
+//            )
+//            .doOnSuccess {
+//                if (vid?.uploadState == UploadState.UPLOADED_HIGH) manager.updateVideoStatus(
+//                    vid ?: return@doOnSuccess, UploadState.COMPLETE
+//                )
+//                if (vid?.uploadState == UploadState.REGISTERED || vid?.uploadState == UploadState.UPLOADING_MEDIUM)
+//                    manager.updateVideoStatus(
+//                        vid ?: return@doOnSuccess, UploadState.UPLOADED_MEDIUM
+//                    )
+//            }
+//            .subscribe({
+//            }, {
+//                it.printStackTrace()
+//                manager.resetUploadStateForCurrentVideo(vid ?: return@subscribe)
+//            })
+    }
+
+    fun updateState(vid: SavedVideo) {
+        when (vid.uploadState) {
+            QUEUED -> manager.updateVideoStatus(vid, REGISTERING)
+            REGISTERING -> manager.updateVideoStatus(vid, REGISTERED)
+            REGISTERED -> manager.updateVideoStatus(vid, UPLOADED_MEDIUM)
+            UPLOADED_HIGH -> manager.updateVideoStatus(vid, COMPLETE)
+            else -> manager.resetUploadStateForCurrentVideo(vid)
+        }
     }
 
     private fun pingServerForStatus() {

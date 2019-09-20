@@ -10,6 +10,7 @@ import java.io.File
 
 interface VideosManager {
 
+
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
     fun subscribeToVideoGallerySize(): Observable<Int>
     fun loadFromDB()
@@ -22,5 +23,7 @@ interface VideosManager {
     fun updateVideoInstanceId(videoId: String, clientId: String)
     fun updateVideoStatus(video: SavedVideo, state: UploadState)
     fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo)
+    fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String)
+    fun updateHighuploaded(qualityUploaded: Boolean, clientId: String)
 
 }

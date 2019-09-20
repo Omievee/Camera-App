@@ -60,7 +60,12 @@ data class SavedVideo(
     @ColumnInfo(name = "uploadState")
     val uploadState: UploadState,
     @ColumnInfo(name = "isProcessed")
-    val isProcessed: Boolean = false
+    val isProcessed: Boolean = false,
+    @ColumnInfo(name = "mediumUploaded")
+    val mediumUploaded: Boolean = false,
+    @ColumnInfo(name = "highUploaded")
+    val highUploaded: Boolean = false
+
 ) : Parcelable
 
 enum class UploadState {
@@ -75,7 +80,6 @@ enum class UploadState {
     UPLOADED_HIGH,
     COMPLETE
 }
-
 
 
 object enumConverter {

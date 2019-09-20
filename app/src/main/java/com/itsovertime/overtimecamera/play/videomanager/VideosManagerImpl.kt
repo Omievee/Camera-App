@@ -31,6 +31,33 @@ import java.util.*
 
 
 class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager) : VideosManager {
+    @SuppressLint("CheckResult")
+    override fun updateHighuploaded(qualityUploaded: Boolean, clientId: String) {
+        Single.fromCallable {
+            with(videoDao) {
+                this?.updateHighUpload(qualityUploaded, clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+            }, {
+                it.printStackTrace()
+            })
+    }
+
+    @SuppressLint("CheckResult")
+    override fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String) {
+        Single.fromCallable {
+            with(videoDao) {
+                this?.updateMediumUpload(qualityUploaded, clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+            }, {
+                it.printStackTrace()
+            })
+    }
 
     var db = AppDatabase.getAppDataBase(context = context)
     private var videoDao = db?.videoDao()
@@ -62,7 +89,12 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 it.printStackTrace()
             }
             .subscribe({
-
+                if (state == UploadState.UPLOADED_MEDIUM) {
+                    updateMediumUploaded(true, video?.clientId)
+                } else if (state == UploadState.UPLOADED_HIGH || state == UploadState.COMPLETE) updateHighuploaded(
+                    true,
+                    video.clientId
+                )
             }, {
                 it.printStackTrace()
             })
@@ -340,7 +372,9 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({}, {
+            .subscribe({
+                loadFromDB()
+            }, {
                 it.printStackTrace()
             })
     }
@@ -381,7 +415,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             })
     }
 
-    private var listOfVideos = mutableListOf<SavedVideo>()
+    private var videosList: List<SavedVideo>? = null
     private var lastVideoMaxTime: String? = ""
     private var isFirstRun: Boolean = true
 
@@ -390,21 +424,21 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
     override fun loadFromDB() {
         preppedVideos.clear()
         Single.fromCallable {
-            listOfVideos.clear()
             db?.videoDao()?.getVideos()
         }.map {
-            listOfVideos.addAll(it.asReversed())
-            determineProcess(listOfVideos)
-            subject.onNext(it)
-            total.onNext(it.size)
+            if (it != videosList) {
+                videosList = it.asReversed()
+            }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
+                subject.onNext(videosList ?: emptyList())
+                total.onNext(videosList?.size ?: 0)
                 if (isFirstRun) {
                     loadFFMPEG()
                     isFirstRun = false
                 }
-
+                determineProcess(videosList ?: emptyList())
             },
                 {
                     it.printStackTrace()
@@ -412,7 +446,8 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             )
     }
 
-    private fun determineProcess(list: MutableList<SavedVideo>) {
+    @Synchronized
+    private fun determineProcess(list: List<SavedVideo>) {
         if (!list.isNullOrEmpty()) {
             lastVideoId = list[0].clientId
             list.sortedBy {
@@ -421,7 +456,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             list.forEach {
                 if (!it.isProcessed) {
                     determineTrim(it)
-                } else prepVideosForUploading(list)
+                } else prepVideosForUploading(list.toMutableList())
             }
         }
     }
@@ -433,6 +468,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
             preppedVideos.removeIf {
                 it.uploadState == UploadState.COMPLETE
             }
+            println("Prepping  videos ${preppedVideos.size}")
             manager.onProcessUploadQue(preppedVideos)
         } else println("Error prepping videos for que...")
     }
