@@ -59,16 +59,16 @@ class UploadsPresenter(
                     it.sortBy {
                         it.is_favorite
                     }
-                    it.forEach {
-                        println("Saved Video:: $it")
-                        if (it.uploadState == QUEUED) {
-                            getVideoInstance(it)
-                        } else if (it.uploadState == UPLOADED_MEDIUM && userEnabledHDUploads) {
-                            getVideoInstance(it)
-                        } else {
-                            manager.resetUploadStateForCurrentVideo(it)
-                        }
-                    }
+//                    it.forEach {
+//                        println("Saved Video:: $it")
+//                        if (it.uploadState == QUEUED) {
+//                            getVideoInstance(it)
+//                        } else if (it.uploadState == UPLOADED_MEDIUM && userEnabledHDUploads) {
+//                            getVideoInstance(it)
+//                        } else {
+//                            manager.resetUploadStateForCurrentVideo(it)
+//                        }
+//                    }
                 }, {
                 })
     }

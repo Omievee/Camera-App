@@ -166,6 +166,22 @@
             app:layout_constraintStart_toEndOf="@id/tapToSave"
             app:layout_constraintTop_toTopOf="@id/bottomView" />
 
+    <TextView
+            android:id="@+id/saveText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="60dp"
+            android:padding="@dimen/margin_half"
+            android:rotation="90"
+            android:visibility="gone"
+            android:text="Save The Last...."
+            android:textColor="@color/OT_Orange"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toTopOf="@id/bottomView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+
     <ImageButton
             android:id="@+id/tapToSave"
             android:layout_width="65dp"
@@ -175,7 +191,6 @@
             android:textAllCaps="false"
             android:textColor="@color/OT_White"
             app:layout_constraintBottom_toBottomOf="parent"
-
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottomView" />

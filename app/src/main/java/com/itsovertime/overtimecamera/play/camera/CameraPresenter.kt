@@ -7,6 +7,7 @@ import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.model.Event
@@ -14,6 +15,8 @@ import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import io.reactivex.disposables.Disposable
 import java.io.File
+import androidx.databinding.adapters.TextViewBindingAdapter.setText
+import android.os.CountDownTimer
 
 
 class CameraPresenter(
@@ -55,12 +58,31 @@ class CameraPresenter(
         checkGallerySize()
     }
 
+    var countDownTimer: CountDownTimer? = null
+    var text : TextView?=null
     @SuppressLint("CheckResult")
-    fun animateProgressBar(progressBar: ProgressBar, maxTime: Int) {
+    fun animateProgressBar(text: TextView, progressBar: ProgressBar, maxTime: Int) {
+        maxTime + 1
+        this.text = text
         val anim = ProgressBarAnimation(progressBar, 0, maxTime * 1000)
         anim.duration = (maxTime * 1000).toLong()
         progressBar.max = maxTime * 1000
         progressBar.startAnimation(anim)
+
+        countDownTimer = object : CountDownTimer(maxTime * 1000L, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                view.activity?.runOnUiThread {
+                    text.text = ("Save the last ${millisUntilFinished.toInt() / 1000}").toString()
+                }
+            }
+
+            override fun onFinish() {
+                view?.activity?.runOnUiThread {
+                    text.visibility = View.GONE//End the game or do whatever you want.
+                }
+
+            }
+        }.start()
     }
 
     fun updateFavoriteField() {
@@ -106,6 +128,8 @@ class CameraPresenter(
     }
 
     fun clearProgressAnimation() {
+        countDownTimer?.cancel()
+        text?.visibility = View.GONE
         view.stopProgressAnimation()
     }
 
@@ -125,7 +149,7 @@ class CameraPresenter(
             }
             .subscribe({
                 view.setUpEventViewData(ev)
-                view.updateEventTitle(eventName ?: "")
+                view.updateEventTitle(eventName?.trim()?: "")
             }, {
 
             })

@@ -91,6 +91,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         progressBar?.let {
             it.clearAnimation()
         }
+
     }
 
     override fun updateUploadsIconCount(count: String) {
@@ -229,14 +230,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @SuppressLint("CheckResult")
     @Synchronized
     override fun switchCameras() {
-        activity?.runOnUiThread {
-            selfieButton.isEnabled = false
-        }
+//        activity?.runOnUiThread {
+//            selfieButton.isEnabled = false
+//        }
 
+        println("pre sync..")
         CAMERA = if (CAMERA == 0) 1 else 0
 
         synchronized(lock = this) {
             Single.fromCallable {
+                println("Here")
                 releaseCamera(tapToSave = false)
             }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -380,6 +383,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @SuppressLint("CheckResult")
     override fun stopRecording(isPaused: Boolean) {
         stopRecordingThread()
+        println("Stopping... ")
         recording = false
         try {
             mediaRecorder?.stop()
@@ -397,7 +401,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun hideViews(isSelfieCamera: Boolean) {
-        progress.visibility = View.GONE
+
         if (!isSelfieCamera) {
             favoriteIcon?.let {
                 it.visibility = View.VISIBLE
@@ -441,7 +445,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     companion object {
         // Splash screen timer
-        private const val TIMEOUT = 10000L
+        private const val TIMEOUT = 5000L
     }
 
     override fun onAttach(context: Context?) {
@@ -545,9 +549,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
                 if (recording) {
+                    saveText.visibility = View.GONE
                     presenter.clearProgressAnimation()
                     paused = !tapToSave
-
                     stopLiveView(paused, selfieCameraEngaged ?: false)
                 }
             }
@@ -561,12 +565,24 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun startLiveView() {
+        activity?.runOnUiThread {
+            progress.visibility = View.GONE
+        }
+
         if (CAMERA == 0) {
-            presenter.animateProgressBar(progressBar, selectedEvent?.max_video_length ?: 12)
+            activity?.runOnUiThread {
+                saveText?.let {
+                    it.visibility = View.VISIBLE
+                }
+            }
+            presenter.animateProgressBar(
+                saveText,
+                progressBar,
+                selectedEvent?.max_video_length ?: 12
+            )
             startRecording()
         }
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
