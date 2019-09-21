@@ -32,7 +32,7 @@ class UploadsManagerImpl(
     var vid = mutableListOf<SavedVideo>()
     override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
         println("UPDATE QUE LIST --------- ${list.size}")
-        if (list.size > vid.size) {
+        if (list != vid) {
             vid = list
             subject.onNext(vid)
         }
@@ -48,7 +48,13 @@ class UploadsManagerImpl(
                     is_favorite = video.is_favorite,
                     is_selfie = video.is_selfie,
                     latitude = video.latitude ?: 0.0,
-                    longitude = video.longitude ?: 0.0
+                    longitude = video.longitude ?: 0.0,
+                    event = video.eventName,
+                    event_id = UUID.fromString(video.event_id).toString(),
+                    address = video.address,
+                    filmed_at = video.created_at ?: "",
+                    duration_in_hours = video.duration_in_hours,
+                    max_video_length = video.max_video_length
                 )
             )
             .doOnSuccess {

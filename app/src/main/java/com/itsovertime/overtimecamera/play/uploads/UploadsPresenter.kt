@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.media.MediaMetadataRetriever
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.IntegerRes
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
@@ -59,14 +60,13 @@ class UploadsPresenter(
                         it.is_favorite
                     }
                     it.forEach {
-                        println("UPLOAD STATE FROM QUE:::: ${it.uploadState}")
+                        println("Saved Video:: $it")
                         if (it.uploadState == QUEUED) {
                             getVideoInstance(it)
                         } else if (it.uploadState == UPLOADED_MEDIUM && userEnabledHDUploads) {
                             getVideoInstance(it)
-                        } else{
+                        } else {
                             manager.resetUploadStateForCurrentVideo(it)
-
                         }
                     }
                 }, {
@@ -116,7 +116,6 @@ class UploadsPresenter(
     var currentVideo: SavedVideo? = null
     @Synchronized
     private fun getVideoInstance(it: SavedVideo) {
-        println("started instance...-------------------------")
         currentVideo = it
         updateState(currentVideo ?: return)
         instanceDisposable =
@@ -131,7 +130,7 @@ class UploadsPresenter(
                         currentVideo?.clientId.toString()
                     )
                     updateState(currentVideo ?: return@doOnSuccess)
-                    requestTokenForUpload()
+                    // requestTokenForUpload()
                 }
                 .doOnError {
                     println("ERROR FROM INSTANCE::: ${it.message}")

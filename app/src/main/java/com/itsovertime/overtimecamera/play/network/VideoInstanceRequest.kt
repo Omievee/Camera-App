@@ -9,24 +9,22 @@ import retrofit2.http.Field
 import java.util.*
 
 
-@JsonClass(generateAdapter = true)
 @Parcelize
 data class VideoInstanceRequest(
     @field:Json(name = "client_id")
     val client_id: UUID? = null,
     val is_favorite: Boolean,
     val is_selfie: Boolean,
-    val event: String? = "",
-    val event_id: Int = 0,
-    val address: String? = "",
-    val city: String? = "",
-    val state: String? = "",
-    val duration_in_hours: Int = 0,
-    val max_video_length: Int = 12,
-    val filmed_at:String="",
     val latitude: Double,
     val longitude: Double,
-    val tagged_user_ids: String? = null
+    val tagged_user_ids: String? = null,
+    val event: String? = "",
+    val event_id: String? = "",
+    val address: String? = "",
+    val filmed_at: String? = "",
+    val duration_in_hours: Int? = 0,
+    val max_video_length: Int? = 12
+
 
 ) : Parcelable
 

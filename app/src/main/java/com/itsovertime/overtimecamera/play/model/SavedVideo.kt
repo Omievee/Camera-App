@@ -3,6 +3,7 @@ package com.itsovertime.overtimecamera.play.model
 import android.os.Parcelable
 import androidx.room.*
 import kotlinx.android.parcel.Parcelize
+import java.util.*
 
 
 @Parcelize
@@ -30,7 +31,7 @@ data class SavedVideo(
     @ColumnInfo(name = "is_selfie")
     val is_selfie: Boolean = false,
     @ColumnInfo(name = "event_id")
-    val event_id: String,
+    val event_id: String? = "",
     @ColumnInfo(name = "lat")
     val latitude: Double?,
     @ColumnInfo(name = "long")

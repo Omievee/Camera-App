@@ -388,7 +388,7 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                 clientId = clientId,
                 highRes = filePath,
                 is_favorite = isFavorite,
-                event_id = event?.id ?: "",
+                event_id = event?.id,
                 eventName = event?.name,
                 starts_at = event?.starts_at,
                 address = event?.address,
@@ -481,9 +481,6 @@ class VideosManagerImpl(val context: OTApplication, val manager: UploadsManager)
                     uploadState = UploadState.QUEUED,
                     uploadId = "",
                     id = "",
-                    mediumRes = "",
-                    trimmedVidPath = "",
-                    isProcessed = false,
                     lastID = currentVideo.clientId
                 )
             }
