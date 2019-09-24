@@ -13,19 +13,19 @@ data class SavedVideo(
     @ColumnInfo(name = "clientId")
     val clientId: String,
     @ColumnInfo(name = "id")
-    val id: String? = "",
+    var id: String? = "",
     @ColumnInfo(name = "uploadId")
     val uploadId: String? = "",
     @ColumnInfo(name = "highRes")
     val highRes: String?,
     @ColumnInfo(name = "mediumRes")
-    val mediumRes: String? = null,
+    var mediumRes: String? = null,
     @ColumnInfo(name = "trimmedVidPath")
     val trimmedVidPath: String? = null,
     @ColumnInfo(name = "md5")
     val md5: String? = null,
     @ColumnInfo(name = "is_favorite")
-    val is_favorite: Boolean = false,
+    var is_favorite: Boolean = false,
     @ColumnInfo(name = "is_funny")
     val is_funny: Boolean = false,
     @ColumnInfo(name = "is_selfie")
@@ -59,9 +59,9 @@ data class SavedVideo(
     @ColumnInfo(name = "isVideographer")
     val isVideographer: Boolean = false,
     @ColumnInfo(name = "uploadState")
-    val uploadState: UploadState,
+    var uploadState: UploadState,
     @ColumnInfo(name = "isProcessed")
-    val isProcessed: Boolean = false,
+    var isProcessed: Boolean = false,
     @ColumnInfo(name = "mediumUploaded")
     val mediumUploaded: Boolean = false,
     @ColumnInfo(name = "highUploaded")

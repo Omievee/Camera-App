@@ -14,7 +14,7 @@ interface VideosManager {
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
     fun subscribeToVideoGallerySize(): Observable<Int>
     fun loadFromDB()
-    fun saveHighQualityVideoToDB(event: Event? = null, filePath: String, isFavorite: Boolean)
+    fun saveHighQualityVideoToDB(video:SavedVideo)
     fun transcodeVideo(savedVideo: SavedVideo, videoFile: File)
     fun updateVideoFavorite(isFavorite: Boolean)
     fun updateVideoFunny(isFunny: Boolean)
@@ -24,6 +24,8 @@ interface VideosManager {
     fun updateVideoStatus(video: SavedVideo, state: UploadState)
     fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo)
     fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String)
+    fun loadFFMPEG()
+    fun determineTrim(savedVideo: SavedVideo)
     fun updateHighuploaded(qualityUploaded: Boolean, clientId: String)
 
 }

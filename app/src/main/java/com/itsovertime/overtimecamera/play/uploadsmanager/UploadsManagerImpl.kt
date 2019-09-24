@@ -25,6 +25,13 @@ class UploadsManagerImpl(
     val api: Api,
     val manager: WifiManager
 ) : UploadsManager {
+    override fun onGetNextVideoForUpload(): SavedVideo? {
+        var next: SavedVideo? = null
+        if (!vid.isNullOrEmpty()) {
+            next = vid[0]
+        }
+        return next
+    }
 
     private val subject: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
     private var currentVideo: SavedVideo? = null
@@ -34,7 +41,10 @@ class UploadsManagerImpl(
         println("UPDATE QUE LIST --------- ${list.size}")
         if (list != vid) {
             vid = list
-            subject.onNext(vid)
+            vid.sortBy {
+                it.is_favorite
+            }
+           // subject.onNext(vid)
         }
     }
 
@@ -49,20 +59,12 @@ class UploadsManagerImpl(
                     is_selfie = video.is_selfie,
                     latitude = video.latitude ?: 0.0,
                     longitude = video.longitude ?: 0.0,
-                    event = video.eventName,
-                    event_id = UUID.fromString(video.event_id).toString(),
+                    event_id = video.event_id,
                     address = video.address,
-                    filmed_at = video.created_at ?: "",
                     duration_in_hours = video.duration_in_hours,
                     max_video_length = video.max_video_length
                 )
             )
-            .doOnSuccess {
-                println("success.. .? ${it.video}")
-            }
-            .doOnError {
-                println("error... ? ${it.message}")
-            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }

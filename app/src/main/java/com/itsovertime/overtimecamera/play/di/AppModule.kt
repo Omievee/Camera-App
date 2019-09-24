@@ -9,6 +9,8 @@ import com.itsovertime.overtimecamera.play.network.Api
 import com.itsovertime.overtimecamera.play.network.JobBindingModule
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.network.StaticApiModule
+import com.itsovertime.overtimecamera.play.quemanager.QueManager
+import com.itsovertime.overtimecamera.play.quemanager.QueManagerImpl
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManagerImpl
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
@@ -24,8 +26,12 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideVideosManager(context: OTApplication, manager: UploadsManager): VideosManager {
-        return VideosManagerImpl(context, manager)
+    fun provideVideosManager(
+        context: OTApplication,
+        manager: UploadsManager,
+        que: QueManager
+    ): VideosManager {
+        return VideosManagerImpl(context, manager,que)
     }
 
 
@@ -63,6 +69,13 @@ class AppModule {
     @Singleton
     fun provideAuthManager(context: OTApplication, api: Api): AuthenticationManager {
         return AuthenticationManagerImpl(context, api)
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideQueManager(context: OTApplication): QueManager {
+        return QueManagerImpl(context)
     }
 
 

@@ -28,28 +28,26 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
             true -> View.VISIBLE
             else -> View.INVISIBLE
         }
-        println("------ELSE------ ${savedVideo.uploadState}")
-        when (savedVideo.uploadState) {
-            UploadState.UPLOADED_MEDIUM -> medQProgressBar.setProgress(100, false)
-            UploadState.UPLOADED_HIGH -> highQProgressBar.setProgress(100, false)
-            else -> {
-
-                if (savedVideo.clientId == progress.id) {
-                    val anim = ProgressBarAnimation(medQProgressBar, 0, progress.end)
-                    anim.duration = (progress.end).toLong()
-                    when (progress.isHighQuality) {
-                        true -> {
-                            highQProgressBar.max = progress.end
-                            highQProgressBar.startAnimation(anim)
-                        }
-                        else -> {
-                            medQProgressBar.max = progress.end
-                            medQProgressBar.startAnimation(anim)
-                        }
-                    }
-                }
-            }
+        println("------ELSE------ ${savedVideo.mediumUploaded}")
+        if (savedVideo.mediumUploaded) {
+            medQProgressBar.setProgress(100, false)
+        } else if (savedVideo.highUploaded) {
+            highQProgressBar.setProgress(100, false)
         }
+//        if (savedVideo.clientId == progress.id) {
+//            val anim = ProgressBarAnimation(medQProgressBar, 0, progress.end)
+//            anim.duration = (progress.end).toLong()
+//            when (progress.isHighQuality) {
+//                true -> {
+//                    highQProgressBar.max = progress.end
+//                    highQProgressBar.startAnimation(anim)
+//                }
+//                else -> {
+//                    medQProgressBar.max = progress.end
+//                    medQProgressBar.startAnimation(anim)
+//                }
+//            }
+//        }
 
         val uri = Uri.fromFile(File(savedVideo.highRes))
         val request = ImageRequestBuilder

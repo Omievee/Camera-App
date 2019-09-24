@@ -26,5 +26,7 @@ interface UploadsManager {
         vid: SavedVideo
     ): Single<ServerResponse>
 
+    fun onGetNextVideoForUpload(): SavedVideo?
+
     fun onUpdateQue(): Observable<MutableList<SavedVideo>>
 }

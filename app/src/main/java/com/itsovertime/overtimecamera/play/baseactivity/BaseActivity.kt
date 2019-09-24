@@ -27,6 +27,7 @@ import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.onboarding.OnBoardingFragment
 import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
+import com.itsovertime.overtimecamera.play.settings.SettingsFragment
 import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
@@ -38,7 +39,11 @@ import javax.inject.Inject
 
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
-    View.OnClickListener {
+    View.OnClickListener, SettingsFragment.SettingsInterface {
+    override fun onSettingsOptionClicked() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun hideKeyboard() {
         val imm = this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         var view = currentFocus;

@@ -94,6 +94,10 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
         settingsRecycler.addItemDecoration(itemDecorator)
     }
 
+    interface SettingsInterface {
+        fun onSettingsOptionClicked()
+    }
+
     companion object {
         @JvmStatic
         fun newInstance(param1: String, param2: String) =

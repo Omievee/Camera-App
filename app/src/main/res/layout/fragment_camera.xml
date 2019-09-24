@@ -170,16 +170,17 @@
             android:id="@+id/saveText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="60dp"
-            android:padding="@dimen/margin_half"
+            android:layout_marginBottom="@dimen/margin_double"
             android:rotation="90"
+            android:textAlignment="center"
+            android:textColor="@color/OT_White"
+            android:textSize="12sp"
+            android:textStyle="bold"
             android:visibility="gone"
-            android:text="Save The Last...."
-            android:textColor="@color/OT_Orange"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toTopOf="@id/bottomView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tapToSave"
+            app:layout_constraintStart_toEndOf="@id/favoriteIcon"
+            app:layout_constraintTop_toBottomOf="@id/bottomGuide" />
 
 
     <ImageButton

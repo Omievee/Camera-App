@@ -52,13 +52,14 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     }
 
     override fun displaySettings() {
-        val manager = childFragmentManager
-        val transaction = manager?.beginTransaction()
-        transaction?.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-        transaction?.setCustomAnimations(R.anim.slide_up, R.anim.slide_out)
-        transaction?.replace(R.id.fragContainer, SettingsFragment.newInstance("", ""))
-            ?.addToBackStack("settings")
-            .commit()
+        SettingsFragment.newInstance("", "")
+//        val manager = childFragmentManager
+//        val transaction = manager?.beginTransaction()
+//        transaction?.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+//        transaction?.setCustomAnimations(R.anim.slide_up, R.anim.slide_out)
+//        transaction?.replace(R.id.fragContainer, )
+//            ?.addToBackStack("settings")
+//            .commit()
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
@@ -102,6 +103,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     override fun onAttach(context: Context) {
         AndroidSupportInjection.inject(this)
         super.onAttach(context)
+
     }
 
     override fun onResume() {

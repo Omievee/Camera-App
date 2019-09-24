@@ -17,12 +17,17 @@ import io.reactivex.disposables.Disposable
 import java.io.File
 import androidx.databinding.adapters.TextViewBindingAdapter.setText
 import android.os.CountDownTimer
+import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.model.UploadState
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 
 class CameraPresenter(
     val view: CameraFragment,
     val manager: VideosManager,
-    val eventsManager: EventManager
+    private val eventsManager: EventManager
 ) {
 
     private var filePath: String? = null
@@ -37,29 +42,47 @@ class CameraPresenter(
 
         filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
         println("Path:: $filePath")
-
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
     var e: Event? = null
-    fun saveRecordingToDataBase(videoEvent: Event?) {
+    var video: SavedVideo? = null
+    fun saveVideo(videoEvent: Event?) {
         e = videoEvent
+        val clientId = UUID.randomUUID().toString()
         filePath?.let {
-            manager.saveHighQualityVideoToDB(
-                event = e,
-                filePath = it,
-                isFavorite = false
+            video = SavedVideo(
+                clientId = clientId,
+                highRes = it,
+                is_favorite = fave,
+                event_id = e?.id,
+                eventName = e?.name,
+                starts_at = e?.starts_at,
+                address = e?.address,
+                latitude = e?.latitude,
+                city = e?.city,
+                duration_in_hours = e?.duration_in_hours ?: 0,
+                longitude = e?.longitude,
+                uploadState = UploadState.QUEUED,
+                max_video_length = e?.max_video_length ?: 12,
+                created_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             )
         }
         view.engageCamera()
     }
 
-    fun onCreate() {
-        checkGallerySize()
+    fun timerRanOut() {
+        println("video from.... $video")
+        manager.determineTrim(video ?: return)
     }
 
-    var countDownTimer: CountDownTimer? = null
-    var text : TextView?=null
+    fun onCreate() {
+        checkGallerySize()
+        manager.loadFFMPEG()
+    }
+
+    private var countDownTimer: CountDownTimer? = null
+    var text: TextView? = null
     @SuppressLint("CheckResult")
     fun animateProgressBar(text: TextView, progressBar: ProgressBar, maxTime: Int) {
         maxTime + 1
@@ -72,21 +95,22 @@ class CameraPresenter(
         countDownTimer = object : CountDownTimer(maxTime * 1000L, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 view.activity?.runOnUiThread {
-                    text.text = ("Save the last ${millisUntilFinished.toInt() / 1000}").toString()
+                    text.text = ("Save the last ${millisUntilFinished.toInt() / 1000}s").toString()
                 }
             }
 
             override fun onFinish() {
                 view?.activity?.runOnUiThread {
-                    text.visibility = View.GONE//End the game or do whatever you want.
+                    text.text = "${maxTime}s"
                 }
-
             }
         }.start()
     }
 
+    var fave: Boolean = false
     fun updateFavoriteField() {
-        manager.updateVideoFavorite(isFavorite = true)
+        video?.is_favorite = true
+//        manager.updateVideoFavorite(isFavorite = true)
     }
 
     fun cameraSwitch() {
@@ -107,7 +131,6 @@ class CameraPresenter(
             previousFile.delete()
         }
         filePath = null
-
     }
 
 
@@ -149,12 +172,9 @@ class CameraPresenter(
             }
             .subscribe({
                 view.setUpEventViewData(ev)
-                view.updateEventTitle(eventName?.trim()?: "")
+                view.updateEventTitle(eventName?.trim() ?: "")
             }, {
-
             })
-
-
     }
 
     fun displayHiddenView() {
@@ -204,7 +224,6 @@ class CameraPresenter(
                 return true
             }
         }
-
         a.duration = 2000
         v.startAnimation(a)
     }

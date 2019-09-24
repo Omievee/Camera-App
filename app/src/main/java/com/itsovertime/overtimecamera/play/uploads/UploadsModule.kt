@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.uploads
 
 import com.itsovertime.overtimecamera.play.di.FragmentScope
+import com.itsovertime.overtimecamera.play.quemanager.QueManager
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
@@ -15,7 +16,9 @@ class UploadsModule {
         fragment: UploadsFragment,
         manager: VideosManager,
         wifiManager: WifiManager,
-        uploadsManager: UploadsManager
-    ): UploadsPresenter = UploadsPresenter(fragment, manager, wifiManager, uploadsManager)
+        uploadsManager: UploadsManager,
+        queManager: QueManager
+    ): UploadsPresenter =
+        UploadsPresenter(fragment, manager, wifiManager, uploadsManager, queManager)
 }
 

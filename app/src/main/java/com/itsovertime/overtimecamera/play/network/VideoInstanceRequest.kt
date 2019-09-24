@@ -18,10 +18,8 @@ data class VideoInstanceRequest(
     val latitude: Double,
     val longitude: Double,
     val tagged_user_ids: String? = null,
-    val event: String? = "",
     val event_id: String? = "",
     val address: String? = "",
-    val filmed_at: String? = "",
     val duration_in_hours: Int? = 0,
     val max_video_length: Int? = 12
 
@@ -46,7 +44,7 @@ data class Video(
     val filmed_at: String? = "",
     val client_id: String? = "",
     val user_id: String? = "",
-    val event_id: Int? = 0,
+    val event_id: String? = "",
     val item_id: Int? = 0,
     val is_favorite: Boolean? = false,
     val is_funny: Boolean? = false,
