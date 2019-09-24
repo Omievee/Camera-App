@@ -15,6 +15,7 @@ object UserPreference {
 
 
 
+
     var accessAllowed: Boolean
         get() {
             return sPrefs.getBoolean(Constants.ACCESS, false)

@@ -17,6 +17,20 @@ class AuthenticationManagerImpl(
     val context: OTApplication,
     val api: Api
 ) : AuthenticationManager {
+    var user: User? = null
+    override fun getUserId(): Single<User>? {
+        return when (user) {
+            null -> {
+                with(db?.userDao()) {
+                    this?.getUser()
+                }?.doOnSuccess {
+                    user = it
+                }
+            }
+            else -> Single.just(user)
+        }?.subscribeOn(Schedulers.io())
+            ?.observeOn(AndroidSchedulers.mainThread())
+    }
 
     override fun onUserAgreedToTOS(): Single<TOSResponse> {
 
@@ -31,22 +45,18 @@ class AuthenticationManagerImpl(
             .getUser(UserPreference.userId)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-
     }
 
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
     override fun saveUserToDB(user: User) {
         Observable.fromCallable {
-
             val userDao = db?.userDao()
             with(userDao) {
                 this?.saveUserData(user)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-            }
             .onErrorReturn {
                 it.printStackTrace()
             }

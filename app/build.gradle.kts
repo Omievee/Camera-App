@@ -30,7 +30,10 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     androidExtensions {
@@ -87,6 +90,8 @@ dependencies {
     //Room
     implementation("android.arch.persistence.room:runtime:1.1.1")
     kapt("android.arch.persistence.room:compiler:1.1.1")
+    implementation("android.arch.persistence.room:rxjava2:1.1.1")
+
     //transcoder
     implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
     //FFMPJEG - trimming

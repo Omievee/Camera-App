@@ -87,7 +87,7 @@ class VideosManagerImpl(
 
     @SuppressLint("CheckResult")
     override fun updateVideoStatus(video: SavedVideo, state: UploadState) {
-        println("STATE IS : $state")
+
         Single.fromCallable {
             with(videoDao) {
                 this?.updateVideoState(state, video.clientId)
@@ -98,16 +98,11 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
-                if (state == UploadState.UPLOADING_MEDIUM || state == UploadState.REGISTERED) {
-                    updateMediumUploaded(true, video?.clientId)
-                } else if (state == UploadState.UPLOADED_HIGH || state == UploadState.COMPLETE) updateHighuploaded(
-                    true,
-                    video.clientId
-                )
 
             }, {
                 it.printStackTrace()
-            })
+            }
+            )
     }
 
     @SuppressLint("CheckResult")

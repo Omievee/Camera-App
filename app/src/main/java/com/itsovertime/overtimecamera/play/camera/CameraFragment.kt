@@ -1,5 +1,7 @@
 package com.itsovertime.overtimecamera.play.camera
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
@@ -17,6 +19,7 @@ import android.util.SparseIntArray
 import android.view.*
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -48,12 +51,26 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun hideEventsRV() {
         //  presenter.collapse(hiddenEvents)
         hiddenEvents.visibility = View.GONE
+//        hiddenEvents.animate()
+//            .translationY(0f)
+//            .alpha(0.0f)
+//            .setListener(object : AnimatorListenerAdapter() {
+//                override fun onAnimationEnd(animation: Animator?) {
+//                    super.onAnimationEnd(animation)
+//
+//                }
+//            })
 
     }
 
     override fun openEvents() {
         //presenter.expand(hiddenEvents)
         hiddenEvents.visibility = View.VISIBLE
+//        hiddenEvents.alpha = 0.0f;
+//        hiddenEvents.animate()
+//            .translationY(eventSpace.height.toFloat())
+//            .alpha(1.0f)
+//            .setListener(null);
     }
 
     override fun setUpEventViewData(eventList: List<Event>?) {
@@ -227,6 +244,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             override fun onDoubleTap(e: MotionEvent?): Boolean {
                 return true
             }
+
         })
 
     private var CAMERA: Int = 0
@@ -384,33 +402,27 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun executeStart() {
-        println("inside activity..")
-        val timerTask = object : TimerTask() {
-            override fun run() {
-                activity?.runOnUiThread {
-                    favoriteIcon?.let {
-                        it.visibility = View.INVISIBLE
-                    }
-                    hahaIcon?.let {
-                        it.visibility = View.INVISIBLE
-                    }
+        val runnable = Runnable {
+            activity?.runOnUiThread {
+                favoriteIcon?.let {
+                    it.visibility = View.INVISIBLE
                 }
-                presenter.timerRanOut()
+                hahaIcon?.let {
+                    it.visibility = View.INVISIBLE
+                }
             }
+            presenter.timerRanOut()
         }
-
         activity?.runOnUiThread {
             progress.visibility = View.GONE
-            Timer().schedule(timerTask, 5000)
         }
         mediaRecorder?.start()
-
+        Handler().postDelayed(runnable, 5000)
     }
 
     @SuppressLint("CheckResult")
     override fun stopRecording(isPaused: Boolean) {
         stopRecordingThread()
-        println("Stopping... ")
         recording = false
         try {
             mediaRecorder?.stop()
@@ -487,6 +499,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         presenter.onCreate()
         getEventData()
         hiddenEvents.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+
     }
 
 
@@ -541,22 +554,25 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @SuppressLint("CheckResult")
     private fun releaseCamera(tapToSave: Boolean) {
         println("releasing camera..... $recording")
-        Single.fromCallable {
-            closeCamera()
-            stopBackgroundThread()
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-                if (recording) {
-                    saveText.visibility = View.GONE
-                    presenter.clearProgressAnimation()
-                    paused = !tapToSave
-                    stopLiveView(paused, selfieCameraEngaged ?: false)
+        synchronized(this) {
+            Single.fromCallable {
+                closeCamera()
+                stopBackgroundThread()
+            }.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    if (recording) {
+                        saveText.visibility = View.GONE
+                        presenter.clearProgressAnimation()
+                        paused = !tapToSave
+                        stopLiveView(paused, selfieCameraEngaged ?: false)
+                    }
                 }
-            }
-            .subscribe({
-            }, {
-            })
+                .subscribe({
+                }, {
+                })
+        }
+
     }
 
     private fun getEventData() {
@@ -616,7 +632,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             val characteristics = manager?.getCameraCharacteristics(cameraId)
             val map = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
                 ?: throw RuntimeException("Cannot get available preview/video sizes")
-            val frame = characteristics[CameraCharacteristics.SENSOR_INFO_MAX_FRAME_DURATION]
+//            val frame = characteristics[CameraCharacteristics.SENSOR_INFO_MAX_FRAME_DURATION]
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
 

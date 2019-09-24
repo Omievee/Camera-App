@@ -52,7 +52,7 @@ class UploadsPresenter(
         if (videoFromQue != null) {
             println("UPLOADING REG!!!")
             getVideoInstance(videoFromQue)
-        }else {
+        } else {
             println("everything uploaded... $videoFromHQ")
         }
 //        else if (videoFromHQ != null && userEnabledHDUploads) {
@@ -67,7 +67,7 @@ class UploadsPresenter(
     }
 
 
-    var queDisp: Disposable? = null
+    private var queDisp: Disposable? = null
     private fun subscribeToQue() {
         queDisp?.dispose()
         queDisp = queManager
@@ -185,14 +185,6 @@ class UploadsPresenter(
                 .map {
                     println("Encrypt... $it")
                     encryptionResponse = it
-//                    manager.updateVideoMd5(
-//                        md5 = encryptionResponse?.upload?.md5.toString(),
-//                        clientId = currentVideo?.clientId.toString()
-//                    )
-//                    manager.updateUploadId(
-//                        uplaodId = encryptionResponse?.upload?.id.toString(),
-//                        clientId = currentVideo?.clientId.toString()
-//                    )
                 }
                 .doOnSuccess {
                     continueUploadProcess()
@@ -418,6 +410,10 @@ class UploadsPresenter(
 
         this.width = width
         this.height = height
+    }
+
+    fun hdSwitchWasChecked(isChecked: Boolean) {
+        println("checked.... $isChecked")
     }
 }
 

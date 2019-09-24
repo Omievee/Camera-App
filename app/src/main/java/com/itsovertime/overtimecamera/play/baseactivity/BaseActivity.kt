@@ -168,7 +168,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun setUpAdapter() {
-        println("set adapter..")
         permissions.visibility = View.GONE
         phoneVerificationView.visibility = View.GONE
         val viewPager = findViewById<ViewPager>(R.id.viewPager)
@@ -214,7 +213,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             }
         }
         scheduleJob()
-        //detectOrientation()
+        detectOrientation()
         keepScreenUnlocked()
     }
 
@@ -264,30 +263,30 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         wakeLockAcquire()
     }
 
-//    private fun detectOrientation() {
-//        orientation = object : OrientationEventListener(this) {
-//            override fun onOrientationChanged(orientation: Int) {
-//                when (orientation) {
-//                    0 -> {
-//                        showWarnings()
-//                    }
-//                    180 -> {
-//                        showWarnings()
-//                    }
-//                    90 -> {
-//                        hideWarnings()
-//                    }
-//                    270 -> {
-//                        hideWarnings()
-//                    }
-//                    else -> {
-//
-//                    }
-//                }
-//            }
-//        }
-//
-//    }
+    private fun detectOrientation() {
+        orientation = object : OrientationEventListener(this) {
+            override fun onOrientationChanged(orientation: Int) {
+                when (orientation) {
+                    0 -> {
+                        showWarnings()
+                    }
+                    180 -> {
+                        showWarnings()
+                    }
+                    90 -> {
+                        hideWarnings()
+                    }
+                    270 -> {
+                        hideWarnings()
+                    }
+                    else -> {
+
+                    }
+                }
+            }
+        }
+
+    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -304,18 +303,17 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         }
     }
 
-//    fun showWarnings() {
+    fun showWarnings() {
 //        rotateView.visibility = View.VISIBLE
 //        rotateWarning.visibility = View.VISIBLE
 //        viewPager.visibility = View.GONE
-//    }
-//
-//    fun hideWarnings() {
+    }
+
+    fun hideWarnings() {
 //        rotateView.visibility = View.GONE
 //        rotateWarning.visibility = View.GONE
 //        viewPager.visibility = View.VISIBLE
-//    }
-
+    }
 
     override fun onPause() {
         super.onPause()

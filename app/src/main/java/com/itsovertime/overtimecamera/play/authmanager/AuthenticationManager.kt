@@ -14,4 +14,5 @@ interface AuthenticationManager {
     fun saveUserToDB(user: User)
     fun getFullUser(): Single<ApplicationResponse>
     fun onUserAgreedToTOS(): Single<TOSResponse>
+    fun getUserId(): Single<User>?
 }

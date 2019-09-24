@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DiffUtil.calculateDiff
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,12 +22,15 @@ import kotlinx.android.synthetic.main.uploads_view_toolbar.*
 import javax.inject.Inject
 
 class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
+    CompoundButton.OnCheckedChangeListener,
     SwipeRefreshLayout.OnRefreshListener {
+    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
+        presenter.hdSwitchWasChecked(isChecked)
+    }
 
     override fun updateProgressBar(start: Int, end: Int, highQuality: Boolean, clientId: String) {
         progressData = ProgressData(start, end, highQuality, clientId)
     }
-
 
     override fun displayNoNetworkConnection() {
         uploadsIcon.visibility = View.INVISIBLE
@@ -53,13 +56,6 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
 
     override fun displaySettings() {
         SettingsFragment.newInstance("", "")
-//        val manager = childFragmentManager
-//        val transaction = manager?.beginTransaction()
-//        transaction?.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-//        transaction?.setCustomAnimations(R.anim.slide_up, R.anim.slide_out)
-//        transaction?.replace(R.id.fragContainer, )
-//            ?.addToBackStack("settings")
-//            .commit()
     }
 
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
@@ -117,6 +113,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         presenter.onCreate()
         settingsButton.setOnClickListener(this)
         debug.setOnClickListener(this)
+        switchHD.setOnCheckedChangeListener(this)
         swipe2refresh.setOnRefreshListener(this)
         uploadsRecycler.adapter = adapter
         swipe2refresh.setColorSchemeResources(

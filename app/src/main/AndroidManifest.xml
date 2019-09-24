@@ -37,7 +37,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".baseactivity.BaseActivity"></activity>
+        <activity
+                android:name=".baseactivity.BaseActivity"
+                android:screenOrientation="portrait">
+
+        </activity>
 
         <meta-data
                 android:name="io.fabric.ApiKey"

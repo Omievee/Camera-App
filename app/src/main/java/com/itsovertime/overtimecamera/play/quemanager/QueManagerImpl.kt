@@ -1,11 +1,8 @@
 package com.itsovertime.overtimecamera.play.quemanager
 
-import android.util.Log
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
-import com.itsovertime.overtimecamera.play.model.UploadState
 import io.reactivex.Observable
-import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
@@ -21,12 +18,12 @@ class QueManagerImpl(val context: OTApplication) : QueManager {
 
     var vidHD: SavedVideo? = null
     override fun onGetNextVideoFromMediumList(): SavedVideo? {
-        if (medList.size > 0) {
-            vidHD = medList[0]
+        if (highQList.size > 0) {
+            vidHD = highQList[0]
         }
 
         vidHD.let {
-            medList.remove(it)
+            highQList.remove(it)
         }
         return vidHD
     }
@@ -44,11 +41,11 @@ class QueManagerImpl(val context: OTApplication) : QueManager {
     }
 
     var queList = mutableListOf<SavedVideo>()
-    val medList = mutableListOf<SavedVideo>()
+    val highQList = mutableListOf<SavedVideo>()
     override fun onUpdateQueList(video: List<SavedVideo>) {
         println("Made the que start... ${video.size}")
         queList.clear()
-        medList.clear()
+        highQList.clear()
 
         if (video != queList) {
             queList = video.toMutableList()
@@ -65,27 +62,25 @@ class QueManagerImpl(val context: OTApplication) : QueManager {
             val vid = iterator.next()
             if (vid.mediumUploaded) {
                 iterator.remove()
-                medList.add(vid)
+                highQList.add(vid)
             }
         }
-
-
 
         queList.forEach {
             if (it.mediumUploaded) {
-                medList.add(it)
+                highQList.add(it)
                 queList.remove(it)
             }
         }
-        medList.sortBy {
+        highQList.sortBy {
             it.is_favorite
         }
 
-        if (!queList.isNullOrEmpty() || !medList.isNullOrEmpty()) {
+        if (!queList.isNullOrEmpty() || !highQList.isNullOrEmpty()) {
             subject.onNext(true)
         }
         println("Size of que list -- ${queList.size}")
-        println("Size of med list -- ${medList.size}")
+        println("Size of med list -- ${highQList.size}")
     }
 
 }

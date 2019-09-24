@@ -88,8 +88,8 @@
 
     <ImageButton
             android:id="@+id/pauseButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
             android:layout_margin="@dimen/margin_half"
             android:background="@android:color/transparent"
             android:rotation="90"
@@ -123,14 +123,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent=".9" />
+            app:layout_constraintGuide_end="85dp" />
 
 
     <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="65dp"
-            android:layout_height="65dp"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
             android:background="@drawable/circular_shape"
             android:progress="0"
             android:progressDrawable="@drawable/circular_progress"
@@ -170,23 +170,28 @@
             android:id="@+id/saveText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/margin_double"
+            android:gravity="bottom"
             android:rotation="90"
-            android:textAlignment="center"
             android:textColor="@color/OT_White"
-            android:textSize="12sp"
+            android:textSize="16sp"
             android:textStyle="bold"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/tapToSave"
-            app:layout_constraintStart_toEndOf="@id/favoriteIcon"
-            app:layout_constraintTop_toBottomOf="@id/bottomGuide" />
+            android:visibility="visible"
+            app:layout_constraintBottom_toTopOf="@id/clockGuide"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
+
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/clockGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent=".84" />
 
     <ImageButton
             android:id="@+id/tapToSave"
-            android:layout_width="65dp"
-            android:layout_height="65dp"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
             android:background="@drawable/tap"
             android:rotation="90"
             android:textAllCaps="false"
@@ -229,7 +234,9 @@
     <FrameLayout
             android:id="@+id/fragContainerA"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="0dp">
 
     </FrameLayout>
 

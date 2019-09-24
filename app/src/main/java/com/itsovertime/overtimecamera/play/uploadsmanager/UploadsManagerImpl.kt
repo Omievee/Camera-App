@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.uploadsmanager
 
 import android.annotation.SuppressLint
+import android.icu.text.SimpleDateFormat
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -44,13 +45,14 @@ class UploadsManagerImpl(
             vid.sortBy {
                 it.is_favorite
             }
-           // subject.onNext(vid)
+            // subject.onNext(vid)
         }
     }
 
     @Synchronized
     override fun getVideoInstance(video: SavedVideo): Single<VideoInstanceResponse> {
         currentVideo = video
+
         return api
             .getVideoInstance(
                 VideoInstanceRequest(

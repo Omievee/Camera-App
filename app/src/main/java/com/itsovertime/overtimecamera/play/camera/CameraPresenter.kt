@@ -17,16 +17,23 @@ import io.reactivex.disposables.Disposable
 import java.io.File
 import androidx.databinding.adapters.TextViewBindingAdapter.setText
 import android.os.CountDownTimer
+import android.os.SystemClock
+import android.widget.Chronometer
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
+import android.os.SystemClock.elapsedRealtime
+import android.widget.Chronometer.OnChronometerTickListener
+import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
+import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 
 
 class CameraPresenter(
     val view: CameraFragment,
     val manager: VideosManager,
+    val authManager: AuthenticationManager,
     private val eventsManager: EventManager
 ) {
 
@@ -72,21 +79,19 @@ class CameraPresenter(
     }
 
     fun timerRanOut() {
-        println("video from.... $video")
         manager.determineTrim(video ?: return)
     }
 
     fun onCreate() {
         checkGallerySize()
         manager.loadFFMPEG()
+        user()
     }
 
     private var countDownTimer: CountDownTimer? = null
-    var text: TextView? = null
     @SuppressLint("CheckResult")
     fun animateProgressBar(text: TextView, progressBar: ProgressBar, maxTime: Int) {
         maxTime + 1
-        this.text = text
         val anim = ProgressBarAnimation(progressBar, 0, maxTime * 1000)
         anim.duration = (maxTime * 1000).toLong()
         progressBar.max = maxTime * 1000
@@ -95,13 +100,14 @@ class CameraPresenter(
         countDownTimer = object : CountDownTimer(maxTime * 1000L, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 view.activity?.runOnUiThread {
-                    text.text = ("Save the last ${millisUntilFinished.toInt() / 1000}s").toString()
+                    text.text =
+                        ("Save the last ${(maxTime) - millisUntilFinished / 1000}s").toString()
                 }
             }
 
             override fun onFinish() {
                 view?.activity?.runOnUiThread {
-                    text.text = "${maxTime}s"
+                    text.text = "                 ${maxTime}s"
                 }
             }
         }.start()
@@ -110,7 +116,6 @@ class CameraPresenter(
     var fave: Boolean = false
     fun updateFavoriteField() {
         video?.is_favorite = true
-//        manager.updateVideoFavorite(isFavorite = true)
     }
 
     fun cameraSwitch() {
@@ -152,7 +157,6 @@ class CameraPresenter(
 
     fun clearProgressAnimation() {
         countDownTimer?.cancel()
-        text?.visibility = View.GONE
         view.stopProgressAnimation()
     }
 
@@ -160,15 +164,24 @@ class CameraPresenter(
         view.showOrHideViewsForCamera()
     }
 
+    var videographerArray = emptyArray<String>()
     var ev: List<Event>? = null
     var eventName: String? = ""
     fun getEvents() {
         eventDisposable?.dispose()
         eventDisposable = eventsManager
             .getEvents()
-            .map {
-                eventName = it?.events?.get(0).name ?: ""
-                ev = it.events
+            .map { er ->
+                er.events.forEach { e ->
+                    videographerArray = e.videographer_ids
+                    videographerArray.forEach {
+                        eventName = when (it == userID) {
+                            true -> e.name
+                            else -> er?.events?.get(0).name ?: ""
+                        }
+                    }
+                }
+                ev = er.events
             }
             .subscribe({
                 view.setUpEventViewData(ev)
@@ -176,6 +189,22 @@ class CameraPresenter(
             }, {
             })
     }
+
+    var authdisp: Disposable? = null
+    var userID: String? = ""
+    fun user() {
+        authdisp?.dispose()
+        authdisp = authManager
+            .getUserId()
+            ?.doOnError {
+                it.printStackTrace()
+            }
+            ?.subscribe({
+                userID = it.id
+            }, {
+            })
+    }
+
 
     fun displayHiddenView() {
         view.openEvents()

@@ -20,8 +20,9 @@ data class Event(
     val endsAt: String?,
     val duration_in_hours: Int = 3,
     val max_video_length: Int = 12,
-    val created_at: String?="",
-    val updated_at: String?="",
-    val isVideographer: Boolean = false
+    val created_at: String? = "",
+    val updated_at: String? = "",
+    val isVideographer: Boolean = false,
+    val videographer_ids: Array<String> = emptyArray()
 
 ) : Parcelable
