@@ -27,6 +27,7 @@ import java.util.*
 import android.os.SystemClock.elapsedRealtime
 import android.widget.Chronometer.OnChronometerTickListener
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
+import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 
 
@@ -139,7 +140,7 @@ class CameraPresenter(
     }
 
 
-    fun checkGallerySize() {
+    private fun checkGallerySize() {
         totalDisposable?.dispose()
         totalDisposable = manager
             .subscribeToVideoGallerySize()
@@ -175,9 +176,9 @@ class CameraPresenter(
                 er.events.forEach { e ->
                     videographerArray = e.videographer_ids
                     videographerArray.forEach {
-                        eventName = when (it == userID) {
+                        eventName = when (it == user?.id) {
                             true -> e.name
-                            else -> er?.events?.get(0).name ?: ""
+                            else -> er.events[0].name ?: ""
                         }
                     }
                 }
@@ -191,7 +192,7 @@ class CameraPresenter(
     }
 
     var authdisp: Disposable? = null
-    var userID: String? = ""
+    var user: User? = null
     fun user() {
         authdisp?.dispose()
         authdisp = authManager
@@ -200,7 +201,7 @@ class CameraPresenter(
                 it.printStackTrace()
             }
             ?.subscribe({
-                userID = it.id
+                user = it
             }, {
             })
     }

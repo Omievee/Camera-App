@@ -6,10 +6,12 @@
         android:layout_height="match_parent"
         android:background="@android:color/black">
 
+
     <FrameLayout
             android:id="@+id/fragContainerB"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
+
 
 
     <com.itsovertime.overtimecamera.play.viewpager.CustomViewpager
@@ -25,6 +27,12 @@
             android:layout_height="match_parent"
             android:visibility="gone" />
 
+
+    <com.itsovertime.overtimecamera.play.baseactivity.RotatWarningView
+            android:id="@+id/rotateWarning"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
     <TextView
             android:id="@+id/noNetwork"
             android:layout_width="0dp"
@@ -46,5 +54,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

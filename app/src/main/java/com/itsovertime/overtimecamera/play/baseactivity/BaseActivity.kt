@@ -266,25 +266,28 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     private fun detectOrientation() {
         orientation = object : OrientationEventListener(this) {
             override fun onOrientationChanged(orientation: Int) {
+                println("Orientation : $orientation")
                 when (orientation) {
-                    0 -> {
+                    in 0..65 -> {
                         showWarnings()
                     }
-                    180 -> {
+                    in 360 downTo 290 -> {
                         showWarnings()
                     }
-                    90 -> {
+                    in 65..165 -> {
                         hideWarnings()
                     }
-                    270 -> {
+                    in 290 downTo 235 -> {
                         hideWarnings()
                     }
                     else -> {
-
+                        showWarnings()
                     }
                 }
             }
+
         }
+        orientation?.enable()
 
     }
 
@@ -304,15 +307,14 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     fun showWarnings() {
-//        rotateView.visibility = View.VISIBLE
-//        rotateWarning.visibility = View.VISIBLE
-//        viewPager.visibility = View.GONE
+        println("SHOW WARNINGS")
+        rotateWarning.visibility = View.VISIBLE
+        viewPager.visibility = View.GONE
     }
 
     fun hideWarnings() {
-//        rotateView.visibility = View.GONE
-//        rotateWarning.visibility = View.GONE
-//        viewPager.visibility = View.VISIBLE
+        rotateWarning.visibility = View.GONE
+        viewPager.visibility = View.VISIBLE
     }
 
     override fun onPause() {
