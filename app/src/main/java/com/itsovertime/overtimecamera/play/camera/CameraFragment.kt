@@ -1,7 +1,5 @@
 package com.itsovertime.overtimecamera.play.camera
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
@@ -19,7 +17,6 @@ import android.util.SparseIntArray
 import android.view.*
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -154,7 +151,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 progress.visibility = View.VISIBLE
                 favoriteIcon.visibility = View.VISIBLE
                 hahaIcon.visibility = View.VISIBLE
-                println("")
                 if (recording) {
                     releaseCamera(tapToSave = true)
                     if (CAMERA == 0) resetIcons()
@@ -306,11 +302,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
         when (sensorOrientation) {
             SENSOR_ORIENTATION_DEFAULT_DEGREES ->
-                recorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
+                recorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
             SENSOR_ORIENTATION_INVERSE_DEGREES ->
-                recorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
+                recorder.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
         }
-        recorder?.apply {
+        recorder.apply {
             setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
@@ -401,17 +397,21 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
+    var runnable: Runnable? = null
     private fun executeStart() {
-        val runnable = Runnable {
-            activity?.runOnUiThread {
-                favoriteIcon?.let {
-                    it.visibility = View.INVISIBLE
-                }
-                hahaIcon?.let {
-                    it.visibility = View.INVISIBLE
+        favoriteIcon?.let {
+            if (it.visibility == View.VISIBLE) {
+                runnable = Runnable {
+                    activity?.runOnUiThread {
+                        favoriteIcon?.let {
+                            it.visibility = View.INVISIBLE
+                        }
+                        hahaIcon?.let {
+                            it.visibility = View.INVISIBLE
+                        }
+                    }
                 }
             }
-            presenter.timerRanOut()
         }
         activity?.runOnUiThread {
             progress.visibility = View.GONE
@@ -500,6 +500,42 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         getEventData()
         hiddenEvents.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
 
+        detectOrientation()
+    }
+
+    var orientation: OrientationEventListener? = null
+    private fun detectOrientation() {
+        orientation = object : OrientationEventListener(context) {
+            override fun onOrientationChanged(orientation: Int) {
+                when (orientation) {
+                    in 0..65 -> {
+                        showWarnings()
+                    }
+                    in 360 downTo 290 -> {
+                        showWarnings()
+                    }
+                    in 65..165 -> {
+                        hideWarnings()
+                    }
+                    in 290 downTo 235 -> {
+                        hideWarnings()
+                    }
+                    else -> {
+                        showWarnings()
+                    }
+                }
+            }
+
+        }
+        orientation?.enable()
+    }
+
+    fun showWarnings() {
+        rotateWarning.visibility = View.VISIBLE
+    }
+
+    fun hideWarnings() {
+        rotateWarning.visibility = View.GONE
     }
 
 
@@ -537,6 +573,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun onPause() {
         releaseCamera(tapToSave = false)
         super.onPause()
+//        orientation?.disable()
     }
 
     override fun onResume() {
@@ -545,6 +582,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             paused = false
             progress.visibility = View.VISIBLE
             engageCamera()
+        }
+        orientation?.let {
+            if (it.canDetectOrientation()) {
+                it.enable()
+            }
         }
 
     }

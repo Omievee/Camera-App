@@ -28,7 +28,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
             true -> View.VISIBLE
             else -> View.INVISIBLE
         }
-        println("------ELSE------ ${savedVideo.mediumUploaded}")
+        println("------ELSE------ ${savedVideo.mediumUploaded} && ${savedVideo.highUploaded}")
         if (savedVideo.mediumUploaded) {
             medQProgressBar.setProgress(100, false)
         } else if (savedVideo.highUploaded) {

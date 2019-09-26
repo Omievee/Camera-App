@@ -6,8 +6,11 @@ import java.util.*
 
 interface QueManager {
     fun onUpdateQueList(video: List<SavedVideo>)
-    fun onGetNextVideo(): SavedVideo?
-    fun onGetNextVideoFromMediumList() : SavedVideo?
+    fun getStandardVideo(): SavedVideo?
+    fun getFavoriteVideo(): SavedVideo?
+    fun getStandardHQVideo(): SavedVideo?
+    fun getFavoriteHQVideo(): SavedVideo?
 
-    fun onIsQueReady() : Observable<Boolean>
+
+    fun onIsQueReady(): Observable<Boolean>
 }

@@ -201,6 +201,13 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottomView" />
 
+    <com.itsovertime.overtimecamera.play.baseactivity.RotatWarningView
+            android:id="@+id/rotateWarning"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+
     <com.itsovertime.overtimecamera.play.camera.UploadButtonView
             android:id="@+id/uploadButton"
             android:layout_width="0dp"

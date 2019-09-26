@@ -1,13 +1,17 @@
 package com.itsovertime.overtimecamera.play.quemanager
 
+import androidx.work.WorkerParameters
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.uploadsmanager.VideoUploadWorker
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import java.util.*
 
 class QueManagerImpl(val context: OTApplication) : QueManager {
+
     private val subject: BehaviorSubject<Boolean> = BehaviorSubject.create()
 
     override fun onIsQueReady(): Observable<Boolean> {
@@ -17,70 +21,104 @@ class QueManagerImpl(val context: OTApplication) : QueManager {
     }
 
     var vidHD: SavedVideo? = null
-    override fun onGetNextVideoFromMediumList(): SavedVideo? {
-        if (highQList.size > 0) {
-            vidHD = highQList[0]
-        }
-
-        vidHD.let {
-            highQList.remove(it)
-        }
-        return vidHD
-    }
 
     var vid: SavedVideo? = null
-    override fun onGetNextVideo(): SavedVideo? {
-        if (queList.size > 0) {
-            vid = queList[0]
+
+    var mainList = mutableListOf<SavedVideo>()
+    var standardVideoList = mutableListOf<SavedVideo>()
+    var favoriteVideoList = mutableListOf<SavedVideo>()
+    val standardVideoListHQ = mutableListOf<SavedVideo>()
+    var favoriteVideoListHQ = mutableListOf<SavedVideo>()
+    override fun onUpdateQueList(video: List<SavedVideo>) {
+        println("Made the que start... ${video.size}")
+        mainList.clear()
+
+
+//        standardVideoList.clear()
+//        favoriteVideoList.clear()
+//        standardVideoListHQ.clear()
+//        favoriteVideoListHQ.clear()
+
+
+        mainList = video.toMutableList()
+
+        mainList.removeIf {
+            it.highUploaded
         }
 
+        val iterator = mainList.iterator()
+        while (iterator.hasNext()) {
+            val vid = iterator.next()
+            if (vid.is_favorite && !vid.mediumUploaded) {
+                iterator.remove()
+                favoriteVideoList.add(0, vid)
+            } else if (vid.is_favorite && vid.mediumUploaded) {
+                iterator.remove()
+                favoriteVideoListHQ.add(0, vid)
+            } else if (!vid.is_favorite && !vid.mediumUploaded) {
+                iterator.remove()
+                standardVideoList.add(0, vid)
+            } else if (!vid.is_favorite && vid.mediumUploaded) {
+                iterator.remove()
+                standardVideoListHQ.add(0, vid)
+            }
+        }
+
+        if (!standardVideoList.isNullOrEmpty()
+            || !favoriteVideoList.isNullOrEmpty()
+            || !favoriteVideoListHQ.isNullOrEmpty()
+            || !standardVideoListHQ.isNullOrEmpty()
+        ) {
+            subject.onNext(true)
+        }
+
+
+        println("Size of fave list -- ${favoriteVideoList.size}")
+        println("Size of regular list -- ${standardVideoList.size}")
+        println("Size of fave HQ list -- ${favoriteVideoListHQ.size}")
+        println("Size of regular HQ list -- ${standardVideoListHQ.size}")
+    }
+
+    override fun getStandardVideo(): SavedVideo? {
+        if (standardVideoList.size > 0) {
+            vid = standardVideoList[0]
+        }
         vid?.let {
-            queList.remove(it)
+            standardVideoList.remove(it)
         }
         return vid
     }
 
-    var queList = mutableListOf<SavedVideo>()
-    val highQList = mutableListOf<SavedVideo>()
-    override fun onUpdateQueList(video: List<SavedVideo>) {
-        println("Made the que start... ${video.size}")
-        queList.clear()
-        highQList.clear()
-
-        if (video != queList) {
-            queList = video.toMutableList()
-            println("made this .. .${queList.size}")
+    override fun getFavoriteVideo(): SavedVideo? {
+        if (favoriteVideoList.size > 0) {
+            vid = favoriteVideoList[0]
         }
-        queList.sortedBy {
-            it.is_favorite
+        vid.let {
+            favoriteVideoList.remove(it)
         }
-        queList.removeIf {
-            it.highUploaded
-        }
-        val iterator = queList.iterator()
-        while (iterator.hasNext()) {
-            val vid = iterator.next()
-            if (vid.mediumUploaded) {
-                iterator.remove()
-                highQList.add(vid)
-            }
-        }
-
-        queList.forEach {
-            if (it.mediumUploaded) {
-                highQList.add(it)
-                queList.remove(it)
-            }
-        }
-        highQList.sortBy {
-            it.is_favorite
-        }
-
-        if (!queList.isNullOrEmpty() || !highQList.isNullOrEmpty()) {
-            subject.onNext(true)
-        }
-        println("Size of que list -- ${queList.size}")
-        println("Size of med list -- ${highQList.size}")
+        return vid
     }
+
+
+    override fun getFavoriteHQVideo(): SavedVideo? {
+        if (favoriteVideoListHQ.size > 0) {
+            vidHD = favoriteVideoListHQ[0]
+        }
+        vidHD.let {
+            favoriteVideoListHQ.remove(it)
+        }
+        return vidHD
+    }
+
+    override fun getStandardHQVideo(): SavedVideo? {
+        if (standardVideoListHQ.size > 0) {
+            vidHD = standardVideoListHQ[0]
+        }
+        vidHD.let {
+            standardVideoListHQ.remove(it)
+        }
+        return vidHD
+    }
+
 
 }

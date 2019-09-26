@@ -1,5 +1,6 @@
 package com.itsovertime.overtimecamera.play.di
 
+import androidx.work.WorkerFactory
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManagerImpl
@@ -11,6 +12,7 @@ import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.network.StaticApiModule
 import com.itsovertime.overtimecamera.play.quemanager.QueManager
 import com.itsovertime.overtimecamera.play.quemanager.QueManagerImpl
+import com.itsovertime.overtimecamera.play.uploadsmanager.DaggerWorkerFactory
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManagerImpl
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
@@ -31,7 +33,7 @@ class AppModule {
         manager: UploadsManager,
         que: QueManager
     ): VideosManager {
-        return VideosManagerImpl(context, manager,que)
+        return VideosManagerImpl(context, manager, que)
     }
 
 
@@ -76,6 +78,12 @@ class AppModule {
     @Singleton
     fun provideQueManager(context: OTApplication): QueManager {
         return QueManagerImpl(context)
+    }
+
+    @Provides
+    @Singleton
+    fun workerFactory(uplods: UploadsManager): WorkerFactory {
+        return DaggerWorkerFactory(uplods)
     }
 
 

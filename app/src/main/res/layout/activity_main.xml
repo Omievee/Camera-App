@@ -28,11 +28,7 @@
             android:visibility="gone" />
 
 
-    <com.itsovertime.overtimecamera.play.baseactivity.RotatWarningView
-            android:id="@+id/rotateWarning"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone" />
+
     <TextView
             android:id="@+id/noNetwork"
             android:layout_width="0dp"

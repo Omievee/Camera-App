@@ -2,9 +2,6 @@ package com.itsovertime.overtimecamera.play.uploads
 
 import android.annotation.SuppressLint
 import android.media.MediaMetadataRetriever
-import android.util.Log
-import android.widget.Toast
-import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState.*
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
@@ -16,10 +13,7 @@ import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -47,23 +41,20 @@ class UploadsPresenter(
     }
 
     private fun getLatestVideoForUploading() {
-        val videoFromQue = queManager.onGetNextVideo()
-        val videoFromHQ = queManager.onGetNextVideoFromMediumList()
-        if (videoFromQue != null) {
-            println("UPLOADING REG!!!")
-            getVideoInstance(videoFromQue)
-        } else {
-            println("everything uploaded... $videoFromHQ")
+        val favoriteVideo = queManager.getFavoriteVideo()
+        val standardVideo = queManager.getStandardVideo()
+        val favoriteVideoHQ = queManager.getFavoriteHQVideo()
+        val standrdVideoHQ = queManager.getStandardHQVideo()
+
+        if (favoriteVideo != null) {
+            getVideoInstance(favoriteVideo)
+        } else if (standardVideo != null) {
+            getVideoInstance(standardVideo)
+        } else if (favoriteVideoHQ != null) {
+          //  getVideoInstance(favoriteVideoHQ)
+        } else if (standrdVideoHQ != null) {
+           // getVideoInstance(standrdVideoHQ)
         }
-//        else if (videoFromHQ != null && userEnabledHDUploads) {
-//            if(videoFromHQ.uploadState == QUEUED){
-//                println("UPLOADING REG!!!")
-//                getVideoInstance(videoFromHQ)
-//            }else manager.resetUploadStateForCurrentVideo(videoFromHQ)
-//        } else {
-//            println("--------ALL VIDEOS UPLOADED-----------")
-//            return
-//        }
     }
 
 
@@ -74,7 +65,9 @@ class UploadsPresenter(
             .onIsQueReady()
             .subscribe({
                 if (it) {
-                    getLatestVideoForUploading()
+
+//                    println("TRUE!!")
+//                    getLatestVideoForUploading()
                 }
             }, {
 
@@ -88,7 +81,7 @@ class UploadsPresenter(
         managerDisposable = manager
             .subscribeToVideoGallery()
             .subscribe({
-                view.updateAdapter(it.asReversed())
+                view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
             }, {
                 println("throwable: ${it.printStackTrace()}")

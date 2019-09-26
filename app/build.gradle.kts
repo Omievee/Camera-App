@@ -1,3 +1,6 @@
+import org.gradle.kotlin.dsl.resolver.kotlinBuildScriptModelTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
+
 plugins {
     id("com.android.application")
     id("io.fabric")
@@ -20,9 +23,18 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
     compileOptions {
+        setIncremental(true)
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    kotlinOptions {
+        val options = this as KotlinJvmOptions
+        options.jvmTarget = "1.8"
+    }
+
+
+
+
 
     dataBinding {
         isEnabled = true
@@ -42,7 +54,10 @@ android {
 
 }
 
+val WORKER_VERSION = "2.2.0"
+
 dependencies {
+
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.41")
     implementation("com.android.support:appcompat-v7:28.0.0")
@@ -106,8 +121,10 @@ dependencies {
     implementation("com.mixpanel.android:mixpanel-android:5.+")
     implementation("com.google.firebase:firebase-messaging:17.3.4")
     //WorkManager
-    implementation("androidx.work:work-runtime-ktx:2.0.1")
-    implementation("androidx.work:work-rxjava2:2.0.1")
+    implementation("androidx.work:work-runtime-ktx:$WORKER_VERSION")
+    implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
+    implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
+    implementation("androidx.work:work-runtime-ktx:$WORKER_VERSION")
 
 //Testing
     testImplementation("junit:junit:4.12")

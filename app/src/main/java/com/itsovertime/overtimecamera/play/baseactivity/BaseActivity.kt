@@ -33,6 +33,7 @@ import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.events_item_view.*
 import kotlinx.android.synthetic.main.permissions_view.*
 import kotlinx.android.synthetic.main.phone_verification.*
 import javax.inject.Inject
@@ -68,7 +69,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         permissions.visibility = View.VISIBLE
     }
 
-    var orientation: OrientationEventListener? = null
     private val permissionsCode = 0
     private val requiredAppPermissions = arrayOf(
         Manifest.permission.CAMERA,
@@ -213,7 +213,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             }
         }
         scheduleJob()
-        detectOrientation()
         keepScreenUnlocked()
     }
 
@@ -252,44 +251,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onResume() {
         super.onResume()
-        orientation?.let {
-            if (it.canDetectOrientation()) {
-                it.enable()
-            }
-        }
         presenter.retrieveFullUser()
-
-
         wakeLockAcquire()
     }
 
-    private fun detectOrientation() {
-        orientation = object : OrientationEventListener(this) {
-            override fun onOrientationChanged(orientation: Int) {
-                println("Orientation : $orientation")
-                when (orientation) {
-                    in 0..65 -> {
-                        showWarnings()
-                    }
-                    in 360 downTo 290 -> {
-                        showWarnings()
-                    }
-                    in 65..165 -> {
-                        hideWarnings()
-                    }
-                    in 290 downTo 235 -> {
-                        hideWarnings()
-                    }
-                    else -> {
-                        showWarnings()
-                    }
-                }
-            }
-
-        }
-        orientation?.enable()
-
-    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -306,20 +271,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         }
     }
 
-    fun showWarnings() {
-        println("SHOW WARNINGS")
-        rotateWarning.visibility = View.VISIBLE
-        viewPager.visibility = View.GONE
-    }
-
-    fun hideWarnings() {
-        rotateWarning.visibility = View.GONE
-        viewPager.visibility = View.VISIBLE
-    }
 
     override fun onPause() {
         super.onPause()
-        orientation?.disable()
         if (wakeLock?.isHeld == true) {
             wakeLock?.release()
         }

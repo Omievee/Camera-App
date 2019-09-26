@@ -26,20 +26,12 @@ class UploadsManagerImpl(
     val api: Api,
     val manager: WifiManager
 ) : UploadsManager {
-    override fun onGetNextVideoForUpload(): SavedVideo? {
-        var next: SavedVideo? = null
-        if (!vid.isNullOrEmpty()) {
-            next = vid[0]
-        }
-        return next
-    }
 
     private val subject: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
     private var currentVideo: SavedVideo? = null
 
     var vid = mutableListOf<SavedVideo>()
     override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
-        println("UPDATE QUE LIST --------- ${list.size}")
         if (list != vid) {
             vid = list
             vid.sortBy {
@@ -50,23 +42,26 @@ class UploadsManagerImpl(
     }
 
     @Synchronized
-    override fun getVideoInstance(video: SavedVideo): Single<VideoInstanceResponse> {
+    override fun getVideoInstance(video: SavedVideo?): Single<VideoInstanceResponse> {
         currentVideo = video
-
+        println("Getting insacneeeeeee...")
         return api
             .getVideoInstance(
                 VideoInstanceRequest(
-                    client_id = UUID.fromString(video.clientId),
-                    is_favorite = video.is_favorite,
-                    is_selfie = video.is_selfie,
-                    latitude = video.latitude ?: 0.0,
-                    longitude = video.longitude ?: 0.0,
-                    event_id = video.event_id,
-                    address = video.address,
-                    duration_in_hours = video.duration_in_hours,
-                    max_video_length = video.max_video_length
+                    client_id = UUID.fromString(video?.clientId),
+                    is_favorite = video?.is_favorite ?: false,
+                    is_selfie = video?.is_selfie ?: false,
+                    latitude = video?.latitude ?: 0.0,
+                    longitude = video?.longitude ?: 0.0,
+                    event_id = video?.event_id,
+                    address = video?.address,
+                    duration_in_hours = video?.duration_in_hours,
+                    max_video_length = video?.max_video_length
                 )
-            )
+            ).doOnSuccess {
+                println("SUZccESS ?!? $it")
+            }
+
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }

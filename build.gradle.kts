@@ -30,5 +30,8 @@ tasks {
     val clean by registering(Delete::class) {
         delete(rootProject.buildDir)
     }
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions.jvmTarget = "1.8"
+    }
 
 }

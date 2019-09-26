@@ -62,7 +62,7 @@ class CameraPresenter(
             video = SavedVideo(
                 clientId = clientId,
                 highRes = it,
-                is_favorite = fave,
+                is_favorite = false,
                 event_id = e?.id,
                 eventName = e?.name,
                 starts_at = e?.starts_at,
@@ -76,12 +76,10 @@ class CameraPresenter(
                 created_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             )
         }
+        manager.saveHighQualityVideoToDB(video ?: return)
         view.engageCamera()
     }
 
-    fun timerRanOut() {
-        manager.determineTrim(video ?: return)
-    }
 
     fun onCreate() {
         checkGallerySize()
@@ -105,7 +103,6 @@ class CameraPresenter(
                         ("Save the last ${(maxTime) - millisUntilFinished / 1000}s").toString()
                 }
             }
-
             override fun onFinish() {
                 view?.activity?.runOnUiThread {
                     text.text = "                 ${maxTime}s"
@@ -114,9 +111,8 @@ class CameraPresenter(
         }.start()
     }
 
-    var fave: Boolean = false
     fun updateFavoriteField() {
-        video?.is_favorite = true
+        manager.updateVideoFavorite(true)
     }
 
     fun cameraSwitch() {

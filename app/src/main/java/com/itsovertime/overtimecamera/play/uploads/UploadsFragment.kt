@@ -11,11 +11,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DiffUtil.calculateDiff
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.work.*
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.itemsame.ItemSame
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
+import com.itsovertime.overtimecamera.play.uploadsmanager.VideoUploadWorker
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_uploads.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
@@ -76,7 +78,6 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     var progressData = ProgressData()
     var adapter: UploadsAdapter = UploadsAdapter()
     override fun updateAdapter(videos: List<SavedVideo>, data: ProgressData?) {
-        println("-------------------------------------------------------UPDATING ADAPTER-------------------------------------------------------")
         val old = adapter.data?.data ?: emptyList()
         val newD = mutableListOf<UploadsPresentation>()
         if (!videos.isNullOrEmpty()) {
@@ -121,6 +122,16 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
             R.color.OT_White,
             android.R.color.black
         )
+
+        val worker = OneTimeWorkRequestBuilder<VideoUploadWorker>()
+            .build()
+        val data = Data.Builder()
+
+
+        WorkManager.getInstance(context ?: return).enqueue(worker)
+
+
+
 
         context?.let {
             uploadsRecycler.layoutManager =

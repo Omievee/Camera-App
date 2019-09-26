@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
@@ -61,7 +62,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-
+                loadFromDB()
             }, {
                 it.printStackTrace()
             })
@@ -169,32 +170,9 @@ class VideosManagerImpl(
     var copyVideo = "copy"
 
 
-    private fun isVideoDurationLongerThanMaxTime(file: SavedVideo): Boolean {
-        val retriever = MediaMetadataRetriever();
-        try {
-            println("URI : ${Uri.fromFile(File(file.highRes))}")
-            retriever.setDataSource(context, Uri.fromFile(File(file.highRes)))
-            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: ""
-            val timeInMillisec = time.toLong() / 1000
-            retriever.release()
-            return timeInMillisec > file.max_video_length
-        } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
-        }
-        return false
-    }
-
-    override fun determineTrim(savedVideo: SavedVideo) {
-        println("vido... $savedVideo")
-        if (isVideoDurationLongerThanMaxTime(savedVideo)) {
-            trimVideo(savedVideo)
-        } else {
-            transcodeVideo(savedVideo, File(savedVideo.highRes))
-        }
-    }
-
     private fun trimVideo(savedVideo: SavedVideo) {
-        val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name)
+        println("VIDEO BEFORE TRIM!! $savedVideo")
+        val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
         val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
         val complexCommand = arrayOf(
             //seek to end of video
@@ -240,21 +218,44 @@ class VideosManagerImpl(
         }
     }
 
-    private fun fileForTrimmedVideo(fileName: String): File {
+    @SuppressLint("CheckResult")
+    private fun updateMediumFilePath(absolutePath: String, clientId: String) {
+        Single.fromCallable {
+            with(videoDao) {
+                this?.updateMediumQualityPath(absolutePath, clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorReturn {
+                it.printStackTrace()
+            }
+            .subscribe({
+                println("MEDIUM SAVED:: ")
+                loadFromDB()
+            }, {
+                it.printStackTrace()
+            })
+
+    }
+
+    private fun fileForTrimmedVideo(fileName: String, clientId: String): File {
         val mediaStorageDir =
             File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTimeTrimmed")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             println("Failed....")
         }
-        updateTrimmedVidPathInDB(File(mediaStorageDir.path + File.separator + "trim.$fileName").absolutePath)
+        updateTrimmedVidPathInDB(
+            File(mediaStorageDir.path + File.separator + "trim.$fileName").absolutePath,
+            clientId
+        )
         return File(mediaStorageDir.path + File.separator + "trim.$fileName")
     }
 
     @SuppressLint("CheckResult")
-    private fun updateTrimmedVidPathInDB(path: String) {
+    private fun updateTrimmedVidPathInDB(path: String, clientId: String) {
         Single.fromCallable {
             with(videoDao) {
-                this?.updateTrimVideoPath(path, lastVideoId)
+                this?.updateTrimVideoPath(path, clientId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -267,20 +268,23 @@ class VideosManagerImpl(
             })
     }
 
-    private fun compressedFile(file: File): File {
+    private fun compressedFile(file: File, video: SavedVideo): File {
         val mediaStorageDir =
             File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             Crashlytics.log("Compress File Error")
         }
-        path = File(mediaStorageDir.path + File.separator + file.name).absolutePath
+        println("saving medium... ")
+        updateMediumFilePath(
+            File(mediaStorageDir.path + File.separator + file.name).absolutePath,
+            video.clientId
+        )
         return File(mediaStorageDir.path + File.separator + file.name)
     }
 
 
     @SuppressLint("CheckResult")
     override fun updateVideoFunny(isFunny: Boolean) {
-        println("VIDEO UPDATE FUNNY :::::: $isFunny && $lastVideoId")
         Single.fromCallable {
             with(videoDao) {
                 this?.setVideoAsFunny(is_funny = isFunny, lastID = lastVideoId)
@@ -318,8 +322,8 @@ class VideosManagerImpl(
 
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
-    var path: String = ""
     override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
+        println("VIDEO AFTER TRIM!! : $savedVideo")
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
@@ -335,16 +339,14 @@ class VideosManagerImpl(
             }
 
             override fun onTranscodeCompleted() {
-                println("successful .. $savedVideo")
-                saveHighQualityVideoToDB(savedVideo)
+                loadFromDB()
             }
         }
         try {
             MediaTranscoder.getInstance().transcodeVideo(
-                fileDescriptor, compressedFile(videoFile).absolutePath,
+                fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
                 MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
             )
-
         } catch (r: RuntimeException) {
             Crashlytics.log("MediaTranscoder-Error ${r.message}")
             r.printStackTrace()
@@ -357,14 +359,13 @@ class VideosManagerImpl(
         }
     }
 
-
-    private var lastVideoId: String = ""
+    var processedVideos = mutableListOf<SavedVideo>()
+    var lastVideoId: String = ""
     @SuppressLint("CheckResult")
     override fun saveHighQualityVideoToDB(video: SavedVideo) {
-        println("saving ....... video ? $video")
+        println("saving ....... video ")
         this.lastVideoMaxTime = video.max_video_length.toString()
-        video.mediumRes = path
-        video.isProcessed = true
+        lastVideoId = video.clientId
         Single.fromCallable {
             with(videoDao) {
                 this?.saveVideoData(video)
@@ -385,33 +386,33 @@ class VideosManagerImpl(
 
 
     private var lastVideoMaxTime: String? = ""
-
+    var videosList = mutableListOf<SavedVideo>()
     @Synchronized
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
-        var videosList: List<SavedVideo> = emptyList()
+        videosList.clear()
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
-            println("list from DB === ${it.size}")
-            if (it != videosList) {
-                videosList = it
-            }
+            subject.onNext(it.asReversed())
+            total.onNext(it.size)
+            videosList.addAll(it.asReversed())
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                subject.onNext(videosList)
-                total.onNext(videosList.size)
-
                 if (!videosList.isNullOrEmpty()) {
-                    println("Inside IF :${videosList.size}")
-                    queManager.onUpdateQueList(videosList)
-                } else println("Error prepping videos for que...")
-            },
-                {
-                    it.printStackTrace()
+                    videosList.forEach {
+                        if (it.mediumRes.isNullOrEmpty()) {
+                            trimVideo(it)
+                        } else processedVideos.add(it)
+                    }
                 }
-            )
+//                if (!processedVideos.isNullOrEmpty()) {
+//                    queManager.onUpdateQueList(processedVideos)
+//                }
+            }, {
+                it.printStackTrace()
+            })
     }
 
     @SuppressLint("CheckResult")
