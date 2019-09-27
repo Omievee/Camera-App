@@ -21,6 +21,7 @@ import com.itsovertime.overtimecamera.play.uploadsmanager.VideoUploadWorker
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_uploads.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
@@ -122,14 +123,6 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
             R.color.OT_White,
             android.R.color.black
         )
-
-        val worker = OneTimeWorkRequestBuilder<VideoUploadWorker>()
-            .build()
-        val data = Data.Builder()
-
-
-        WorkManager.getInstance(context ?: return).enqueue(worker)
-
 
 
 

@@ -4,6 +4,7 @@ import androidx.room.*
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
+import io.reactivex.Single
 import java.util.*
 
 
@@ -61,6 +62,8 @@ interface VideoObjectDAO {
         uploadId: String,
         id: String,
         lastID: String
-
     )
+
+    @Query("SELECT * FROM SavedVideo")
+    fun getVideosForUpload(): Single<List<SavedVideo>>
 }

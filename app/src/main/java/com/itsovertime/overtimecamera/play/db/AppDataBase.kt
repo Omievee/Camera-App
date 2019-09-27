@@ -17,6 +17,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun videoDao(): VideoObjectDAO
     abstract fun userDao(): UserObjectDAO
 
+
+
     companion object {
         private var databaseInstance: AppDatabase? = null
 

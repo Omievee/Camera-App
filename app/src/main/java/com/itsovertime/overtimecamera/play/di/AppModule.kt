@@ -82,8 +82,8 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun workerFactory(uplods: UploadsManager): WorkerFactory {
-        return DaggerWorkerFactory(uplods)
+    fun workerFactory(uploads: UploadsManager, videos:VideosManager): WorkerFactory {
+        return DaggerWorkerFactory(uploads, videos)
     }
 
 

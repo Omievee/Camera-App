@@ -6,6 +6,9 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import android.widget.Toast
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
@@ -19,6 +22,7 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.quemanager.QueManager
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
+import com.itsovertime.overtimecamera.play.uploadsmanager.VideoUploadWorker
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -31,6 +35,7 @@ import java.io.IOException
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class VideosManagerImpl(
@@ -38,6 +43,13 @@ class VideosManagerImpl(
     val manager: UploadsManager,
     private val queManager: QueManager
 ) : VideosManager {
+    var queSub: BehaviorSubject<Boolean> = BehaviorSubject.create()
+    override fun subToDbUpdates(): Observable<Boolean> {
+        return queSub
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
     @SuppressLint("CheckResult")
     override fun updateHighuploaded(qualityUploaded: Boolean, clientId: String) {
         Single.fromCallable {
@@ -390,7 +402,8 @@ class VideosManagerImpl(
     @Synchronized
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
-        videosList.clear()
+        println("Loading DB!")
+        videosList = mutableListOf()
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
@@ -401,15 +414,23 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 if (!videosList.isNullOrEmpty()) {
+                    queSub.onNext(true)
                     videosList.forEach {
                         if (it.mediumRes.isNullOrEmpty()) {
                             trimVideo(it)
                         } else processedVideos.add(it)
                     }
                 }
-//                if (!processedVideos.isNullOrEmpty()) {
-//                    queManager.onUpdateQueList(processedVideos)
-//                }
+                println("Subscribe hit...")
+
+                if (!processedVideos.isNullOrEmpty()) {
+                    println("Running worker...")
+                    WorkManager.getInstance(context).enqueue(
+                        OneTimeWorkRequestBuilder<VideoUploadWorker>()
+                            .build()
+                    )
+                }
+
             }, {
                 it.printStackTrace()
             })
