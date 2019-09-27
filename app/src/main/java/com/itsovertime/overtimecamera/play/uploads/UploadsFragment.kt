@@ -11,22 +11,23 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DiffUtil.calculateDiff
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import androidx.work.*
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.itemsame.ItemSame
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
-import com.itsovertime.overtimecamera.play.uploadsmanager.VideoUploadWorker
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_uploads.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     CompoundButton.OnCheckedChangeListener,
     SwipeRefreshLayout.OnRefreshListener {
+    override fun notifyPendingUploads() {
+        uploadsMessage.text = "You have pending uploads. Turn on HD uploads to continue."
+    }
+
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
         presenter.hdSwitchWasChecked(isChecked)
     }
@@ -37,7 +38,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
 
     override fun displayNoNetworkConnection() {
         uploadsIcon.visibility = View.INVISIBLE
-        uploadsMessage.text = "No active connection..."
+       // uploadsMessage.text = "No active connection..."
     }
 
     override fun displayWifiReady() {
@@ -71,7 +72,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.settingsButton -> {
-                presenter.displayBottomSheetSettings()
+//                presenter.displayBottomSheetSettings()
             }
         }
     }
@@ -101,7 +102,6 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     override fun onAttach(context: Context) {
         AndroidSupportInjection.inject(this)
         super.onAttach(context)
-
     }
 
     override fun onResume() {
@@ -118,13 +118,12 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         switchHD.setOnCheckedChangeListener(this)
         swipe2refresh.setOnRefreshListener(this)
         uploadsRecycler.adapter = adapter
+
         swipe2refresh.setColorSchemeResources(
             R.color.OT_Orange,
             R.color.OT_White,
             android.R.color.black
         )
-
-
 
         context?.let {
             uploadsRecycler.layoutManager =
@@ -132,10 +131,6 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        presenter.onDestroy()
-    }
 
     companion object {
         @JvmStatic

@@ -1,13 +1,9 @@
 package com.itsovertime.overtimecamera.play.videomanager
 
 import android.annotation.SuppressLint
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
-import android.util.Log
-import android.widget.Toast
 import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
@@ -17,12 +13,10 @@ import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunnin
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
-import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
-import com.itsovertime.overtimecamera.play.quemanager.QueManager
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
-import com.itsovertime.overtimecamera.play.uploadsmanager.VideoUploadWorker
+import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -32,16 +26,11 @@ import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
-import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 class VideosManagerImpl(
     val context: OTApplication,
-    val manager: UploadsManager,
-    private val queManager: QueManager
+    val manager: UploadsManager
 ) : VideosManager {
     var queSub: BehaviorSubject<Boolean> = BehaviorSubject.create()
     override fun subToDbUpdates(): Observable<Boolean> {
@@ -242,7 +231,7 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
-                println("MEDIUM SAVED:: ")
+
                 loadFromDB()
             }, {
                 it.printStackTrace()
@@ -286,7 +275,6 @@ class VideosManagerImpl(
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             Crashlytics.log("Compress File Error")
         }
-        println("saving medium... ")
         updateMediumFilePath(
             File(mediaStorageDir.path + File.separator + file.name).absolutePath,
             video.clientId
@@ -335,7 +323,6 @@ class VideosManagerImpl(
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
     override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
-        println("VIDEO AFTER TRIM!! : $savedVideo")
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
@@ -375,7 +362,6 @@ class VideosManagerImpl(
     var lastVideoId: String = ""
     @SuppressLint("CheckResult")
     override fun saveHighQualityVideoToDB(video: SavedVideo) {
-        println("saving ....... video ")
         this.lastVideoMaxTime = video.max_video_length.toString()
         lastVideoId = video.clientId
         Single.fromCallable {
@@ -402,7 +388,6 @@ class VideosManagerImpl(
     @Synchronized
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
-        println("Loading DB!")
         videosList = mutableListOf()
         Single.fromCallable {
             db?.videoDao()?.getVideos()
@@ -421,8 +406,6 @@ class VideosManagerImpl(
                         } else processedVideos.add(it)
                     }
                 }
-                println("Subscribe hit...")
-
                 if (!processedVideos.isNullOrEmpty()) {
                     println("Running worker...")
                     WorkManager.getInstance(context).enqueue(

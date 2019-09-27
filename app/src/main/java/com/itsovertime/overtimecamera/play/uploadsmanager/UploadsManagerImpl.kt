@@ -79,8 +79,11 @@ class UploadsManagerImpl(
 
 
     @Synchronized
-    override fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse> {
-        val md5 = md5(File(currentVideo?.mediumRes).readBytes())
+    override fun registerWithMD5(data: TokenResponse, hdReady: Boolean): Single<EncryptedResponse> {
+        val md5 = when (hdReady) {
+            true -> md5(File(currentVideo?.trimmedVidPath).readBytes())
+            else -> md5(File(currentVideo?.mediumRes).readBytes())
+        }
         return api
             .uploadDataForMd5(
                 UploadRequest(

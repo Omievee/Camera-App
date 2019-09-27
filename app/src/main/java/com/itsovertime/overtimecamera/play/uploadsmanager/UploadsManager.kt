@@ -8,7 +8,7 @@ import io.reactivex.Single
 interface UploadsManager {
     fun onProcessUploadQue(list: MutableList<SavedVideo>)
     fun getVideoInstance(video: SavedVideo?): Single<VideoInstanceResponse>
-    fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse>
+    fun registerWithMD5(data: TokenResponse, hdReady:Boolean): Single<EncryptedResponse>
     fun getAWSDataForUpload(): Single<TokenResponse>
     fun uploadVideoToServer(
         upload: Upload,

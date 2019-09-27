@@ -31,7 +31,8 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
         println("------ELSE------ ${savedVideo.mediumUploaded} && ${savedVideo.highUploaded}")
         if (savedVideo.mediumUploaded) {
             medQProgressBar.setProgress(100, false)
-        } else if (savedVideo.highUploaded) {
+        }
+        if (savedVideo.highUploaded) {
             highQProgressBar.setProgress(100, false)
         }
 //        if (savedVideo.clientId == progress.id) {
