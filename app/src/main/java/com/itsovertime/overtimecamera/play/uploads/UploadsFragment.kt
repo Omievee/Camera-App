@@ -25,7 +25,9 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     CompoundButton.OnCheckedChangeListener,
     SwipeRefreshLayout.OnRefreshListener {
     override fun notifyPendingUploads() {
-        uploadsMessage.text = "You have pending uploads. Turn on HD uploads to continue."
+        uploadsMessage.text =
+            "HD videos are ready for upload. Turn on HD uploading. (WiFi Recommended)"
+        uploadsIcon
     }
 
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
@@ -38,7 +40,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
 
     override fun displayNoNetworkConnection() {
         uploadsIcon.visibility = View.INVISIBLE
-       // uploadsMessage.text = "No active connection..."
+        // uploadsMessage.text = "No active connection..."
     }
 
     override fun displayWifiReady() {

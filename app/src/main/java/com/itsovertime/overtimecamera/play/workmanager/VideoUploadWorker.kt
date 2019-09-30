@@ -54,21 +54,28 @@ class VideoUploadWorker(
             hdReady = inputData.getBoolean("HD", false)
 
             when {
-                faveList.size > 0 -> getVideoInstance(faveList[0])
+                faveList.size > 0 ->  getVideoInstance(faveList[0])
                 standardList.size > 0 -> getVideoInstance(standardList[0])
-                faveListHQ.size > 0 && hdReady -> getVideoInstance(faveListHQ[0])
-                standardListHQ.size > 0 && hdReady -> getVideoInstance(standardListHQ[0])
+                faveListHQ.size > 0 && hdReady -> {
+                    do {
+                        getVideoInstance(faveListHQ[0])
+                    } while (faveListHQ.size > 0)
+                }
+                standardListHQ.size > 0 && hdReady -> {
+                    do {
+                        getVideoInstance(standardListHQ[0])
+                    } while (standardListHQ.size > 0)
+                }
             }
 
             if (faveListHQ.size > 0 && faveList.isEmpty() || standardListHQ.size > 0 && standardList.isEmpty()) {
                 progressManager.onNotifyPendingUploads()
             }
 
-            WorkerUtils().makeStatusNotification(
-                message = "Uploading Video....",
-                context = context
-            )
-
+//            WorkerUtils().makeStatusNotification(
+//                message = "Uploading Video....",
+//                context = context
+//            )
             return Result.success()
         } catch (throwable: Throwable) {
             println("Error from worker... ${throwable.message}")

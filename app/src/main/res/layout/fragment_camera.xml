@@ -172,6 +172,7 @@
             android:layout_height="wrap_content"
             android:gravity="bottom"
             android:rotation="90"
+            android:text="Save the last 12s"
             android:textColor="@color/OT_White"
             android:textSize="16sp"
             android:textStyle="bold"
