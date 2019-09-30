@@ -23,6 +23,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.io.File
+import java.lang.NumberFormatException
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -53,6 +54,7 @@ class VideoUploadWorker(
 
 
             //  progressManager.onSetMessageToMediumUploads()
+
             processListForUploads(getVideosFromDB()?.blockingGet())
 
             hdReady = inputData.getBoolean("HD", false)
@@ -61,16 +63,7 @@ class VideoUploadWorker(
                 else -> progressManager.onSetMessageToHDUploads()
             }
 
-            when {
-                faveList.size > 0 -> getVideoInstance(faveList[0])
-                standardList.size > 0 -> getVideoInstance(standardList[0])
-                faveListHQ.size > 0 && hdReady -> {
-                    getVideoInstance(faveListHQ[0])
-                }
-                standardListHQ.size > 0 && hdReady -> {
-                    getVideoInstance(standardListHQ[0])
-                }
-            }
+
 
             if (faveListHQ.size > 0 && faveList.isEmpty() || standardListHQ.size > 0 && standardList.isEmpty()) {
                 // progressManager.onNotifyPendingUploads()
@@ -91,7 +84,7 @@ class VideoUploadWorker(
 
     }
 
-    var queList = mutableListOf<SavedVideo>()
+    private var queList = mutableListOf<SavedVideo>()
     var standardList = mutableListOf<SavedVideo>()
     var standardListHQ = mutableListOf<SavedVideo>()
     var faveList = mutableListOf<SavedVideo>()
@@ -106,9 +99,7 @@ class VideoUploadWorker(
 
 
         v?.forEach {
-            if (it.is_favorite) {
-                queList.add(0, it)
-            } else queList.add(it)
+            queList.add(it)
         }
         queList.removeIf {
             it.highUploaded
@@ -126,6 +117,31 @@ class VideoUploadWorker(
             }
         }
 
+        when {
+            faveList.size > 0 -> {
+                val it = faveList.iterator()
+                while (it.hasNext()) {
+                    getVideoInstance(it.next())
+                }
+
+            }
+            standardList.size > 0 -> {
+                val it = standardList.iterator()
+                while (it.hasNext()) {
+                    getVideoInstance(it.next())
+                }
+            }
+            faveListHQ.size > 0 && hdReady -> {
+                while (faveList.iterator().hasNext()) {
+                    getVideoInstance(faveListHQ.iterator().next())
+                }
+            }
+            standardListHQ.size > 0 && hdReady -> {
+                while (standardListHQ.iterator().hasNext()) {
+                    getVideoInstance(standardListHQ.iterator().next())
+                }
+            }
+        }
         println("standard list  is.... ${standardList.size}")
         println("fave list is.... ${faveList.size}")
         println("stardard hd is.... ${standardListHQ.size}")
@@ -227,7 +243,11 @@ class VideoUploadWorker(
         if (currentVideo?.id != "") {
             chunkToUpload = baseChunkSize
             if (currentVideo?.mediumUploaded == true && hdReady) {
-                fullBytes = File(currentVideo?.trimmedVidPath).readBytes()
+                fullBytes = when (currentVideo?.trimmedVidPath) {
+                    null -> File(currentVideo?.highRes).readBytes()
+                    "" -> File(currentVideo?.highRes).readBytes()
+                    else -> File(currentVideo?.trimmedVidPath).readBytes()
+                }
                 currentVideo?.uploadState = UploadState.UPLOADING_HIGH
                 upload()
             } else {
@@ -363,6 +383,9 @@ class VideoUploadWorker(
                 getVideoDimensions(path = path ?: "")
             } catch (arg: IllegalAccessException) {
                 arg.printStackTrace()
+                videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
+            } catch (num: NumberFormatException) {
+                num.printStackTrace()
                 videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             }
 

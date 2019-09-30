@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.facebook.drawee.backends.pipeline.Fresco
+import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequest
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.itsovertime.overtimecamera.play.R
@@ -24,11 +25,13 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
     }
 
     fun bind(savedVideo: SavedVideo, progress: ProgressData) {
+        medQProgressBar.progress = 0
+        highQProgressBar.progress = 0
+
         faveIcon.visibility = when (savedVideo.is_favorite) {
             true -> View.VISIBLE
             else -> View.INVISIBLE
         }
-        println("------ELSE------ ${savedVideo.mediumUploaded} && ${savedVideo.highUploaded}")
         if (savedVideo.mediumUploaded) {
             medQProgressBar.setProgress(100, false)
         }
@@ -53,8 +56,10 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
         val uri = Uri.fromFile(File(savedVideo.highRes))
         val request = ImageRequestBuilder
             .newBuilderWithSource(uri)
-            .setLowestPermittedRequestLevel(ImageRequest.RequestLevel.FULL_FETCH)
             .setProgressiveRenderingEnabled(true)
+            .setLocalThumbnailPreviewsEnabled(true)
+            .setResizingAllowedOverride(true)
+            .setResizeOptions(ResizeOptions(852, 480))
             .build()
 
         val controller = Fresco.newDraweeControllerBuilder()

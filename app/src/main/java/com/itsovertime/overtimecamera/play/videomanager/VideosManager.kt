@@ -16,7 +16,7 @@ interface VideosManager {
     fun loadFromDB()
     fun saveHighQualityVideoToDB(video: SavedVideo)
     fun transcodeVideo(savedVideo: SavedVideo, videoFile: File)
-    fun updateVideoFavorite(isFavorite: Boolean)
+    fun updateVideoFavorite(isFavorite: Boolean, clientId: String)
     fun updateVideoFunny(isFunny: Boolean)
     fun updateVideoMd5(md5: String, clientId: String)
     fun updateUploadId(uplaodId: String, clientId: String)
@@ -27,5 +27,5 @@ interface VideosManager {
     fun loadFFMPEG()
     fun updateHighuploaded(qualityUploaded: Boolean, clientId: String)
     fun subToDbUpdates(): Observable<Boolean>
-
+    fun determineTrim(savedVideo: SavedVideo)
 }

@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.videomanager
 
 import android.annotation.SuppressLint
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
 import androidx.work.OneTimeWorkRequestBuilder
@@ -145,10 +146,6 @@ class VideosManagerImpl(
         println("loading FFMPEG")
         try {
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
-                override fun onSuccess() {
-                    super.onSuccess()
-                }
-
                 override fun onFailure() {
                     super.onFailure()
                     loadFFMPEG()
@@ -162,17 +159,39 @@ class VideosManagerImpl(
         }
     }
 
-    var seekToEndOf = "-sseof"
-    var videoCodec = "-vcodec"
-    var codecValue = "h264"
-    var commandYOverwrite = "-y"
-    var readInput = "-i"
-    var commandCCopy = "-c"
-    var copyVideo = "copy"
+    private var seekToEndOf = "-sseof"
+    private var videoCodec = "-vcodec"
+    private var codecValue = "h264"
+    private var commandYOverwrite = "-y"
+    private var readInput = "-i"
+    private var commandCCopy = "-c"
+    private var copyVideo = "copy"
 
+    private fun isVideoDurationLongerThanMaxTime(file: SavedVideo): Boolean {
+        val retriever = MediaMetadataRetriever();
+        try {
+            println("URI : ${Uri.fromFile(File(file.highRes))}")
+            retriever.setDataSource(context, Uri.fromFile(File(file.highRes)))
+            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: ""
+            val timeInMillisec = time.toLong() / 1000
+            retriever.release()
+            return timeInMillisec > file.max_video_length
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
+    override fun determineTrim(savedVideo: SavedVideo) {
+        if (isVideoDurationLongerThanMaxTime(savedVideo)) {
+            trimVideo(savedVideo)
+        } else{
+            transcodeVideo(savedVideo, File(savedVideo.highRes))
+        }
+    }
 
     private fun trimVideo(savedVideo: SavedVideo) {
-        println("VIDEO BEFORE TRIM!! $savedVideo")
+
         val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
         val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
         val complexCommand = arrayOf(
@@ -198,21 +217,23 @@ class VideosManagerImpl(
             newFile.absolutePath
         )
 
+
         try {
-            ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
-                override fun onSuccess(message: String?) {
-                    super.onSuccess(message)
-                    println("Success from trim....")
-                    transcodeVideo(savedVideo, newFile)
-                }
+            synchronized(this) {
+                ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
+                    override fun onSuccess(message: String?) {
+                        super.onSuccess(message)
+                        println("Success from trim....")
+                        transcodeVideo(savedVideo, newFile)
+                    }
 
-                override fun onFailure(message: String?) {
-                    super.onFailure(message)
-                    println("TRIM FAILURE $message")
-                    Crashlytics.log("Failed to execute ffmpeg -- $message")
-                }
-            })
-
+                    override fun onFailure(message: String?) {
+                        super.onFailure(message)
+                        println("TRIM FAILURE $message")
+                        Crashlytics.log("Failed to execute ffmpeg -- $message")
+                    }
+                })
+            }
         } catch (e: FFmpegCommandAlreadyRunningException) {
             println("FFMPEG :: ${e.message}")
             Crashlytics.log("FFMPEG -- ${e.message}")
@@ -269,17 +290,20 @@ class VideosManagerImpl(
             })
     }
 
+    @Synchronized
     private fun compressedFile(file: File, video: SavedVideo): File {
-        val mediaStorageDir =
-            File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
-        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-            Crashlytics.log("Compress File Error")
+        synchronized(this) {
+            val mediaStorageDir =
+                File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
+            if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+                Crashlytics.log("Compress File Error")
+            }
+            updateMediumFilePath(
+                File(mediaStorageDir.path + File.separator + file.name).absolutePath,
+                video.clientId
+            )
+            return File(mediaStorageDir.path + File.separator + file.name)
         }
-        updateMediumFilePath(
-            File(mediaStorageDir.path + File.separator + file.name).absolutePath,
-            video.clientId
-        )
-        return File(mediaStorageDir.path + File.separator + file.name)
     }
 
 
@@ -301,10 +325,10 @@ class VideosManagerImpl(
     }
 
     @SuppressLint("CheckResult")
-    override fun updateVideoFavorite(isFavorite: Boolean) {
+    override fun updateVideoFavorite(isFavorite: Boolean, clientId: String) {
         Single.fromCallable {
             with(videoDao) {
-                this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = lastVideoId)
+                this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = clientId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -322,6 +346,7 @@ class VideosManagerImpl(
 
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
+    @Synchronized
     override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
@@ -342,10 +367,12 @@ class VideosManagerImpl(
             }
         }
         try {
-            MediaTranscoder.getInstance().transcodeVideo(
-                fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
-                MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
-            )
+            synchronized(this) {
+                MediaTranscoder.getInstance().transcodeVideo(
+                    fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
+                    MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
+                )
+            }
         } catch (r: RuntimeException) {
             Crashlytics.log("MediaTranscoder-Error ${r.message}")
             r.printStackTrace()
@@ -402,7 +429,7 @@ class VideosManagerImpl(
                     queSub.onNext(true)
                     videosList.forEach {
                         if (it.mediumRes.isNullOrEmpty()) {
-                            trimVideo(it)
+                            determineTrim(it)
                         } else processedVideos.add(it)
                     }
                 }

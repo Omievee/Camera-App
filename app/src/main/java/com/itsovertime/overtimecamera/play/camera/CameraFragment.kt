@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
+import android.util.Range
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.*
@@ -390,10 +391,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                     CaptureRequest.CONTROL_MODE,
                                     CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
                                 )
-//                                previewRequestBuilder.set(
-//                                    CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
-//                                    CaptureRequest.CONTROL
-//                                )
+                                previewRequestBuilder.set(
+                                    CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
+                                    Range<Int>(60, 60)
+                                );
+
                                 try {
                                     setUpCaptureRequestBuilder(previewRequestBuilder)
                                     HandlerThread("CameraPreview").start()

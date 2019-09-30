@@ -55,9 +55,10 @@ class CameraPresenter(
 
     var e: Event? = null
     var video: SavedVideo? = null
+    var clientId: String = ""
     fun saveVideo(videoEvent: Event?) {
         e = videoEvent
-        val clientId = UUID.randomUUID().toString()
+        clientId = UUID.randomUUID().toString()
         filePath?.let {
             video = SavedVideo(
                 clientId = clientId,
@@ -103,8 +104,9 @@ class CameraPresenter(
                         ("Save the last ${(maxTime) - millisUntilFinished / 1000}s").toString()
                 }
             }
+
             override fun onFinish() {
-                view?.activity?.runOnUiThread {
+                view.activity?.runOnUiThread {
                     text.text = "                 ${maxTime}s"
                 }
             }
@@ -112,7 +114,7 @@ class CameraPresenter(
     }
 
     fun updateFavoriteField() {
-        manager.updateVideoFavorite(true)
+        manager.updateVideoFavorite(true, clientId)
     }
 
     fun cameraSwitch() {
