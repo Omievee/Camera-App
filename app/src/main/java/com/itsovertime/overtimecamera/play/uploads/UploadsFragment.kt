@@ -87,6 +87,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
             R.id.settingsButton -> {
 //                presenter.displayBottomSheetSettings()
             }
+            R.id.back -> activity?.onBackPressed()
         }
     }
 
@@ -127,6 +128,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         super.onViewCreated(view, savedInstanceState)
         presenter.onCreate()
         settingsButton.setOnClickListener(this)
+        back.setOnClickListener(this)
         debug.setOnClickListener(this)
         switchHD.setOnCheckedChangeListener(this)
         swipe2refresh.setOnRefreshListener(this)

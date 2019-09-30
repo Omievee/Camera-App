@@ -18,18 +18,24 @@ import android.view.*
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.events.EventsAdapter
 import com.itsovertime.overtimecamera.play.events.EventsClickListener
+import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.model.Event
+import com.itsovertime.overtimecamera.play.model.Tagged_Teams
+import com.itsovertime.overtimecamera.play.model.User
 import dagger.android.support.AndroidSupportInjection
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.event_view.*
+import kotlinx.android.synthetic.main.events_item_view.view.*
 import kotlinx.android.synthetic.main.fragment_camera.*
+import kotlinx.android.synthetic.main.tagged_players_view.*
 import kotlinx.android.synthetic.main.upload_button_view.*
 import java.io.File
 import java.io.IOException
@@ -70,7 +76,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 //            .setListener(null);
     }
 
+    var taggedAdapter = TaggedPlayersAdapter()
+    var newData = mutableListOf<TaggedPlayersPresentation>()
+    var old = taggedAdapter.data?.data ?: emptyList()
     override fun setUpEventViewData(eventList: List<Event>?) {
+
         if (eventList.isNullOrEmpty()) {
             eventSpace.visibility = View.GONE
         }
@@ -79,6 +89,21 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         evAdapter = EventsAdapter(eventList, listener)
         hiddenEvents.adapter = evAdapter
 
+
+        var tagged: Array<Tagged_Teams>
+        eventList?.forEach {
+            tagged = it.tagged_teams
+            tagged.forEach {
+                it.taggable_athletes.forEach {
+                    newData.add(TaggedPlayersPresentation(it))
+                }
+            }
+        }
+
+        taggedAdapter.data =
+            TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
+
+        athleteRecycler.adapter = taggedAdapter
     }
 
     override fun showOrHideViewsForCamera() {
@@ -151,6 +176,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 progress.visibility = View.VISIBLE
                 favoriteIcon.visibility = View.VISIBLE
                 hahaIcon.visibility = View.VISIBLE
+                if (!newData.isNullOrEmpty()) {
+                    taggedView.visibility = View.VISIBLE
+                }
                 if (recording) {
                     releaseCamera(tapToSave = true)
                     if (CAMERA == 0) resetIcons()
@@ -409,6 +437,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                         hahaIcon?.let {
                             it.visibility = View.INVISIBLE
                         }
+                        taggedView?.let {
+                            it.visibility = View.INVISIBLE
+                        }
                     }
                 }
             }
@@ -418,6 +449,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
         mediaRecorder?.start()
         Handler().postDelayed(runnable, 5000)
+
     }
 
     @SuppressLint("CheckResult")
@@ -488,6 +520,18 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             eventTitle.text = event.name
 
             selectedEvent = event
+            old = newData
+            newData.clear()
+            event.tagged_teams.forEach {
+                if (!it.taggable_athletes.isEmpty()) {
+                    it.taggable_athletes.forEach {
+                        newData.add(TaggedPlayersPresentation(it))
+                    }
+                } else newData.clear()
+            }
+
+            taggedAdapter.data =
+                TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
         }
     }
 
@@ -499,7 +543,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         presenter.onCreate()
         getEventData()
         hiddenEvents.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-
+        athleteRecycler.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         detectOrientation()
     }
 

@@ -46,10 +46,13 @@ class VideoUploadWorker(
     var hdReady: Boolean = false
     var videos = mutableListOf<SavedVideo>()
     var instanceDisp: Disposable? = null
+
     override fun doWork(): Result {
 
         try {
-            progressManager.onSetMessageToMediumUploads()
+
+
+            //  progressManager.onSetMessageToMediumUploads()
             processListForUploads(getVideosFromDB()?.blockingGet())
 
             hdReady = inputData.getBoolean("HD", false)
@@ -70,7 +73,7 @@ class VideoUploadWorker(
             }
 
             if (faveListHQ.size > 0 && faveList.isEmpty() || standardListHQ.size > 0 && standardList.isEmpty()) {
-                progressManager.onNotifyPendingUploads()
+                // progressManager.onNotifyPendingUploads()
             }
             if (faveListHQ.isEmpty() || faveList.isEmpty() || standardListHQ.isEmpty() || standardList.isEmpty()) {
                 //TODO -- notify all uploads complete
@@ -94,6 +97,7 @@ class VideoUploadWorker(
     var faveList = mutableListOf<SavedVideo>()
     var faveListHQ = mutableListOf<SavedVideo>()
     private fun processListForUploads(v: List<SavedVideo>?) {
+
         queList.clear()
         standardList.clear()
         standardListHQ.clear()
@@ -264,13 +268,16 @@ class VideoUploadWorker(
                     chunk = uploadChunkIndex
                 )
                 .doAfterNext {
+                    if (it?.code() == 502) {
+                        upload()
+                    }
                     if (it.body()?.success == true) {
                         chunkToUpload = when (checkResponseTimeDifference(
                             timeSent = it.raw().sentRequestAtMillis(),
                             timeReceived = it.raw().receivedResponseAtMillis()
                         )) {
-                            in 0..1 -> maxChunkSize
-                            in 1..2 -> baseChunkSize
+                            in 0..2 -> maxChunkSize
+                            in 2..4 -> baseChunkSize
                             else -> minChunkSize
                         }
 
@@ -289,12 +296,14 @@ class VideoUploadWorker(
                 .doOnError {
                     startRange = 0
                     uploadChunkIndex = 0
+                    println("THIS IS AN ERROR......... ____________________________________________")
                     videosManager.resetUploadStateForCurrentVideo(
                         currentVideo = currentVideo ?: return@doOnError
                     )
                 }
                 .subscribe({
                 }, {
+                    println("THIS IS AN ERROR......... ____________________++STACKTRACE++________________________")
                     it.printStackTrace()
                 })
         }
@@ -307,72 +316,81 @@ class VideoUploadWorker(
 
 
     var complete: Disposable? = null
+    @Synchronized
     private fun checkForComplete() {
-        complete = uploadsManager
-            .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
-            .doOnError {
-                videosManager.resetUploadStateForCurrentVideo(
-                    currentVideo = currentVideo ?: return@doOnError
-                )
-            }
-            .subscribe({
-                if (it.code() == 502) {
-                    checkForComplete()
+        synchronized(this) {
+
+
+            complete = uploadsManager
+                .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
+                .doOnError {
+                    videosManager.resetUploadStateForCurrentVideo(
+                        currentVideo = currentVideo ?: return@doOnError
+                    )
                 }
-                when (it.body()?.status) {
-                    CompleteResponse.COMPLETING.name -> pingServerForStatus()
-                    CompleteResponse.COMPLETED.name -> {
-                        firstRun = true
-                        finalizeUpload(it.body()?.upload)
+                .subscribe({
+                    if (it.code() == 502) {
+                        checkForComplete()
                     }
-                    else -> {
-                        videosManager.resetUploadStateForCurrentVideo(
-                            currentVideo = currentVideo ?: return@subscribe
-                        )
+                    when (it.body()?.status) {
+                        CompleteResponse.COMPLETING.name -> pingServerForStatus()
+                        CompleteResponse.COMPLETED.name -> {
+                            firstRun = true
+                            finalizeUpload(it.body()?.upload)
+                        }
+                        else -> {
+                            videosManager.resetUploadStateForCurrentVideo(
+                                currentVideo = currentVideo ?: return@subscribe
+                            )
+                        }
                     }
-                }
-            }, {
-                it.printStackTrace()
-            })
+                }, {
+                    it.printStackTrace()
+                })
+        }
     }
 
 
     private var serverDis: Disposable? = null
+    @Synchronized
     private fun finalizeUpload(upload: Upload?) {
         val path = when (hdReady) {
             true -> currentVideo?.trimmedVidPath
             else -> currentVideo?.mediumRes
         }
-        try {
-            getVideoDimensions(path = path ?: "")
-        } catch (arg: IllegalAccessException) {
-            arg.printStackTrace()
-            videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
-        }
-
-        serverDis = uploadsManager
-            .writerToServerAfterComplete(
-                uploadId = currentVideo?.id ?: "",
-                S3Key = upload?.S3Key ?: "",
-                vidWidth = width,
-                vidHeight = height,
-                hq = hdReady,
-                vid = currentVideo ?: return
-            )
-            .doOnSuccess {
-                if (currentVideo?.uploadState == UploadState.UPLOADING_MEDIUM) {
-                    videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
-                    currentVideo?.uploadState = UploadState.UPLOADED_MEDIUM
-                } else {
-                    currentVideo?.uploadState = UploadState.UPLOADED_HIGH
-                    videosManager.updateHighuploaded(true, currentVideo?.clientId ?: "")
-                }
+        synchronized(this) {
+            try {
+                getVideoDimensions(path = path ?: "")
+            } catch (arg: IllegalAccessException) {
+                arg.printStackTrace()
+                videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             }
-            .subscribe({
-            }, {
-                it.printStackTrace()
-                videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return@subscribe)
-            })
+
+            serverDis = uploadsManager
+                .writerToServerAfterComplete(
+                    uploadId = currentVideo?.id ?: "",
+                    S3Key = upload?.S3Key ?: "",
+                    vidWidth = width,
+                    vidHeight = height,
+                    hq = hdReady,
+                    vid = currentVideo ?: return
+                )
+                .doOnSuccess {
+                    if (currentVideo?.uploadState == UploadState.UPLOADING_MEDIUM) {
+                        videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
+                        currentVideo?.uploadState = UploadState.UPLOADED_MEDIUM
+                    } else {
+                        currentVideo?.uploadState = UploadState.UPLOADED_HIGH
+                        videosManager.updateHighuploaded(true, currentVideo?.clientId ?: "")
+                    }
+
+                }
+                .subscribe({
+                }, {
+                    it.printStackTrace()
+                    videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return@subscribe)
+                })
+        }
     }
 
 
