@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 
 
 class WorkerUtils {
+
     fun makeStatusNotification(message: String, context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "OverTime"

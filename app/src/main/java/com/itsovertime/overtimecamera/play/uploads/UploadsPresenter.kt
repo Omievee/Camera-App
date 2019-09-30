@@ -3,9 +3,7 @@ package com.itsovertime.overtimecamera.play.uploads
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.itsovertime.overtimecamera.play.progress.ProgressManager
-import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
@@ -31,13 +29,30 @@ class UploadsPresenter(
     fun onResume() {
         onRefresh()
         subscribeToPendingUploads()
+        subcribeToQualityBeingUploaded()
+    }
+
+    var qualityDisp: Disposable? = null
+    private fun subcribeToQualityBeingUploaded() {
+        qualityDisp?.dispose()
+        qualityDisp =
+            progressManager
+                .subscribeToCurrentVideoQuality()
+                .subscribe({
+                    when(it){
+                        true -> view.setUploadingHdVideo()
+                        else -> view.setUploadingMedVideo()
+                    }
+                }, {
+
+                })
     }
 
 
     var pendingDisposable: Disposable? = null
     private fun subscribeToPendingUploads() {
         pendingDisposable = progressManager
-            .subcribeToPendingHQUploads()
+            .subscribeToPendingHQUploads()
             .subscribe({
                 println("True.. $it")
                 if (it) {

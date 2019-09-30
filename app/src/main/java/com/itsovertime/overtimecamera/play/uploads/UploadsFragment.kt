@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.uploads
 
 import android.content.Context
+import android.content.res.Resources
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -24,10 +25,20 @@ import javax.inject.Inject
 class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
     CompoundButton.OnCheckedChangeListener,
     SwipeRefreshLayout.OnRefreshListener {
+    override fun setUploadingHdVideo() {
+        uploadsMessage.text = "Uploading High Quality Videos.."
+        uploadsIcon.setImageResource(R.drawable.upload)
+    }
+
+    override fun setUploadingMedVideo() {
+        uploadsMessage.text = "Uploading Medium Quality Videos.."
+        uploadsIcon.setImageResource(R.drawable.upload)
+    }
+
     override fun notifyPendingUploads() {
         uploadsMessage.text =
             "HD videos are ready for upload. Turn on HD uploading. (WiFi Recommended)"
-        uploadsIcon
+        uploadsIcon.setImageResource(R.drawable.warning)
     }
 
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {

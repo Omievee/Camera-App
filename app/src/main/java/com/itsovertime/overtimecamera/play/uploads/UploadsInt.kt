@@ -11,6 +11,8 @@ interface UploadsInt {
     fun displayNoNetworkConnection()
     fun updateProgressBar(start: Int, end: Int, highQuality: Boolean, clientId: String)
     fun notifyPendingUploads()
+    fun setUploadingHdVideo()
+    fun setUploadingMedVideo()
 
 
 }

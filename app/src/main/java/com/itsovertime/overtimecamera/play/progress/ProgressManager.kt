@@ -8,5 +8,9 @@ interface ProgressManager {
     fun onProgressComplete()
     fun onUpdateProgress()
     fun onNotifyPendingUploads()
-    fun subcribeToPendingHQUploads(): io.reactivex.Observable<Boolean>
+    fun subscribeToPendingHQUploads(): io.reactivex.Observable<Boolean>
+    fun onSetMessageToMediumUploads()
+    fun onSetMessageToHDUploads()
+    fun subscribeToCurrentVideoQuality(): io.reactivex.Observable<Boolean>
+
 }

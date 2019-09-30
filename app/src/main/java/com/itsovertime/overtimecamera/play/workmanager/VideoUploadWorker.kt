@@ -49,27 +49,31 @@ class VideoUploadWorker(
     override fun doWork(): Result {
 
         try {
+            progressManager.onSetMessageToMediumUploads()
             processListForUploads(getVideosFromDB()?.blockingGet())
 
             hdReady = inputData.getBoolean("HD", false)
+            when (hdReady) {
+                false -> progressManager.onSetMessageToMediumUploads()
+                else -> progressManager.onSetMessageToHDUploads()
+            }
 
             when {
-                faveList.size > 0 ->  getVideoInstance(faveList[0])
+                faveList.size > 0 -> getVideoInstance(faveList[0])
                 standardList.size > 0 -> getVideoInstance(standardList[0])
                 faveListHQ.size > 0 && hdReady -> {
-                    do {
-                        getVideoInstance(faveListHQ[0])
-                    } while (faveListHQ.size > 0)
+                    getVideoInstance(faveListHQ[0])
                 }
                 standardListHQ.size > 0 && hdReady -> {
-                    do {
-                        getVideoInstance(standardListHQ[0])
-                    } while (standardListHQ.size > 0)
+                    getVideoInstance(standardListHQ[0])
                 }
             }
 
             if (faveListHQ.size > 0 && faveList.isEmpty() || standardListHQ.size > 0 && standardList.isEmpty()) {
                 progressManager.onNotifyPendingUploads()
+            }
+            if (faveListHQ.isEmpty() || faveList.isEmpty() || standardListHQ.isEmpty() || standardList.isEmpty()) {
+                //TODO -- notify all uploads complete
             }
 
 //            WorkerUtils().makeStatusNotification(
@@ -118,11 +122,11 @@ class VideoUploadWorker(
             }
         }
 
-        println("Size is.... ${standardList.size}")
-        println("Size is.... ${faveList.size}")
-        println("Size is.... ${standardListHQ.size}")
-        println("Size is.... ${faveListHQ.size}")
-        println("Size is.... ${queList.size}")
+        println("standard list  is.... ${standardList.size}")
+        println("fave list is.... ${faveList.size}")
+        println("stardard hd is.... ${standardListHQ.size}")
+        println("fave hd is.... ${faveListHQ.size}")
+        println("mainlist is.... ${queList.size}")
     }
 
     var db = AppDatabase.getAppDataBase(context = context)

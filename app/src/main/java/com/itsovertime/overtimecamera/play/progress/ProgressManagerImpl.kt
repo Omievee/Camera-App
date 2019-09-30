@@ -7,7 +7,23 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 
 class ProgressManagerImpl(val context: OTApplication) : ProgressManager {
-    override fun subcribeToPendingHQUploads(): Observable<Boolean> {
+
+    var qualitySubject: BehaviorSubject<Boolean> = BehaviorSubject.create()
+    override fun subscribeToCurrentVideoQuality(): Observable<Boolean> {
+        return qualitySubject
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
+    override fun onSetMessageToMediumUploads() {
+        qualitySubject.onNext(false)
+    }
+
+    override fun onSetMessageToHDUploads() {
+        qualitySubject.onNext(true)
+    }
+
+    override fun subscribeToPendingHQUploads(): Observable<Boolean> {
         return subject
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -25,4 +41,6 @@ class ProgressManagerImpl(val context: OTApplication) : ProgressManager {
     override fun onNotifyPendingUploads() {
         subject.onNext(true)
     }
+
+
 }
