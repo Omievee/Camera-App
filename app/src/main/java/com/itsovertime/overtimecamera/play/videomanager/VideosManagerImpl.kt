@@ -435,10 +435,6 @@ class VideosManagerImpl(
                 }
                 if (!processedVideos.isNullOrEmpty()) {
                     println("Running worker...")
-                    WorkManager.getInstance(context).enqueue(
-                        OneTimeWorkRequestBuilder<VideoUploadWorker>()
-                            .build()
-                    )
                 }
 
             }, {

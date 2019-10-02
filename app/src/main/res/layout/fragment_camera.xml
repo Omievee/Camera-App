@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent=".8" />
+            app:layout_constraintGuide_begin="329dp" />
 
 
     <com.itsovertime.overtimecamera.play.camera.EventPickVIew
@@ -42,6 +42,33 @@
             android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:background="@drawable/gradient"
+            app:layout_constraintBottom_toTopOf="@id/bottomGuide"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/verticalGuide"
+            app:layout_constraintTop_toBottomOf="@id/topGuide" />
+
+    <TextView
+            android:id="@+id/selfieMsg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:rotation="90"
+            android:text="@string/selfie_message"
+            android:textColor="@color/OT_White"
+            android:textSize="18sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    <Chronometer
+            android:id="@+id/selfieTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:rotation="90"
+            android:textColor="@color/OT_White"
+            android:textSize="18sp"
+            android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@id/bottomGuide"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/verticalGuide"
@@ -116,14 +143,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent=".1" />
+            app:layout_constraintGuide_percent=".12" />
 
     <androidx.constraintlayout.widget.Guideline
             android:id="@+id/bottomGuide"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_end="85dp" />
+            app:layout_constraintGuide_percent=".87" />
 
 
     <ProgressBar

@@ -9,6 +9,7 @@ import com.itsovertime.overtimecamera.play.network.*
 import com.itsovertime.overtimecamera.play.utils.Constants
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import io.reactivex.Observable
+import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -30,19 +31,8 @@ class UploadsManagerImpl(
     private val subject: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
     private var currentVideo: SavedVideo? = null
 
-    var vid = mutableListOf<SavedVideo>()
-    override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
-        if (list != vid) {
-            vid = list
-            vid.sortBy {
-                it.is_favorite
-            }
-            // subject.onNext(vid)
-        }
-    }
-
     @Synchronized
-    override fun getVideoInstance(video: SavedVideo?): Single<VideoInstanceResponse> {
+    override fun getVideoInstance(video: SavedVideo?): Observable<VideoInstanceResponse> {
         currentVideo = video
         println("Getting insacneeeeeee...")
         return api
@@ -58,28 +48,25 @@ class UploadsManagerImpl(
                     duration_in_hours = video?.duration_in_hours,
                     max_video_length = video?.max_video_length
                 )
-            ).doOnSuccess {
-                println("SUZccESS ?!? $it")
-            }
-
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            ).observeOn(AndroidSchedulers.mainThread())
     }
 
     @Synchronized
-    override fun getAWSDataForUpload(): Single<TokenResponse> {
+    override fun getAWSDataForUpload(): Observable<TokenResponse> {
         return api
             .uploadToken(VideoSourceRequest(type = Constants.Source))
             .doOnError {
                 println("token error ${it.message}")
             }
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
 
     @Synchronized
-    override fun registerWithMD5(data: TokenResponse, hdReady: Boolean): Single<EncryptedResponse> {
+    override fun registerWithMD5(
+        data: TokenResponse,
+        hdReady: Boolean
+    ): Observable<EncryptedResponse> {
         val md5 = when (hdReady) {
             true -> md5(File(currentVideo?.trimmedVidPath).readBytes())
             else -> md5(File(currentVideo?.mediumRes).readBytes())
@@ -98,7 +85,6 @@ class UploadsManagerImpl(
             .doOnError {
                 println("aws error ${it.message}")
             }
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
@@ -122,7 +108,6 @@ class UploadsManagerImpl(
                 uploadChunk = chunk,
                 file = request
             )
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
@@ -142,13 +127,12 @@ class UploadsManagerImpl(
     override fun onCompleteUpload(uploadId: String): Observable<retrofit2.Response<CompleteResponse>> {
         return api
             .checkStatusForComplete(uploadId, CompleteRequest(async = true))
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
     override fun writerToServerAfterComplete(
         uploadId: String, S3Key: String, vidWidth: Int, vidHeight: Int, hq: Boolean, vid: SavedVideo
-    ): Single<ServerResponse> {
+    ): Observable<ServerResponse> {
         val r: ServerRequest
         when (hq) {
             false -> {
@@ -174,14 +158,7 @@ class UploadsManagerImpl(
                 uploadId = uploadId,
                 request = r
             )
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-
-    override fun onUpdateQue(): Observable<MutableList<SavedVideo>> {
-        return subject
-            .observeOn(Schedulers.io())
-            .subscribeOn(AndroidSchedulers.mainThread())
-    }
 }

@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DiffUtil.calculateDiff
@@ -79,6 +80,10 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         super.setUserVisibleHint(isVisibleToUser)
         if (isVisibleToUser && view != null) {
             presenter.onRefresh()
+            adapter.data = UploadsViewData(newD, calculateDiff(BasicDiffCallback(old, newD)))
+            uploadsRecycler.adapter = adapter
+
+            //presenter.onRefresh()
         }
     }
 
@@ -93,13 +98,12 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
 
     var progressData = ProgressData()
     var adapter: UploadsAdapter = UploadsAdapter()
+    val old = adapter.data?.data ?: emptyList()
+    var newD = mutableListOf<UploadsPresentation>()
     override fun updateAdapter(videos: List<SavedVideo>, data: ProgressData?) {
-        val old = adapter.data?.data ?: emptyList()
-        val newD = mutableListOf<UploadsPresentation>()
         if (!videos.isNullOrEmpty()) {
             newD.add(UploadsPresentation(list = videos, progressData = data ?: ProgressData()))
         }
-        adapter.data = UploadsViewData(newD, calculateDiff(BasicDiffCallback(old, newD)))
     }
 
     @Inject
@@ -132,7 +136,7 @@ class UploadsFragment : Fragment(), UploadsInt, View.OnClickListener,
         debug.setOnClickListener(this)
         switchHD.setOnCheckedChangeListener(this)
         swipe2refresh.setOnRefreshListener(this)
-        uploadsRecycler.adapter = adapter
+
 
         swipe2refresh.setColorSchemeResources(
             R.color.OT_Orange,

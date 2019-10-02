@@ -66,7 +66,7 @@ class StaticApiModule {
         return Retrofit.Builder()
             .baseUrl(Constants.mainUploadURL)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
             .client(client.build())
             .build()
             .create(Api::class.java)

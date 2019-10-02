@@ -70,6 +70,10 @@ class UploadsPresenter(
             .subscribe({
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
+                WorkManager.getInstance(view?.context ?: return@subscribe).enqueue(
+                    OneTimeWorkRequestBuilder<VideoUploadWorker>()
+                        .build()
+                )
             }, {
                 println("throwable: ${it.printStackTrace()}")
             })

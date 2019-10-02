@@ -6,10 +6,9 @@ import io.reactivex.Observable
 import io.reactivex.Single
 
 interface UploadsManager {
-    fun onProcessUploadQue(list: MutableList<SavedVideo>)
-    fun getVideoInstance(video: SavedVideo?): Single<VideoInstanceResponse>
-    fun registerWithMD5(data: TokenResponse, hdReady:Boolean): Single<EncryptedResponse>
-    fun getAWSDataForUpload(): Single<TokenResponse>
+    fun getVideoInstance(video: SavedVideo?): Observable<VideoInstanceResponse>
+    fun registerWithMD5(data: TokenResponse, hdReady:Boolean): Observable<EncryptedResponse>
+    fun getAWSDataForUpload(): Observable<TokenResponse>
     fun uploadVideoToServer(
         upload: Upload,
         array: ByteArray,
@@ -24,8 +23,7 @@ interface UploadsManager {
         vidHeight: Int,
         hq: Boolean,
         vid: SavedVideo
-    ): Single<ServerResponse>
+    ): Observable<ServerResponse>
 
 
-    fun onUpdateQue(): Observable<MutableList<SavedVideo>>
 }

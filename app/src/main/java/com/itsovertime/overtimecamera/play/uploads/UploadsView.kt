@@ -57,9 +57,9 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
         val request = ImageRequestBuilder
             .newBuilderWithSource(uri)
             .setProgressiveRenderingEnabled(true)
-            .setLocalThumbnailPreviewsEnabled(true)
-            .setResizingAllowedOverride(true)
+            .setLocalThumbnailPreviewsEnabled(false)
             .setResizeOptions(ResizeOptions(852, 480))
+            .setCacheChoice(ImageRequest.CacheChoice.SMALL)
             .build()
 
         val controller = Fresco.newDraweeControllerBuilder()

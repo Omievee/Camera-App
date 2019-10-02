@@ -15,6 +15,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.OrientationEventListener
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.StringRes
@@ -199,6 +200,11 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         resend.setOnClickListener(this)
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
+        val w = window
+        w.setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        );
 
         when (intent?.extras?.get("logIn")) {
             true -> {

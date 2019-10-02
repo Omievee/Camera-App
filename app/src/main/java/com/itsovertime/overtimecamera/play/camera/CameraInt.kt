@@ -5,7 +5,7 @@ import com.itsovertime.overtimecamera.play.model.Event
 interface CameraInt {
     fun openCamera(width: Int, height: Int, camera: Int)
     fun closeCamera()
-    fun startRecording()
+    fun prepareCameraForRecording()
     fun stopRecording(isPaused: Boolean)
     fun switchCameras()
     fun setUpClicks()
