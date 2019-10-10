@@ -47,19 +47,12 @@ class VideoUploadWorker(
     var videos = mutableListOf<SavedVideo>()
     var instanceDisp: Disposable? = null
 
+    @SuppressLint("CheckResult")
     override fun doWork(): Result {
-
+        println("Started work...")
         try {
 
-            serverDis?.dispose()
-            awsDataDisposable?.dispose()
-            complete?.dispose()
-            up?.dispose()
-            instanceDisp?.dispose()
-            tokenDisposable?.dispose()
-
-            processListForUploads(getVideosFromDB()?.blockingGet())
-
+            getVideosFromDB().blockingGet()
             hdReady = inputData.getBoolean("HD", false)
             when (hdReady) {
                 false -> progressManager.onSetMessageToMediumUploads()
@@ -80,7 +73,8 @@ class VideoUploadWorker(
 //            )
             return Result.success()
         } catch (throwable: Throwable) {
-            println("Error from worker... ${throwable.message}")
+            println("Error from worker... ${throwable.cause}")
+            throwable.printStackTrace()
             return Result.failure()
         }
 
@@ -91,73 +85,83 @@ class VideoUploadWorker(
     var standardListHQ = mutableListOf<SavedVideo>()
     var faveList = mutableListOf<SavedVideo>()
     var faveListHQ = mutableListOf<SavedVideo>()
-    private fun processListForUploads(v: List<SavedVideo>?) {
-
-        queList.clear()
-        standardList.clear()
-        standardListHQ.clear()
-        faveList.clear()
-        faveListHQ.clear()
-
-
-
-        queList.addAll(v?.asIterable() ?: emptyList())
-
-        queList.removeIf {
-            it.highUploaded
-        }
-
-        queList.forEach {
-            if (it.is_favorite && !it.mediumUploaded) {
-                faveList.add(0, it)
-            } else if (!it.is_favorite && !it.mediumUploaded) {
-                standardList.add(0, it)
-            } else if (it.is_favorite && it.mediumUploaded) {
-                faveListHQ.add(0, it)
-            } else if (!it.is_favorite && it.mediumUploaded) {
-                standardListHQ.add(0, it)
-            }
-        }
-
-        when {
-            faveList.size > 0 -> {
-                iterate(faveList[faveList.size - 1])
-            }
-            standardList.size > 0 -> {
-                iterate(standardList[standardList.size - 1])
-            }
-            faveListHQ.size > 0 && hdReady -> {
-                iterate(faveListHQ[faveListHQ.size - 1])
-            }
-            standardListHQ.size > 0 && hdReady -> {
-                iterate(standardListHQ[standardListHQ.size - 1])
-            }
-        }
-        println("standard list  is.... ${standardList.size}")
-        println("fave list is.... ${faveList.size}")
-        println("stardard hd is.... ${standardListHQ.size}")
-        println("fave hd is.... ${faveListHQ.size}")
-        println("mainlist is.... ${queList.size}")
-    }
-
-    fun iterate(it: SavedVideo) {
-        // getVideoInstance(it)
-    }
 
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
-    fun getVideosFromDB(): Single<List<SavedVideo>>? {
-        return db?.videoDao()
-            ?.getVideosForUpload()
-            ?.subscribeOn(Schedulers.io())
-            ?.observeOn(AndroidSchedulers.mainThread())
+    fun getVideosFromDB(): Single<List<SavedVideo>> {
+        serverDis?.dispose()
+        awsDataDisposable?.dispose()
+        complete?.dispose()
+        up?.dispose()
+        instanceDisp?.dispose()
+        tokenDisposable?.dispose()
+
+        queList.clear()
+        faveList.clear()
+        standardList.clear()
+        faveListHQ.clear()
+        standardListHQ.clear()
+
+        return db!!.videoDao()
+            .getVideosForUpload()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSuccess {
+                queList = it as MutableList<SavedVideo>
+                println("Size... ${queList.size}")
+
+                queList.removeIf {
+                    it.highUploaded
+                }
+
+                val it = queList.iterator()
+                while (it.hasNext()) {
+                    val video = it.next()
+                    println("Video is ${video.is_favorite} && ${video.mediumUploaded}")
+                    if (video.is_favorite && !video.mediumUploaded) {
+                        faveList.add(video)
+                        it.remove()
+                    } else if (!video.is_favorite && !video.mediumUploaded) {
+                        standardList.add(video)
+                        it.remove()
+                    } else if (video.is_favorite && video.mediumUploaded) {
+                        faveListHQ.add(video)
+                        it.remove()
+                    } else if (!video.is_favorite && video.mediumUploaded) {
+                        standardListHQ.add(video)
+                        it.remove()
+                    }
+                }
+
+
+                println("Fave list size: ${faveList.size}")
+                println("Fave list size HQ: ${faveListHQ.size}")
+                println("Standard list size: ${standardList.size}")
+                println("Standard list size HQ: ${standardListHQ.size}")
+                println("main list size.. ${queList.size}")
+
+                when {
+                    faveList.size > 0 -> {
+                        synchronized(this) {
+                            getVideoInstance(faveList[0])
+                            faveList.remove(faveList[0])
+                        }
+                    }
+                    standardList.size > 0 -> {
+                        synchronized(this) {
+                            getVideoInstance(standardList[0])
+                            standardList.remove(standardList[0])
+                        }
+                    }
+                }
+            }
+
     }
 
-    var currentVideo: SavedVideo? = null
+    private var currentVideo: SavedVideo? = null
     @Synchronized
     private fun getVideoInstance(it: SavedVideo?) {
         currentVideo = it
-        println("Current ----- $currentVideo")
         instanceDisp = uploadsManager
             .getVideoInstance(it)
             .map {
@@ -184,18 +188,20 @@ class VideoUploadWorker(
     private var tokenDisposable: Disposable? = null
     private var awsDataDisposable: Disposable? = null
     private fun requestTokenForUpload() {
-
+        println("Token...")
         awsDataDisposable =
             uploadsManager
                 .getAWSDataForUpload()
                 .doOnError {
                     it.printStackTrace()
+                    println("made an error... ${it.message}")
                     videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return@doOnError)
                 }
                 .map {
                     tokenResponse = it
                 }
                 .doAfterNext {
+                    println("Success.... $tokenResponse")
                     beginUpload(token = tokenResponse)
                 }
                 .subscribe({
@@ -206,7 +212,7 @@ class VideoUploadWorker(
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?) {
-
+        println("BEGIN UPLOAD>... $token")
         tokenDisposable =
             uploadsManager
                 .registerWithMD5(token ?: return, hdReady)
@@ -250,7 +256,11 @@ class VideoUploadWorker(
                 upload()
             } else {
                 fullBytes = File(currentVideo?.mediumRes).readBytes()
+                if (fullBytes.isEmpty()) {
+                    return
+                }
                 currentVideo?.uploadState = UploadState.UPLOADING_MEDIUM
+                println("medium.... ${currentVideo?.mediumRes}")
                 upload()
             }
         } else {
@@ -258,9 +268,8 @@ class VideoUploadWorker(
         }
     }
 
-    private var startRange = 0 //8578237
+    private var startRange = 0
     private var chunkToUpload: Int = 0
-    var isHighQuality: Boolean = false
     @SuppressLint("CheckResult")
     var up: Disposable? = null
 
@@ -384,7 +393,6 @@ class VideoUploadWorker(
                 arg.printStackTrace()
                 videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             }
-
 
             serverDis = uploadsManager
                 .writerToServerAfterComplete(

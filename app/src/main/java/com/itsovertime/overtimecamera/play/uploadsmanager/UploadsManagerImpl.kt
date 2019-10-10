@@ -67,9 +67,12 @@ class UploadsManagerImpl(
         data: TokenResponse,
         hdReady: Boolean
     ): Observable<EncryptedResponse> {
+        println("pre md5..")
         val md5 = when (hdReady) {
             true -> md5(File(currentVideo?.trimmedVidPath).readBytes())
+
             else -> md5(File(currentVideo?.mediumRes).readBytes())
+
         }
         return api
             .uploadDataForMd5(

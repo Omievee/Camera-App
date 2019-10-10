@@ -29,7 +29,6 @@ import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.onboarding.OnBoardingFragment
 import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
-import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
 import kotlinx.android.parcel.Parcelize
@@ -126,16 +125,13 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.submit -> {
-                println("access code :: $accessCodeSent")
                 if (accessCodeSent) {
                     submitAccessCode()
                 } else {
-                    println("else?")
                     submitNumberForCode()
                 }
             }
             R.id.resend -> {
-
                 presenter.resendAccessCode()
             }
             R.id.changeNum -> presenter.resetViews()
@@ -186,7 +182,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     private var wakeLock: PowerManager.WakeLock? = null
     private fun keepScreenUnlocked() {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screen_on:tag")
     }
 
     @Inject
@@ -295,14 +291,14 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onBackPressed() {
         supportFragmentManager.fragments.forEach {
             when (it) {
-                is UploadsFragment -> {
-                    println("uploads..... ${it.isVisible}")
-                    if (it.childFragmentManager.backStackEntryCount > 0) {
-                        it.childFragmentManager.popBackStack()
-                    } else if (it.childFragmentManager.backStackEntryCount == 0 && viewPager.currentItem == 1) {
-                        viewPager.currentItem = 0
-                    }
-                }
+//                is UploadsFragment -> {
+//                    println("uploads..... ${it.isVisible}")
+//                    if (it.childFragmentManager.backStackEntryCount > 0) {
+//                        it.childFragmentManager.popBackStack()
+//                    } else if (it.childFragmentManager.backStackEntryCount == 0 && viewPager.currentItem == 1) {
+//                        viewPager.currentItem = 0
+//                    }
+//                }
                 is CameraFragment -> {
                     println("camera..... ${it.isVisible}")
                     if (it.childFragmentManager.backStackEntryCount > 0) {
@@ -374,7 +370,7 @@ class CustomViewPageAdapter(
     override fun getCount(): Int {
         TABS = when (isMainViewPager) {
             true -> {
-                2
+                1
             }
             else -> data.size
         }
@@ -387,7 +383,6 @@ class CustomViewPageAdapter(
             true -> {
                 when (position) {
                     0 -> CameraFragment()
-                    1 -> UploadsFragment()
                     else -> null
                 }
             }

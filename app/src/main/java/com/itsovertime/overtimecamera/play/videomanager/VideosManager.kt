@@ -26,6 +26,5 @@ interface VideosManager {
     fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String)
     fun loadFFMPEG()
     fun updateHighuploaded(qualityUploaded: Boolean, clientId: String)
-    fun subToDbUpdates(): Observable<Boolean>
     fun determineTrim(savedVideo: SavedVideo)
 }

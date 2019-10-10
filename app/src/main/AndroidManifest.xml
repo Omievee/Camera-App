@@ -22,15 +22,16 @@
             android:name=".application.OTApplication"
             android:allowBackup="true"
             android:configChanges="orientation|screenSize"
+            android:hardwareAccelerated="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:largeHeap="true"
-            android:hardwareAccelerated="true"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppFullScreenTheme"
             tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".onboarding.OnboardingActivity"></activity>
+        <activity android:name=".uploads.UploadsActivity"></activity>
+        <activity android:name=".onboarding.OnboardingActivity" />
         <activity android:name=".splashscreen.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -40,9 +41,7 @@
         </activity>
         <activity
                 android:name=".baseactivity.BaseActivity"
-                android:screenOrientation="portrait">
-
-        </activity>
+                android:screenOrientation="portrait"></activity>
 
         <meta-data
                 android:name="io.fabric.ApiKey"

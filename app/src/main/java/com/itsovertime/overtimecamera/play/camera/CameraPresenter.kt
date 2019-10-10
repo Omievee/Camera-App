@@ -5,7 +5,6 @@ import android.os.Environment
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Transformation
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -15,20 +14,21 @@ import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import io.reactivex.disposables.Disposable
 import java.io.File
-import androidx.databinding.adapters.TextViewBindingAdapter.setText
 import android.os.CountDownTimer
-import android.os.SystemClock
-import android.widget.Chronometer
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
-import android.os.SystemClock.elapsedRealtime
-import android.widget.Chronometer.OnChronometerTickListener
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
+import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.User
-import com.itsovertime.overtimecamera.play.userpreference.UserPreference
+import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 
 
 class CameraPresenter(
@@ -78,15 +78,19 @@ class CameraPresenter(
             )
         }
         manager.saveHighQualityVideoToDB(video ?: return)
+
         view.engageCamera()
     }
 
 
     fun onCreate() {
-        checkGallerySize()
+
+        subscribeToGallerySize()
         manager.loadFFMPEG()
+        manager.loadFromDB()
         user()
     }
+
 
     private var countDownTimer: CountDownTimer? = null
     @SuppressLint("CheckResult")
@@ -107,7 +111,7 @@ class CameraPresenter(
 
             override fun onFinish() {
                 view.activity?.runOnUiThread {
-                    text.text = "                 ${maxTime}s"
+                    text.text = "                        ${maxTime}s"
                 }
             }
         }.start()
@@ -138,12 +142,18 @@ class CameraPresenter(
     }
 
 
-    private fun checkGallerySize() {
+    private fun subscribeToGallerySize() {
         totalDisposable?.dispose()
         totalDisposable = manager
             .subscribeToVideoGallerySize()
             .subscribe({
                 view.updateUploadsIconCount(it.toString())
+                view.context?.let { it1 ->
+                    WorkManager.getInstance(it1).enqueue(
+                        OneTimeWorkRequestBuilder<VideoUploadWorker>()
+                            .build()
+                    )
+                }
             }, {
 
             })

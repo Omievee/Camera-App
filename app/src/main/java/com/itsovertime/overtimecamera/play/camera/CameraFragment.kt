@@ -2,6 +2,7 @@ package com.itsovertime.overtimecamera.play.camera
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Matrix
@@ -32,6 +33,8 @@ import com.itsovertime.overtimecamera.play.events.EventsClickListener
 import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.Tagged_Teams
+import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
+import com.itsovertime.overtimecamera.play.uploads.UploadsActivity
 import dagger.android.support.AndroidSupportInjection
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -87,12 +90,19 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         if (eventList.isNullOrEmpty()) {
             eventSpace.visibility = View.GONE
         }
-        selectedEvent = eventList?.get(0)
 
-        evAdapter = EventsAdapter(eventList, listener)
+
+        if (BuildConfig.DEBUG) {
+            eventList as MutableList<Event>
+             eventList?.removeIf {
+                !it.name.equals("Beta testing 10/10/2019")
+            }
+            selectedEvent = eventList[0]
+            evAdapter = EventsAdapter(eventList, listener)
+        }
+
+
         hiddenEvents.adapter = evAdapter
-
-
         var tagged: Array<Tagged_Teams>
         eventList?.forEach {
             tagged = it.tagged_teams
@@ -243,7 +253,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 progress.visibility = View.VISIBLE
                 deleteUnsavedFile()
                 releaseCamera(tapToSave = false)
-                callback?.onUploadsButtonClicked()
+                startActivity(Intent(context, UploadsActivity::class.java))
             }
         }
     }
@@ -570,11 +580,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             eventSpace.visibility = View.VISIBLE
             eventTitle.text = event.name
 
-            // selectedEvent = event
+            selectedEvent = event
             old = newData
             newData.clear()
             event.tagged_teams.forEach {
-                if (!it.taggable_athletes.isEmpty()) {
+                if (it.taggable_athletes.isNotEmpty()) {
                     it.taggable_athletes.forEach {
                         newData.add(TaggedPlayersPresentation(it))
                     }

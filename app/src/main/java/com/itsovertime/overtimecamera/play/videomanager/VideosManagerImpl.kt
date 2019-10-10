@@ -33,12 +33,6 @@ class VideosManagerImpl(
     val context: OTApplication,
     val manager: UploadsManager
 ) : VideosManager {
-    var queSub: BehaviorSubject<Boolean> = BehaviorSubject.create()
-    override fun subToDbUpdates(): Observable<Boolean> {
-        return queSub
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-    }
 
     @SuppressLint("CheckResult")
     override fun updateHighuploaded(qualityUploaded: Boolean, clientId: String) {
@@ -72,7 +66,6 @@ class VideosManagerImpl(
 
     var db = AppDatabase.getAppDataBase(context = context)
     private var videoDao = db?.videoDao()
-
     @SuppressLint("CheckResult")
     override fun updateUploadId(uplaodId: String, clientId: String) {
         Single.fromCallable {
@@ -185,7 +178,7 @@ class VideosManagerImpl(
     override fun determineTrim(savedVideo: SavedVideo) {
         if (isVideoDurationLongerThanMaxTime(savedVideo)) {
             trimVideo(savedVideo)
-        } else{
+        } else {
             transcodeVideo(savedVideo, File(savedVideo.highRes))
         }
     }
@@ -385,7 +378,6 @@ class VideosManagerImpl(
         }
     }
 
-    var processedVideos = mutableListOf<SavedVideo>()
     var lastVideoId: String = ""
     @SuppressLint("CheckResult")
     override fun saveHighQualityVideoToDB(video: SavedVideo) {
@@ -409,7 +401,6 @@ class VideosManagerImpl(
             })
     }
 
-
     private var lastVideoMaxTime: String? = ""
     var videosList = mutableListOf<SavedVideo>()
     @Synchronized
@@ -426,17 +417,12 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 if (!videosList.isNullOrEmpty()) {
-                    queSub.onNext(true)
                     videosList.forEach {
                         if (it.mediumRes.isNullOrEmpty()) {
                             determineTrim(it)
-                        } else processedVideos.add(it)
+                        }
                     }
                 }
-                if (!processedVideos.isNullOrEmpty()) {
-                    println("Running worker...")
-                }
-
             }, {
                 it.printStackTrace()
             })

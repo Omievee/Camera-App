@@ -14,7 +14,7 @@ class UploadsModule {
     @Provides
     @FragmentScope
     fun providePresenter(
-        fragment: UploadsFragment,
+        fragment: UploadsActivity,
         manager: VideosManager,
         wifiManager: WifiManager,
         progress:ProgressManager

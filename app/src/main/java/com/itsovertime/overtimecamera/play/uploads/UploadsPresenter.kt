@@ -11,7 +11,7 @@ import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
 import io.reactivex.disposables.Disposable
 
 class UploadsPresenter(
-    val view: UploadsFragment,
+    val view: UploadsActivity,
     val manager: VideosManager,
     private val wifiManager: WifiManager,
     val progressManager: ProgressManager
@@ -39,7 +39,7 @@ class UploadsPresenter(
             progressManager
                 .subscribeToCurrentVideoQuality()
                 .subscribe({
-                    when(it){
+                    when (it) {
                         true -> view.setUploadingHdVideo()
                         else -> view.setUploadingMedVideo()
                     }
@@ -70,10 +70,7 @@ class UploadsPresenter(
             .subscribe({
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
-                WorkManager.getInstance(view?.context ?: return@subscribe).enqueue(
-                    OneTimeWorkRequestBuilder<VideoUploadWorker>()
-                        .build()
-                )
+
             }, {
                 println("throwable: ${it.printStackTrace()}")
             })
@@ -113,7 +110,7 @@ class UploadsPresenter(
             val inputData = Data.Builder().apply {
                 putBoolean("HD", true)
             }
-            WorkManager.getInstance(view.context ?: return).enqueue(
+            WorkManager.getInstance(view).enqueue(
                 OneTimeWorkRequestBuilder<VideoUploadWorker>()
                     .setInputData(inputData.build())
                     .build()
