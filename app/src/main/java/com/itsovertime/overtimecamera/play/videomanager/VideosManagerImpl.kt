@@ -175,16 +175,19 @@ class VideosManagerImpl(
         return false
     }
 
+    @Synchronized
     override fun determineTrim(savedVideo: SavedVideo) {
-        if (isVideoDurationLongerThanMaxTime(savedVideo)) {
-            trimVideo(savedVideo)
-        } else {
-            transcodeVideo(savedVideo, File(savedVideo.highRes))
+        synchronized(this) {
+            if (isVideoDurationLongerThanMaxTime(savedVideo)) {
+                trimVideo(savedVideo)
+            } else {
+                transcodeVideo(savedVideo, File(savedVideo.highRes))
+            }
         }
+
     }
 
     private fun trimVideo(savedVideo: SavedVideo) {
-
         val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
         val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
         val complexCommand = arrayOf(
@@ -210,15 +213,14 @@ class VideosManagerImpl(
             newFile.absolutePath
         )
 
-
         try {
             synchronized(this) {
                 ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                     override fun onSuccess(message: String?) {
                         super.onSuccess(message)
-                        println("Success from trim....")
                         transcodeVideo(savedVideo, newFile)
                     }
+
 
                     override fun onFailure(message: String?) {
                         super.onFailure(message)
@@ -245,11 +247,10 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
-
-                loadFromDB()
             }, {
                 it.printStackTrace()
             })
+
 
     }
 
@@ -291,6 +292,7 @@ class VideosManagerImpl(
             if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
                 Crashlytics.log("Compress File Error")
             }
+
             updateMediumFilePath(
                 File(mediaStorageDir.path + File.separator + file.name).absolutePath,
                 video.clientId
@@ -341,6 +343,7 @@ class VideosManagerImpl(
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
     @Synchronized
     override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
+        println("Transcode started...... $savedVideo && $videoFile")
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
@@ -348,15 +351,17 @@ class VideosManagerImpl(
 
         val listener = object : MediaTranscoder.Listener {
             override fun onTranscodeProgress(progress: Double) {
+                println("PROGRESS:: $progress")
             }
 
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
+                resetUploadStateForCurrentVideo(savedVideo)
                 exception?.printStackTrace()
             }
 
             override fun onTranscodeCompleted() {
-                loadFromDB()
+
             }
         }
         try {
@@ -418,35 +423,59 @@ class VideosManagerImpl(
             .subscribe({
                 if (!videosList.isNullOrEmpty()) {
                     videosList.forEach {
+                        println("Medium Path: ${it.mediumRes}")
                         if (it.mediumRes.isNullOrEmpty()) {
-                            determineTrim(it)
-                        }
+                            synchronized(this) {
+                                determineTrim(it)
+                            }
+                        } else doWork()
                     }
+
                 }
+
             }, {
                 it.printStackTrace()
             })
     }
 
+    private fun doWork() {
+        WorkManager.getInstance(context).enqueue(
+            OneTimeWorkRequestBuilder<VideoUploadWorker>()
+                .build()
+        )
+    }
+
     @SuppressLint("CheckResult")
     override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
+        val video = File(currentVideo.mediumRes)
+        val trim = File(currentVideo.trimmedVidPath)
+        if (video.exists()) {
+            video.delete()
+        }
+        if (trim.exists()) {
+            trim.delete()
+        }
         Single.fromCallable {
             with(videoDao) {
                 this?.resetUploadDataForVideo(
                     uploadState = UploadState.QUEUED,
                     uploadId = "",
                     id = "",
-                    lastID = currentVideo.clientId
+                    lastID = currentVideo.clientId,
+                    trimmedVidPath = "",
+                    mediumVidPath = ""
                 )
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
+                println("RESET STATE>>>> LOAD DB")
                 loadFromDB()
             }, {
                 it.printStackTrace()
             })
     }
+
 
     override fun subscribeToVideoGallery(): Observable<List<SavedVideo>> {
         return subject

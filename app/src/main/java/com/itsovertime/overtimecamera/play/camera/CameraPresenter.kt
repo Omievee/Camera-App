@@ -49,6 +49,7 @@ class CameraPresenter(
         }
 
         filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
+
         println("Path:: $filePath")
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
@@ -134,6 +135,7 @@ class CameraPresenter(
     }
 
     fun deletePreviousFile() {
+        println("FILE PATH!?? $filePath")
         val previousFile = File(filePath ?: return)
         if (previousFile.exists()) {
             previousFile.delete()
@@ -148,12 +150,6 @@ class CameraPresenter(
             .subscribeToVideoGallerySize()
             .subscribe({
                 view.updateUploadsIconCount(it.toString())
-                view.context?.let { it1 ->
-                    WorkManager.getInstance(it1).enqueue(
-                        OneTimeWorkRequestBuilder<VideoUploadWorker>()
-                            .build()
-                    )
-                }
             }, {
 
             })

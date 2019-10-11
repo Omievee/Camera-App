@@ -94,7 +94,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
         if (BuildConfig.DEBUG) {
             eventList as MutableList<Event>
-             eventList?.removeIf {
+            eventList?.removeIf {
                 !it.name.equals("Beta testing 10/10/2019")
             }
             selectedEvent = eventList[0]
@@ -295,6 +295,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun deleteUnsavedFile() {
+        println("DELETING FILE!")
         presenter.deletePreviousFile()
     }
 
@@ -680,6 +681,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun onPause() {
         releaseCamera(tapToSave = false)
+        deleteUnsavedFile()
         super.onPause()
 //        orientation?.disable()
     }
