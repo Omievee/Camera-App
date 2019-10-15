@@ -198,12 +198,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             R.id.tapToSave -> {
                 progress.visibility = View.VISIBLE
                 when (CAMERA) {
-                    1 -> {
-                        tapToSaveSelfie()
-                    }
-                    else -> {
-                        tapToSaveRegularRecording()
-                    }
+                    1 -> tapToSaveSelfie()
+                    else -> tapToSaveRegularRecording()
                 }
             }
             R.id.favoriteIcon -> {
@@ -503,6 +499,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 recording = false
             }
         }
+
         activity?.runOnUiThread {
             progress.visibility = View.GONE
         }
@@ -676,8 +673,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun onPause() {
         releaseCamera(tapToSave = false)
-        deleteUnsavedFile()
+        println("PRE SUPER ON PAUSE")
         super.onPause()
+        deleteUnsavedFile()
+        println("POST SUPER ON PAUSE")
 //        orientation?.disable()
     }
 

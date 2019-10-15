@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.camera
 
 import android.annotation.SuppressLint
+import android.os.CountDownTimer
 import android.os.Environment
 import android.view.View
 import android.view.animation.Animation
@@ -8,27 +9,22 @@ import android.view.animation.Transformation
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.itsovertime.overtimecamera.play.eventmanager.EventManager
-import com.itsovertime.overtimecamera.play.model.Event
-import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
-import com.itsovertime.overtimecamera.play.videomanager.VideosManager
-import io.reactivex.disposables.Disposable
-import java.io.File
-import android.os.CountDownTimer
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
+import com.itsovertime.overtimecamera.play.eventmanager.EventManager
+import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
+import com.itsovertime.overtimecamera.play.model.User
+import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
+import com.itsovertime.overtimecamera.play.videomanager.VideosManager
+import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
+import io.reactivex.disposables.Disposable
+import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
-import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
-import com.itsovertime.overtimecamera.play.db.AppDatabase
-import com.itsovertime.overtimecamera.play.model.User
-import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
 
 
 class CameraPresenter(
@@ -90,6 +86,7 @@ class CameraPresenter(
         manager.loadFFMPEG()
         manager.loadFromDB()
         user()
+
     }
 
 
@@ -150,10 +147,13 @@ class CameraPresenter(
             .subscribeToVideoGallerySize()
             .subscribe({
                 view.updateUploadsIconCount(it.toString())
+
             }, {
 
             })
     }
+
+
 
     fun onDestroy() {
         totalDisposable?.dispose()

@@ -53,20 +53,20 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
 //            }
 //        }
 
-        val uri = Uri.fromFile(File(savedVideo.highRes))
-        val request = ImageRequestBuilder
-            .newBuilderWithSource(uri)
-            .setProgressiveRenderingEnabled(true)
-            .setLocalThumbnailPreviewsEnabled(false)
-            .setResizeOptions(ResizeOptions(852, 480))
-            .setCacheChoice(ImageRequest.CacheChoice.SMALL)
-            .build()
-
-        val controller = Fresco.newDraweeControllerBuilder()
-            .setUri(uri)
-            .setLowResImageRequest(request)
-            .build()
-
-        thumbNail.controller = controller
+//        val uri = Uri.fromFile(File(savedVideo.highRes))
+//        val request = ImageRequestBuilder
+//            .newBuilderWithSource(uri)
+//            .setProgressiveRenderingEnabled(true)
+//            .setLocalThumbnailPreviewsEnabled(false)
+//            .setResizeOptions(ResizeOptions(852, 480))
+//            .setCacheChoice(ImageRequest.CacheChoice.SMALL)
+//            .build()
+//
+//        val controller = Fresco.newDraweeControllerBuilder()
+//            .setUri(uri)
+//            .setLowResImageRequest(request)
+//            .build()
+//
+//        thumbNail.controller = controller
     }
 }

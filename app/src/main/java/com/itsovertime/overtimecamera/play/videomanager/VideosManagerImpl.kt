@@ -18,6 +18,8 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
+import com.otaliastudios.transcoder.Transcoder
+import com.otaliastudios.transcoder.TranscoderListener
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -161,9 +163,8 @@ class VideosManagerImpl(
     private var copyVideo = "copy"
 
     private fun isVideoDurationLongerThanMaxTime(file: SavedVideo): Boolean {
-        val retriever = MediaMetadataRetriever();
+        val retriever = MediaMetadataRetriever()
         try {
-            println("URI : ${Uri.fromFile(File(file.highRes))}")
             retriever.setDataSource(context, Uri.fromFile(File(file.highRes)))
             val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: ""
             val timeInMillisec = time.toLong() / 1000
@@ -343,44 +344,24 @@ class VideosManagerImpl(
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
     @Synchronized
     override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
-        println("Transcode started...... $savedVideo && $videoFile")
-        val file = Uri.fromFile(videoFile)
-        val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
-        val fileDescriptor = parcelFileDescriptor?.fileDescriptor
 
+        Transcoder.into(compressedFile(videoFile, savedVideo).absolutePath)
+            .addDataSource(context, Uri.fromFile(videoFile)) // or...
+            .setListener(object : TranscoderListener {
+                override fun onTranscodeCompleted(successCode: Int) {
+                    loadFromDB()
+                }
 
-        val listener = object : MediaTranscoder.Listener {
-            override fun onTranscodeProgress(progress: Double) {
-                println("PROGRESS:: $progress")
-            }
-
-            override fun onTranscodeCanceled() {}
-            override fun onTranscodeFailed(exception: Exception?) {
-                resetUploadStateForCurrentVideo(savedVideo)
-                exception?.printStackTrace()
-            }
-
-            override fun onTranscodeCompleted() {
-
-            }
-        }
-        try {
-            synchronized(this) {
-                MediaTranscoder.getInstance().transcodeVideo(
-                    fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
-                    MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
-                )
-            }
-        } catch (r: RuntimeException) {
-            Crashlytics.log("MediaTranscoder-Error ${r.message}")
-            r.printStackTrace()
-        } catch (io: IOException) {
-            Crashlytics.log("MediaTranscoder-Error ${io.message}")
-            io.printStackTrace()
-        } catch (ia: IllegalArgumentException) {
-            Crashlytics.log("MediaTranscoder-Error ${ia.message}")
-            ia.printStackTrace()
-        }
+                override fun onTranscodeProgress(progress: Double) {
+                    println("Progress... $progress")
+                }
+                override fun onTranscodeCanceled() {
+                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                }
+                override fun onTranscodeFailed(exception: Throwable) {
+                    println("Transcode failure... ${exception.message}")
+                }
+            }).transcode()
     }
 
     var lastVideoId: String = ""
@@ -397,10 +378,8 @@ class VideosManagerImpl(
             .onErrorReturn {
                 it.printStackTrace()
             }
-            .doFinally {
-                loadFromDB()
-            }
             .subscribe({
+                loadFromDB()
             }, {
                 it.printStackTrace()
             })
@@ -428,7 +407,12 @@ class VideosManagerImpl(
                             synchronized(this) {
                                 determineTrim(it)
                             }
-                        } else doWork()
+                        }else {
+//                            WorkManager.getInstance(context).enqueue(
+//                                OneTimeWorkRequestBuilder<VideoUploadWorker>()
+//                                    .build()
+//                            )
+                        }
                     }
 
                 }
@@ -447,8 +431,8 @@ class VideosManagerImpl(
 
     @SuppressLint("CheckResult")
     override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
-        val video = File(currentVideo.mediumRes)
-        val trim = File(currentVideo.trimmedVidPath)
+        val video = File(currentVideo.mediumRes ?: "")
+        val trim = File(currentVideo.trimmedVidPath ?: "")
         if (video.exists()) {
             video.delete()
         }

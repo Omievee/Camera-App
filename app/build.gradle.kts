@@ -40,8 +40,8 @@ android {
         getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
             )
         }
     }
@@ -106,6 +106,8 @@ dependencies {
 
     //transcoder
     implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
+    //NEW Transcoder:
+    implementation("com.otaliastudios:transcoder:0.7.3")
     //FFMPJEG - trimming
     implementation("com.writingminds:FFmpegAndroid:0.3.2")
     //Fabric
