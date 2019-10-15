@@ -132,23 +132,19 @@ class VideoUploadWorker(
         tokenDisposable?.dispose()
 
         when {
-            faveList.size > 0 -> {
-                synchronized(this) {
-                    if (File(faveList[0].mediumRes).readBytes().isNotEmpty()) {
-                        getVideoInstance(faveList[0])
-                        faveList.remove(faveList[0])
-                    } else videosManager.resetUploadStateForCurrentVideo(faveList[0])
+            faveList.size > 0 -> checkForEmptyStartUpload(faveList)
+            standardList.size > 0 -> checkForEmptyStartUpload(standardList)
+        }
+    }
 
-                }
-            }
-            standardList.size > 0 -> {
-                synchronized(this) {
-                    if (File(standardList[0].mediumRes).readBytes().isNotEmpty()) {
-                        getVideoInstance(standardList[0])
-                        standardList.remove(standardList[0])
-                    } else videosManager.resetUploadStateForCurrentVideo(standardList[0])
-                }
-            }
+
+    @Synchronized
+    fun checkForEmptyStartUpload(videoItem: MutableList<SavedVideo>) {
+        synchronized(this) {
+            if (File(videoItem[0].mediumRes).readBytes().isNotEmpty()) {
+                getVideoInstance(videoItem[0])
+                videoItem.remove(videoItem[0])
+            } else videosManager.resetUploadStateForCurrentVideo(videoItem[0])
         }
     }
 

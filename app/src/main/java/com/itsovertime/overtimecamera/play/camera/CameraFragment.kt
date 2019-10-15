@@ -40,6 +40,7 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.event_view.*
+import kotlinx.android.synthetic.main.events_recycler_view.*
 import kotlinx.android.synthetic.main.fragment_camera.*
 import kotlinx.android.synthetic.main.tagged_players_view.*
 import kotlinx.android.synthetic.main.upload_button_view.*
@@ -73,6 +74,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     override fun openEvents() {
+        println("here...")
         //presenter.expand(hiddenEvents)
         hiddenEvents.visibility = View.VISIBLE
 //        hiddenEvents.alpha = 0.0f;
@@ -91,18 +93,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             eventSpace.visibility = View.GONE
         }
 
-
-        if (BuildConfig.DEBUG) {
-            eventList as MutableList<Event>
-            eventList?.removeIf {
-                !it.name.equals("Beta testing 10/10/2019")
-            }
-            selectedEvent = eventList[0]
-            evAdapter = EventsAdapter(eventList, listener)
-        }
-
-
-        hiddenEvents.adapter = evAdapter
+        selectedEvent = eventList?.get(0)
+        evAdapter = EventsAdapter(eventList, listener)
+        eventsRecycler.adapter = evAdapter
         var tagged: Array<Tagged_Teams>
         eventList?.forEach {
             tagged = it.tagged_teams
@@ -200,7 +193,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.eventSpace -> presenter.displayHiddenView()
+            R.id.cancel -> hideEventsRV()
+            R.id.eventTitle -> presenter.displayHiddenView()
             R.id.tapToSave -> {
                 progress.visibility = View.VISIBLE
                 when (CAMERA) {
@@ -308,8 +302,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         selfieButton.setOnClickListener(this)
         pauseButton.setOnClickListener(this)
         pausedView.setOnClickListener(this)
+        cancel.setOnClickListener(this)
         hahaIcon.setOnClickListener(this)
-        eventSpace.setOnClickListener(this)
+        eventTitle.setOnClickListener(this)
         uploadButton.setOnClickListener(this)
 
     }
@@ -604,7 +599,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         presenter.setUpClicks()
         presenter.onCreate()
         getEventData()
-        hiddenEvents.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+        eventsRecycler.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         athleteRecycler.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         detectOrientation()
     }

@@ -75,17 +75,15 @@
             app:layout_constraintTop_toBottomOf="@id/topGuide" />
 
 
-    <androidx.recyclerview.widget.RecyclerView
+    <com.itsovertime.overtimecamera.play.camera.EventsRecyclerView
             android:id="@+id/hiddenEvents"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@android:drawable/screen_background_dark_transparent"
-            android:orientation="horizontal"
-            android:visibility="gone"
+            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="@id/bottomGuide"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/vert"
-            app:layout_constraintTop_toTopOf="@id/topGuide" />
+            app:layout_constraintTop_toBottomOf="@id/topGuide" />
 
     <androidx.constraintlayout.widget.Guideline
             android:id="@+id/verticalGuide"

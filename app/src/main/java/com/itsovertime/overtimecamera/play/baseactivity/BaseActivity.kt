@@ -182,7 +182,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     private var wakeLock: PowerManager.WakeLock? = null
     private fun keepScreenUnlocked() {
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "screen_on:tag")
+        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
     }
 
     @Inject
