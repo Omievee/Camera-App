@@ -41,6 +41,13 @@ import javax.inject.Inject
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener, SettingsFragment.SettingsInterface {
+    override fun onRefreshFragmentFromDisconnect() {
+        supportFragmentManager.beginTransaction()
+            .detach(CameraFragment())
+            .attach(CameraFragment())
+            .commit();
+    }
+
     override fun onSettingsOptionClicked() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -51,7 +58,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         if (view == null) {
             view = View(this);
         }
-        imm.hideSoftInputFromWindow(view.windowToken, 0);
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
     override fun logOut() {

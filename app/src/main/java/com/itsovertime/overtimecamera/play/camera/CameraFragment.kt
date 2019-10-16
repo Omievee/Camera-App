@@ -853,6 +853,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             println("DISCONNECT!! $cameraDevice")
             cameraDevice.close()
             this@CameraFragment.cameraDevice = null
+            callback?.onRefreshFragmentFromDisconnect()
         }
 
         override fun onError(cameraDevice: CameraDevice, error: Int) {
@@ -869,28 +870,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     } ?: choices[choices.size - 1]
 
 
-    private fun chooseOptimalSize(
-        choices: Array<Size>,
-        width: Int,
-        height: Int,
-        aspectRatio: Size
-    ): Size {
-
-        val w = aspectRatio.width
-        val h = aspectRatio.height
-        val bigEnough = choices.filter {
-            it.height == it.width * h / w && it.width >= width && it.height >= height
-        }
-
-        return if (bigEnough.isNotEmpty()) {
-            Collections.min(bigEnough, Compare())
-        } else {
-            choices[0]
-        }
-    }
-
     interface UploadsButtonClick {
         fun onUploadsButtonClicked()
+        fun onRefreshFragmentFromDisconnect()
     }
 }
 

@@ -20,6 +20,7 @@ import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
 import com.otaliastudios.transcoder.Transcoder
 import com.otaliastudios.transcoder.TranscoderListener
+import com.otaliastudios.transcoder.source.FilePathDataSource
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -154,13 +155,6 @@ class VideosManagerImpl(
         }
     }
 
-    private var seekToEndOf = "-sseof"
-    private var videoCodec = "-vcodec"
-    private var codecValue = "h264"
-    private var commandYOverwrite = "-y"
-    private var readInput = "-i"
-    private var commandCCopy = "-c"
-    private var copyVideo = "copy"
 
     private fun isVideoDurationLongerThanMaxTime(file: SavedVideo): Boolean {
         val retriever = MediaMetadataRetriever()
@@ -169,6 +163,7 @@ class VideosManagerImpl(
             val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: ""
             val timeInMillisec = time.toLong() / 1000
             retriever.release()
+            println("Time in file... $timeInMillisec")
             return timeInMillisec > file.max_video_length
         } catch (e: IllegalArgumentException) {
             e.printStackTrace()
@@ -178,50 +173,42 @@ class VideosManagerImpl(
 
     @Synchronized
     override fun determineTrim(savedVideo: SavedVideo) {
-        synchronized(this) {
-            if (isVideoDurationLongerThanMaxTime(savedVideo)) {
+        if (isVideoDurationLongerThanMaxTime(savedVideo)) {
+            synchronized(this) {
+                println("True .. is longer")
                 trimVideo(savedVideo)
-            } else {
-                transcodeVideo(savedVideo, File(savedVideo.highRes))
             }
-        }
-
+        } else transcodeVideo(savedVideo, File(savedVideo.highRes))
     }
 
+    @Synchronized
     private fun trimVideo(savedVideo: SavedVideo) {
         val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
-        val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
-        val complexCommand = arrayOf(
-            //seek to end of video
-            seekToEndOf,
-            //given amount of time from Event -
-            maxVideoLengthFromEvent,
-            // Y command overwrites files w/ out permission
-            commandYOverwrite,
-            // I command reads from designated input file
-            readInput,
-            // file input
+        val maxVideoLengthFromEvent = "${savedVideo.max_video_length}"
+        val command = arrayOf(
+            "-ss",
+            "0",
+            "-i",
             File(savedVideo.highRes).absolutePath,
-            // video codec to write to
-            videoCodec,
-            // value of codec - H264
-            codecValue,
-            // C command dictates what to do w/ file
-            commandCCopy,
-            // copy the file to given location
-            copyVideo,
-            // new file that was copied from old
+            "-t",
+            maxVideoLengthFromEvent,
+            "-c",
+            "copy",
             newFile.absolutePath
         )
 
         try {
             synchronized(this) {
-                ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
-                    override fun onSuccess(message: String?) {
-                        super.onSuccess(message)
-                        transcodeVideo(savedVideo, newFile)
+                ffmpeg.execute(command, object : ExecuteBinaryResponseHandler() {
+                    override fun onFinish() {
+                        super.onFinish()
+                        loadFromDB()
                     }
 
+                    override fun onProgress(message: String?) {
+                        super.onProgress(message)
+                        println("Trim progress -- $message")
+                    }
 
                     override fun onFailure(message: String?) {
                         super.onFailure(message)
@@ -280,6 +267,7 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
+
             }, {
                 it.printStackTrace()
             })
@@ -293,7 +281,6 @@ class VideosManagerImpl(
             if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
                 Crashlytics.log("Compress File Error")
             }
-
             updateMediumFilePath(
                 File(mediaStorageDir.path + File.separator + file.name).absolutePath,
                 video.clientId
@@ -344,24 +331,30 @@ class VideosManagerImpl(
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
     @Synchronized
     override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
+        synchronized(this) {
+            Transcoder.into(compressedFile(videoFile, savedVideo).absolutePath)
+                .addDataSource(context, Uri.fromFile(videoFile))
+                .setListener(object : TranscoderListener {
+                    override fun onTranscodeCompleted(successCode: Int) {
+                        loadFromDB()
+                    }
 
-        Transcoder.into(compressedFile(videoFile, savedVideo).absolutePath)
-            .addDataSource(context, Uri.fromFile(videoFile)) // or...
-            .setListener(object : TranscoderListener {
-                override fun onTranscodeCompleted(successCode: Int) {
-                    loadFromDB()
-                }
+                    override fun onTranscodeProgress(progress: Double) {
+                        println("Progress transcoding ........ OV ........ $progress")
+                    }
 
-                override fun onTranscodeProgress(progress: Double) {
-                    println("Progress... $progress")
-                }
-                override fun onTranscodeCanceled() {
-                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                }
-                override fun onTranscodeFailed(exception: Throwable) {
-                    println("Transcode failure... ${exception.message}")
-                }
-            }).transcode()
+                    override fun onTranscodeCanceled() {
+                    }
+
+                    override fun onTranscodeFailed(exception: Throwable) {
+                        transcodeVideo(savedVideo, videoFile)
+                        println("Transcode failure... ${exception.message}")
+                        println("Transcode failure... ${exception.cause}")
+                        println("Transcode failure... ${exception.localizedMessage}")
+                    }
+                }).transcode()
+        }
+
     }
 
     var lastVideoId: String = ""
@@ -379,7 +372,7 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
-                loadFromDB()
+                determineTrim(video)
             }, {
                 it.printStackTrace()
             })
@@ -401,20 +394,11 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 if (!videosList.isNullOrEmpty()) {
-                    videosList.forEach {
-                        println("Medium Path: ${it.mediumRes}")
-                        if (it.mediumRes.isNullOrEmpty()) {
-                            synchronized(this) {
-                                determineTrim(it)
-                            }
-                        }else {
-//                            WorkManager.getInstance(context).enqueue(
-//                                OneTimeWorkRequestBuilder<VideoUploadWorker>()
-//                                    .build()
-//                            )
+                    for (savedVideo in videosList) {
+                        if (savedVideo.mediumRes.isNullOrEmpty() || File(savedVideo.mediumRes).readBytes().isEmpty()) {
+                            transcodeVideo(savedVideo, File(savedVideo.trimmedVidPath))
                         }
                     }
-
                 }
 
             }, {

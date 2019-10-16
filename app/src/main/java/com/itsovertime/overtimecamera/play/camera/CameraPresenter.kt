@@ -147,12 +147,22 @@ class CameraPresenter(
             .subscribeToVideoGallerySize()
             .subscribe({
                 view.updateUploadsIconCount(it.toString())
-
+                if (it > 0 && isColdStart) {
+                    beginUploadWork()
+                    isColdStart = false
+                }
             }, {
 
             })
     }
 
+    var isColdStart: Boolean = true
+    private fun beginUploadWork() {
+//        val worker = WorkManager.getInstance(view.context ?: return)
+//            .enqueue(OneTimeWorkRequestBuilder<VideoUploadWorker>().build())
+//
+//        println("State?? ${worker.state.value}")
+    }
 
 
     fun onDestroy() {
