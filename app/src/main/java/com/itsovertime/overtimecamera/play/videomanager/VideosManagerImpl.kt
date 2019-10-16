@@ -395,6 +395,7 @@ class VideosManagerImpl(
             .subscribe({
                 if (!videosList.isNullOrEmpty()) {
                     for (savedVideo in videosList) {
+                        println("Med Res: ${savedVideo.mediumRes}")
                         if (savedVideo.mediumRes.isNullOrEmpty() || File(savedVideo.mediumRes).readBytes().isEmpty()) {
                             transcodeVideo(savedVideo, File(savedVideo.trimmedVidPath))
                         }

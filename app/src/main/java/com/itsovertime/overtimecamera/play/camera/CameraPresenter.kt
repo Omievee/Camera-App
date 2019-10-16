@@ -10,6 +10,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.Operation
 import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
@@ -151,17 +152,19 @@ class CameraPresenter(
                     beginUploadWork()
                     isColdStart = false
                 }
+
+                println("State?? ${worker?.state?.value}")
             }, {
 
             })
     }
 
     var isColdStart: Boolean = true
+    var worker: Operation? = null
     private fun beginUploadWork() {
-//        val worker = WorkManager.getInstance(view.context ?: return)
-//            .enqueue(OneTimeWorkRequestBuilder<VideoUploadWorker>().build())
-//
-//        println("State?? ${worker.state.value}")
+        worker = WorkManager.getInstance(view.context ?: return)
+            .enqueue(OneTimeWorkRequestBuilder<VideoUploadWorker>().build())
+
     }
 
 

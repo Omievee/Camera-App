@@ -136,18 +136,14 @@ class VideoUploadWorker(
         when {
             faveList.size > 0 -> {
                 synchronized(this) {
-                    if (File(faveList[0].mediumRes).readBytes().isNotEmpty()) {
-                        getVideoInstance(faveList[0])
-                        faveList.remove(faveList[0])
-                    } else videosManager.resetUploadStateForCurrentVideo(faveList[0])
+                    getVideoInstance(faveList[0])
+                    faveList.remove(faveList[0])
                 }
             }
             standardList.size > 0 -> {
                 synchronized(this) {
-                    if (File(standardList[0].mediumRes).readBytes().isNotEmpty()) {
-                        getVideoInstance(standardList[0])
-                        standardList.remove(standardList[0])
-                    } else videosManager.resetUploadStateForCurrentVideo(standardList[0])
+                    getVideoInstance(standardList[0])
+                    standardList.remove(standardList[0])
                 }
             }
         }

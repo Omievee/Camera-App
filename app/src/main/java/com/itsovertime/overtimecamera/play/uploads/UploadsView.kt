@@ -33,10 +33,10 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
             else -> View.INVISIBLE
         }
         if (savedVideo.mediumUploaded) {
-            medQProgressBar.setProgress(100, false)
+            medQProgressBar.setProgress(100, true)
         }
         if (savedVideo.highUploaded) {
-            highQProgressBar.setProgress(100, false)
+            highQProgressBar.setProgress(100, true)
         }
 //        if (savedVideo.clientId == progress.id) {
 //            val anim = ProgressBarAnimation(medQProgressBar, 0, progress.end)
@@ -56,6 +56,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
 //        val uri = Uri.fromFile(File(savedVideo.highRes))
 //        val request = ImageRequestBuilder
 //            .newBuilderWithSource(uri)
+//
 //            .setProgressiveRenderingEnabled(true)
 //            .setLocalThumbnailPreviewsEnabled(false)
 //            .setResizeOptions(ResizeOptions(852, 480))
@@ -69,4 +70,10 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
 //
 //        thumbNail.controller = controller
     }
+
+    fun setProgress(value: Int) {
+        medQProgressBar.progress = value
+    }
+
+
 }
