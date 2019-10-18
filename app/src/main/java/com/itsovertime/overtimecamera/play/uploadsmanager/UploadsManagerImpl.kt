@@ -67,9 +67,15 @@ class UploadsManagerImpl(
         data: TokenResponse,
         hdReady: Boolean
     ): Observable<EncryptedResponse> {
-        val md5 = when (hdReady) {
-            true -> md5(File(currentVideo?.trimmedVidPath).readBytes())
-            false -> md5(File(currentVideo?.mediumRes).readBytes())
+        val md5: String = when (hdReady) {
+            true -> {
+                when (currentVideo?.trimmedVidPath) {
+                    null -> md5(File(currentVideo?.highRes).readBytes()) ?: ""
+                    "" -> md5(File(currentVideo?.highRes).readBytes()) ?: ""
+                    else -> md5(File(currentVideo?.trimmedVidPath).readBytes()) ?: ""
+                }
+            }
+            false -> md5(File(currentVideo?.mediumRes).readBytes()) ?: ""
         }
         return api
             .uploadDataForMd5(
@@ -83,7 +89,7 @@ class UploadsManagerImpl(
                 )
             )
             .doOnError {
-                println("aws error ${it.message}")
+
             }
             .observeOn(AndroidSchedulers.mainThread())
     }
@@ -143,7 +149,6 @@ class UploadsManagerImpl(
                     source_medium_quality_width = vidWidth,
                     source_medium_quality_progress = 1.0
                 )
-
             }
             else -> {
                 r = ServerRequest(

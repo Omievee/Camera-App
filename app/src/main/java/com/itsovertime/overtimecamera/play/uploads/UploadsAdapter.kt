@@ -6,11 +6,12 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.baseviewholder.BaseViewHolder
 
 class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
+    var holder: UploadsView? = null
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-//        (holder.itemView as UploadsView).bind(
-//            list?.get(position) ?: return,
-//            progress = progress ?: return
-//        )
+        this.holder = holder.itemView as UploadsView
+        holder.itemView.bind(
+            list?.get(position) ?: return
+        )
     }
 
     var data: UploadsViewData? = null
@@ -19,6 +20,12 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
             field?.diffResult?.dispatchUpdatesTo(this)
         }
 
+    fun updateProgress(id: String, prog: Int, hd: Boolean) {
+        if (hd) {
+            holder?.updateHighProgress(prog)
+        } else holder?.updateMediumProgress(prog)
+
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
         return BaseViewHolder(UploadsView(parent.context).apply {
@@ -38,17 +45,5 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
             progress = it.progressData
         }
         return list?.size ?: 0
-    }
-
-    override fun onBindViewHolder(
-        holder: BaseViewHolder,
-        position: Int,
-        payloads: MutableList<Any>
-    ) {
-        super.onBindViewHolder(holder, position, payloads)
-        (holder.itemView as UploadsView).bind(
-            list?.get(position) ?: return,
-            progress = progress ?: return
-        )
     }
 }

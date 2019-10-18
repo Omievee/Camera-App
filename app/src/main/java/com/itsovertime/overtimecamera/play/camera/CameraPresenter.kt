@@ -47,7 +47,6 @@ class CameraPresenter(
 
         filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
 
-        println("Path:: $filePath")
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
@@ -87,7 +86,11 @@ class CameraPresenter(
         manager.loadFFMPEG()
         manager.loadFromDB()
         user()
+    }
 
+
+    fun onResume() {
+        beginUploadWork()
     }
 
 
@@ -133,7 +136,7 @@ class CameraPresenter(
     }
 
     fun deletePreviousFile() {
-        println("FILE PATH!?? $filePath")
+
         val previousFile = File(filePath ?: return)
         if (previousFile.exists()) {
             previousFile.delete()
@@ -148,22 +151,13 @@ class CameraPresenter(
             .subscribeToVideoGallerySize()
             .subscribe({
                 view.updateUploadsIconCount(it.toString())
-                if (it > 0 && isColdStart) {
-                    beginUploadWork()
-                    isColdStart = false
-                }
-
-                println("State?? ${worker?.state?.value}")
             }, {
 
             })
     }
 
-    var isColdStart: Boolean = true
     var worker: Operation? = null
     private fun beginUploadWork() {
-        worker = WorkManager.getInstance(view.context ?: return)
-            .enqueue(OneTimeWorkRequestBuilder<VideoUploadWorker>().build())
 
     }
 

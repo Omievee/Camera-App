@@ -14,11 +14,24 @@ class UploadsPresenter(
     val view: UploadsActivity,
     val manager: VideosManager,
     private val wifiManager: WifiManager,
-    val progressManager: ProgressManager
+    private val progressManager: ProgressManager
 ) {
     fun onCreate() {
         manager.loadFromDB()
         subscribeToNetworkUpdates()
+    }
+
+    var progDisp: Disposable? = null
+    var prog: Int = 0
+    private fun subscribeToUploadProgress() {
+        progDisp?.dispose()
+        progDisp = progressManager
+            .subscribeToUploadProgress()
+            .subscribe({
+                view.updateProgressBar(it.id,it.prog, it.isHD)
+            }, {
+
+            })
     }
 
     fun onRefresh() {
@@ -30,6 +43,7 @@ class UploadsPresenter(
         onRefresh()
         subscribeToPendingUploads()
         subcribeToQualityBeingUploaded()
+        subscribeToUploadProgress()
     }
 
     var qualityDisp: Disposable? = null
@@ -54,7 +68,6 @@ class UploadsPresenter(
         pendingDisposable = progressManager
             .subscribeToPendingHQUploads()
             .subscribe({
-                println("True.. $it")
                 if (it) {
                     view.notifyPendingUploads()
                 }
@@ -70,7 +83,6 @@ class UploadsPresenter(
             .subscribe({
                 view.updateAdapter(it)
                 view.swipe2RefreshIsFalse()
-
             }, {
                 println("throwable: ${it.printStackTrace()}")
             })

@@ -60,6 +60,7 @@ dependencies {
     implementation("com.android.support:appcompat-v7:28.0.0")
     implementation("com.android.support:design:28.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
+    implementation("com.android.support:support-fragment:28.0.0")
     //RecyclerView
     implementation("com.android.support:recyclerview-v7:28.0.0")
     //ConstraintLayouts
@@ -99,13 +100,15 @@ dependencies {
     kapt("android.arch.lifecycle:compiler:1.1.1")
     //Fresco
     implementation("com.facebook.fresco:fresco:1.13.0")
+
+    //Glide
+    implementation("com.github.bumptech.glide:glide:4.9.0")
+
     //Room
     implementation("android.arch.persistence.room:runtime:1.1.1")
     kapt("android.arch.persistence.room:compiler:1.1.1")
     implementation("android.arch.persistence.room:rxjava2:1.1.1")
 
-    //transcoder
-    implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
     //NEW Transcoder:
     implementation("com.otaliastudios:transcoder:0.7.3")
     //FFMPJEG - trimming
@@ -121,11 +124,12 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging:17.3.4")
     //WorkManager
     implementation("androidx.work:work-runtime-ktx:$WORKER_VERSION")
+    implementation("androidx.work:work-runtime:$WORKER_VERSION")
     implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
     implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
     implementation("androidx.work:work-runtime-ktx:$WORKER_VERSION")
 
-//Testing
+    //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")
     androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")

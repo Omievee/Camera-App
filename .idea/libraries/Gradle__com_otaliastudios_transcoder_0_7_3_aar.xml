@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Gradle: com.otaliastudios:transcoder:0.7.3@aar">
     <ANNOTATIONS>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/aa2708284c7f55d98d5f0e805871b68a/annotations.zip!/" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/e1409bb37860e5518757262c9c4c749a/annotations.zip!/" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/aa2708284c7f55d98d5f0e805871b68a/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/aa2708284c7f55d98d5f0e805871b68a/res" />
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/e1409bb37860e5518757262c9c4c749a/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-2/files-2.1/e1409bb37860e5518757262c9c4c749a/res" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

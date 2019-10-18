@@ -20,16 +20,12 @@ import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
 import com.otaliastudios.transcoder.Transcoder
 import com.otaliastudios.transcoder.TranscoderListener
-import com.otaliastudios.transcoder.source.FilePathDataSource
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import net.ypresto.androidtranscoder.MediaTranscoder
-import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
-import java.io.IOException
 
 
 class VideosManagerImpl(
@@ -39,6 +35,7 @@ class VideosManagerImpl(
 
     @SuppressLint("CheckResult")
     override fun updateHighuploaded(qualityUploaded: Boolean, clientId: String) {
+        println("high uploaded?? $qualityUploaded && $clientId")
         Single.fromCallable {
             with(videoDao) {
                 this?.updateHighUpload(qualityUploaded, clientId)
@@ -46,6 +43,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
+                println("SUCCESS!")
                 loadFromDB()
             }, {
                 it.printStackTrace()
@@ -279,13 +277,15 @@ class VideosManagerImpl(
             val mediaStorageDir =
                 File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
             if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-                Crashlytics.log("Compress File Error")
             }
+
+            val filePath = mediaStorageDir.path + File.separator + "720.${file.name}"
+
             updateMediumFilePath(
-                File(mediaStorageDir.path + File.separator + file.name).absolutePath,
+                File(filePath).absolutePath,
                 video.clientId
             )
-            return File(mediaStorageDir.path + File.separator + file.name)
+            return File(filePath)
         }
     }
 
@@ -347,7 +347,7 @@ class VideosManagerImpl(
                     }
 
                     override fun onTranscodeFailed(exception: Throwable) {
-                        transcodeVideo(savedVideo, videoFile)
+                        resetUploadStateForCurrentVideo(savedVideo)
                         println("Transcode failure... ${exception.message}")
                         println("Transcode failure... ${exception.cause}")
                         println("Transcode failure... ${exception.localizedMessage}")
@@ -397,8 +397,14 @@ class VideosManagerImpl(
                     for (savedVideo in videosList) {
                         println("Med Res: ${savedVideo.mediumRes}")
                         if (savedVideo.mediumRes.isNullOrEmpty() || File(savedVideo.mediumRes).readBytes().isEmpty()) {
-                            transcodeVideo(savedVideo, File(savedVideo.trimmedVidPath))
+                            if (savedVideo.trimmedVidPath.isNullOrEmpty()) {
+                                transcodeVideo(savedVideo, File(savedVideo.highRes))
+                            } else transcodeVideo(savedVideo, File(savedVideo.trimmedVidPath))
                         }
+                    }
+                    if (isFirstRun) {
+                        doWork()
+                        isFirstRun = false
                     }
                 }
 
@@ -406,6 +412,8 @@ class VideosManagerImpl(
                 it.printStackTrace()
             })
     }
+
+    var isFirstRun: Boolean = true
 
     private fun doWork() {
         WorkManager.getInstance(context).enqueue(

@@ -3,10 +3,7 @@ package com.itsovertime.overtimecamera.play.workmanager
 import android.annotation.SuppressLint
 import android.content.Context
 import android.media.MediaMetadataRetriever
-import androidx.work.ListenableWorker
-import androidx.work.Worker
-import androidx.work.WorkerFactory
-import androidx.work.WorkerParameters
+import androidx.work.*
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
@@ -23,9 +20,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.io.File
+import java.lang.NumberFormatException
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.math.max
 
 class VideoUploadWorker(
     val context: Context,
@@ -43,7 +42,7 @@ class VideoUploadWorker(
     @Inject
     lateinit var progressManager: ProgressManager
 
-    var hdReady: Boolean = false
+    var hdReady: Boolean? = false
     var videos = mutableListOf<SavedVideo>()
     var instanceDisp: Disposable? = null
 
@@ -51,14 +50,14 @@ class VideoUploadWorker(
     override fun doWork(): Result {
 
         try {
-            println("WORK HAS BEGUN...")
-            getVideosFromDB().blockingGet()
             hdReady = inputData.getBoolean("HD", false)
+            getVideosFromDB().blockingGet()
+
+
             when (hdReady) {
                 false -> progressManager.onSetMessageToMediumUploads()
                 else -> progressManager.onSetMessageToHDUploads()
             }
-
 
             if (faveListHQ.size > 0 && faveList.isEmpty() || standardListHQ.size > 0 && standardList.isEmpty()) {
                 // progressManager.onNotifyPendingUploads()
@@ -85,6 +84,23 @@ class VideoUploadWorker(
     var faveList = mutableListOf<SavedVideo>()
     var faveListHQ = mutableListOf<SavedVideo>()
 
+    var update: Disposable? = null
+    private fun subscribeToUpdates() {
+        update =
+            videosManager
+                .subscribeToVideoGallerySize()
+                .subscribe({
+                    println("size from gallery... $it")
+                    println("size from gallery... ${faveList.size}")
+                    println("size from gallery... ${standardList.size}")
+                    if (it > 0 && faveList.size == 0 && standardList.size == 0) {
+
+                    }
+                }, {
+
+                })
+    }
+
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
     fun getVideosFromDB(): Single<List<SavedVideo>> {
@@ -94,7 +110,7 @@ class VideoUploadWorker(
         standardList.clear()
         faveListHQ.clear()
         standardListHQ.clear()
-
+        println("Started..")
         return db!!.videoDao()
             .getVideosForUpload()
             .subscribeOn(Schedulers.io())
@@ -121,10 +137,12 @@ class VideoUploadWorker(
                         it.remove()
                     }
                 }
+                println("HD READY??? $hdReady")
                 beginProcess()
             }
     }
 
+    @Synchronized
     private fun beginProcess() {
         serverDis?.dispose()
         awsDataDisposable?.dispose()
@@ -132,6 +150,8 @@ class VideoUploadWorker(
         up?.dispose()
         instanceDisp?.dispose()
         tokenDisposable?.dispose()
+
+        println("List Sizes :::: ${faveList.size} && ${standardList.size} && ${faveListHQ.size} && ${standardListHQ.size}")
 
         when {
             faveList.size > 0 -> {
@@ -144,6 +164,19 @@ class VideoUploadWorker(
                 synchronized(this) {
                     getVideoInstance(standardList[0])
                     standardList.remove(standardList[0])
+                }
+            }
+            faveListHQ.size > 0 && hdReady ?: false -> {
+                synchronized(this) {
+                    getVideoInstance(faveListHQ[0])
+                    faveListHQ.remove(faveListHQ[0])
+                }
+            }
+
+            standardListHQ.size > 0 && hdReady ?: false -> {
+                synchronized(this) {
+                    getVideoInstance(standardListHQ[0])
+                    standardListHQ.remove(standardListHQ[0])
                 }
             }
         }
@@ -161,6 +194,7 @@ class VideoUploadWorker(
             .doAfterNext {
                 currentVideo?.id = videoInstanceResponse?.video?.id.toString()
                 requestTokenForUpload()
+
             }
             .doOnError {
                 videosManager.resetUploadStateForCurrentVideo(
@@ -179,13 +213,11 @@ class VideoUploadWorker(
     private var tokenDisposable: Disposable? = null
     private var awsDataDisposable: Disposable? = null
     private fun requestTokenForUpload() {
-        println("Token...")
         awsDataDisposable =
             uploadsManager
                 .getAWSDataForUpload()
                 .doOnError {
                     it.printStackTrace()
-                    println("made an error... ${it.message}")
                     videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return@doOnError)
                 }
                 .map {
@@ -194,6 +226,7 @@ class VideoUploadWorker(
                 .doAfterNext {
                     println("Success.... $tokenResponse")
                     beginUpload(token = tokenResponse)
+
                 }
                 .subscribe({
                 }, {
@@ -206,15 +239,16 @@ class VideoUploadWorker(
         println("BEGIN UPLOAD>... $token")
         tokenDisposable =
             uploadsManager
-                .registerWithMD5(token ?: return, hdReady)
+                .registerWithMD5(token ?: return, hdReady ?: false)
                 .map {
-                    println("Encrypt... $it")
                     encryptionResponse = it
                 }
                 .doAfterNext {
                     continueUploadProcess()
+
                 }
                 .doOnError {
+                    println("ERROR!! ${it.message}")
                     videosManager.resetUploadStateForCurrentVideo(
                         currentVideo = currentVideo ?: return@doOnError
                     )
@@ -229,16 +263,18 @@ class VideoUploadWorker(
     private var maxChunkSize = 1024 * 2 * 1024
     private var baseChunkSize = 1024
     private var uploadChunkIndex = 0
-    private var firstRun: Boolean = true
     private var fullBytes = byteArrayOf()
     var remainder: Int = 0
     var count = 0
     private fun continueUploadProcess() {
-        println("Video ID: ${currentVideo?.id}")
         if (currentVideo?.id != "") {
             chunkToUpload = baseChunkSize
-            if (currentVideo?.mediumUploaded == true && hdReady) {
-                fullBytes = File(currentVideo?.trimmedVidPath).readBytes()
+            if (currentVideo?.mediumUploaded == true && hdReady == true) {
+                fullBytes = when (currentVideo?.trimmedVidPath) {
+                    null -> File(currentVideo?.highRes).readBytes()
+                    "" -> File(currentVideo?.highRes).readBytes()
+                    else -> File(currentVideo?.trimmedVidPath).readBytes()
+                }
                 currentVideo?.uploadState = UploadState.UPLOADING_HIGH
                 upload()
             } else {
@@ -262,7 +298,6 @@ class VideoUploadWorker(
         val previousStartPlusDynamicChunk = startRange + chunkToUpload
 
         val end = minOf(fullFileSize, previousStartPlusDynamicChunk)
-        println("chunk ? $chunkToUpload")
 
         val sliceFromFullFile = fullBytes.sliceArray(
             IntRange(
@@ -270,6 +305,13 @@ class VideoUploadWorker(
                 end - 1
             )
         )
+
+        progressManager.onUpdateProgress(
+            currentVideo?.clientId ?: "",
+            (end * 100L / fullFileSize).toInt(),
+            hdReady ?: false
+        )
+
         synchronized(this) {
             up = uploadsManager
                 .uploadVideoToServer(
@@ -287,7 +329,7 @@ class VideoUploadWorker(
                             timeReceived = it.raw().receivedResponseAtMillis()
                         )) {
                             in 0..2 -> maxChunkSize
-                            in 2..4 -> baseChunkSize
+                            in 3..4 -> baseChunkSize
                             else -> minChunkSize
                         }
 
@@ -328,8 +370,6 @@ class VideoUploadWorker(
     @Synchronized
     private fun checkForComplete() {
         synchronized(this) {
-
-
             complete = uploadsManager
                 .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
                 .doOnError {
@@ -343,15 +383,10 @@ class VideoUploadWorker(
                     }
                     when (it.body()?.status) {
                         CompleteResponse.COMPLETING.name -> pingServerForStatus()
-                        CompleteResponse.COMPLETED.name -> {
-                            firstRun = true
-                            finalizeUpload(it.body()?.upload)
-                        }
-                        else -> {
-                            videosManager.resetUploadStateForCurrentVideo(
-                                currentVideo = currentVideo ?: return@subscribe
-                            )
-                        }
+                        CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
+                        else -> videosManager.resetUploadStateForCurrentVideo(
+                            currentVideo = currentVideo ?: return@subscribe
+                        )
                     }
                 }, {
                     it.printStackTrace()
@@ -364,7 +399,11 @@ class VideoUploadWorker(
     @Synchronized
     private fun finalizeUpload(upload: Upload?) {
         val path = when (hdReady) {
-            true -> currentVideo?.trimmedVidPath
+            true -> when (currentVideo?.trimmedVidPath) {
+                null -> currentVideo?.highRes
+                "" -> currentVideo?.highRes
+                else -> currentVideo?.trimmedVidPath
+            }
             else -> currentVideo?.mediumRes
         }
         synchronized(this) {
@@ -381,10 +420,16 @@ class VideoUploadWorker(
                     S3Key = upload?.S3Key ?: "",
                     vidWidth = width,
                     vidHeight = height,
-                    hq = hdReady,
+                    hq = hdReady ?: false,
                     vid = currentVideo ?: return
                 )
                 .doAfterNext {
+                    progressManager.onUpdateProgress(
+                        currentVideo?.clientId ?: "",
+                        100,
+                        hdReady ?: false
+                    )
+                    println("STATE IS ::: ${currentVideo?.uploadState}")
                     if (currentVideo?.uploadState == UploadState.UPLOADING_MEDIUM) {
                         videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
                         currentVideo?.uploadState = UploadState.UPLOADED_MEDIUM
@@ -393,13 +438,18 @@ class VideoUploadWorker(
                         videosManager.updateHighuploaded(true, currentVideo?.clientId ?: "")
                     }
 
+                    println("PRE PROCESS..")
                     beginProcess()
                 }
                 .subscribe({
-                }, {
-                    it.printStackTrace()
-                    videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return@subscribe)
-                })
+
+                },
+                    {
+                        it.printStackTrace()
+                        videosManager.resetUploadStateForCurrentVideo(
+                            currentVideo ?: return@subscribe
+                        )
+                    })
         }
     }
 
@@ -420,12 +470,19 @@ class VideoUploadWorker(
     private fun getVideoDimensions(path: String) {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(path)
-        val width =
-            Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH))
-        val height =
-            Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT))
-        retriever.release()
+        var width = 0
+        var height = 0
+        try {
+            width =
+                Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH))
+            height =
+                Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT))
+            retriever.release()
+        } catch (nf: NumberFormatException) {
+            videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
+            retriever.release()
 
+        }
         this.width = width
         this.height = height
     }
@@ -436,8 +493,7 @@ class DaggerWorkerFactory(
     private val uploads: UploadsManager,
     private val videos: VideosManager,
     private val progress: ProgressManager
-) :
-    WorkerFactory() {
+) : WorkerFactory() {
     override fun createWorker(
         appContext: Context,
         workerClassName: String,

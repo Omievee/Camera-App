@@ -692,6 +692,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 it.enable()
             }
         }
+        presenter.onResume()
 
     }
 

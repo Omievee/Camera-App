@@ -1,11 +1,12 @@
 package com.itsovertime.overtimecamera.play.uploads
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.CompoundButton
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
@@ -16,6 +17,7 @@ import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.fragment_uploads.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
 import javax.inject.Inject
+
 
 class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
     CompoundButton.OnCheckedChangeListener,
@@ -71,8 +73,15 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
         presenter.hdSwitchWasChecked(isChecked)
     }
 
-    override fun updateProgressBar(start: Int, end: Int, highQuality: Boolean, clientId: String) {
-        progressData = ProgressData(start, end, highQuality, clientId)
+    var prog: Int = 0
+    var hd: Boolean = false
+    var id: String = ""
+    override fun updateProgressBar(id: String, progress: Int, hd: Boolean) {
+        this.prog = progress
+        this.hd = hd
+        this.id = id
+        println("Activity progress..... $progress")
+        adapter.updateProgress(id, progress, hd)
     }
 
     override fun displayNoNetworkConnection() {
@@ -116,14 +125,13 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
         }
     }
 
-    var progressData = ProgressData()
     var adapter: UploadsAdapter = UploadsAdapter()
     val old = adapter.data?.data ?: emptyList()
     var newD = mutableListOf<UploadsPresentation>()
 
-    override fun updateAdapter(videos: List<SavedVideo>, data: ProgressData?) {
+    override fun updateAdapter(videos: List<SavedVideo>) {
         if (!videos.isNullOrEmpty()) {
-            newD.add(UploadsPresentation(list = videos, progressData = data ?: ProgressData()))
+            newD.add(UploadsPresentation(list = videos))
         }
         adapter.data = UploadsViewData(
             newD, DiffUtil.calculateDiff(
@@ -132,7 +140,9 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
                 )
             )
         )
+        adapter.updateProgress(id, prog, hd)
         uploadsRecycler.adapter = adapter
+        (uploadsRecycler.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = true
     }
 
     @Inject
@@ -147,15 +157,14 @@ class UploadsViewData(
 )
 
 data class ProgressData(
-    val start: Int = 0,
-    val end: Int = 0,
-    val isHighQuality: Boolean = false,
+    val progress: Int? = 0,
+    val fullSize: Int? = 0,
     val id: String = ""
 )
 
 data class UploadsPresentation(
     val list: List<SavedVideo>,
-    val progressData: ProgressData
+    val progressData: ProgressData? = null
 ) : ItemSame<UploadsPresentation> {
     override fun sameAs(same: UploadsPresentation): Boolean {
         return equals(same)

@@ -66,9 +66,13 @@
             android:id="@+id/switchHD"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="@color/OT_White"
+            android:buttonTint="@color/OT_DarkGray"
+            android:textOn="HD"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:trackTint="@color/OT_Orange" />
 
     <ImageView
             android:id="@+id/uploadsIcon"
