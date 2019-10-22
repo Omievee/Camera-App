@@ -6,17 +6,20 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.baseviewholder.BaseViewHolder
 
 class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
-    var holder: UploadsView? = null
+    var uploadView: UploadsView? = null
+    var debugView: UploadsDebugView? = null
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
- //       this.holder = holder.itemView as UploadsView
         val view = holder.itemView
+
         when (view) {
             is UploadsView -> {
+                this.uploadView = view
                 view.bind(
                     list?.get(position) ?: return
                 )
             }
             is UploadsDebugView -> {
+                this.debugView = view
                 view.bind(list?.get(position) ?: return)
             }
         }
@@ -30,9 +33,7 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         }
 
     fun updateProgress(id: String, prog: Int, hd: Boolean) {
-        if (hd) {
-            holder?.updateHighProgress(prog)
-        } else holder?.updateMediumProgress(prog)
+        if (hd) uploadView?.updateHighProgress(prog) else uploadView?.updateMediumProgress(prog)
     }
 
     override fun getItemViewType(position: Int): Int {

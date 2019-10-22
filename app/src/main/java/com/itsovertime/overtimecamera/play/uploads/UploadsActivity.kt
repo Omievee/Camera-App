@@ -142,7 +142,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     override fun updateAdapter(videos: List<SavedVideo>, type: UploadType) {
         println("UPDATING!!! ${videos.size} && Type $type")
         if (!videos.isNullOrEmpty()) {
-            newD.add(UploadsPresentation(list = videos, type = type))
+            newD.add(UploadsPresentation(list = videos, type = UploadType.DebugView))
         }
         adapter.data = UploadsViewData(
             newD, DiffUtil.calculateDiff(
