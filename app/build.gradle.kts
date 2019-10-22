@@ -1,3 +1,6 @@
+import org.gradle.kotlin.dsl.resolver.kotlinBuildScriptModelTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
+
 plugins {
     id("com.android.application")
     id("io.fabric")
@@ -20,9 +23,15 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
     compileOptions {
+        setIncremental(true)
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    kotlinOptions {
+        val options = this as KotlinJvmOptions
+        options.jvmTarget = "1.8"
+    }
+
 
     dataBinding {
         isEnabled = true
@@ -42,12 +51,16 @@ android {
 
 }
 
+val WORKER_VERSION = "2.2.0"
+
 dependencies {
+
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.41")
     implementation("com.android.support:appcompat-v7:28.0.0")
     implementation("com.android.support:design:28.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
+    implementation("com.android.support:support-fragment:28.0.0")
     //RecyclerView
     implementation("com.android.support:recyclerview-v7:28.0.0")
     //ConstraintLayouts
@@ -87,13 +100,17 @@ dependencies {
     kapt("android.arch.lifecycle:compiler:1.1.1")
     //Fresco
     implementation("com.facebook.fresco:fresco:1.13.0")
+
+    //Glide
+    implementation("com.github.bumptech.glide:glide:4.9.0")
+
     //Room
     implementation("android.arch.persistence.room:runtime:1.1.1")
     kapt("android.arch.persistence.room:compiler:1.1.1")
     implementation("android.arch.persistence.room:rxjava2:1.1.1")
 
-    //transcoder
-    implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
+    //NEW Transcoder:
+    implementation("com.otaliastudios:transcoder:0.7.3")
     //FFMPJEG - trimming
     implementation("com.writingminds:FFmpegAndroid:0.3.2")
     //Fabric
@@ -106,10 +123,13 @@ dependencies {
     implementation("com.mixpanel.android:mixpanel-android:5.+")
     implementation("com.google.firebase:firebase-messaging:17.3.4")
     //WorkManager
-    implementation("androidx.work:work-runtime-ktx:2.0.1")
-    implementation("androidx.work:work-rxjava2:2.0.1")
+    implementation("androidx.work:work-runtime-ktx:$WORKER_VERSION")
+    implementation("androidx.work:work-runtime:$WORKER_VERSION")
+    implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
+    implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
+    implementation("androidx.work:work-runtime-ktx:$WORKER_VERSION")
 
-//Testing
+    //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")
     androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")

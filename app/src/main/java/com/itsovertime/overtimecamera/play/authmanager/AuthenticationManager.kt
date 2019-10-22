@@ -15,4 +15,5 @@ interface AuthenticationManager {
     fun getFullUser(): Single<ApplicationResponse>
     fun onUserAgreedToTOS(): Single<TOSResponse>
     fun getUserId(): Single<User>?
+    fun logOut()
 }

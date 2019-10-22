@@ -39,6 +39,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     }
 
     fun permissionsDenied() {
+
         view.showToast(view.applicationContext.getString(R.string.permissions_required_msg))
     }
 
@@ -160,7 +161,11 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
                     }
                     view.displaySignUpPage()
                 } else if (!checkPermissions()) {
+                    println("PERMISSIONS DENIED")
                     view.beginPermissionsFlow()
+                }else if (checkPermissions()){
+                    println("PERMISSIONS ALLOWED")
+                    view.disregardPermissions()
                 }
             }, {
 
@@ -169,10 +174,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     }
 
     private fun logOut() {
-        UserPreference.authToken = ""
-        UserPreference.accessAllowed = false
-        UserPreference.userId = ""
-        UserPreference.isSignUpComplete = false
+        auth.logOut()
         view.logOut()
     }
 

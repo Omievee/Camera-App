@@ -1,24 +1,24 @@
 package com.itsovertime.overtimecamera.play.uploads
 
 import com.itsovertime.overtimecamera.play.di.FragmentScope
-import com.itsovertime.overtimecamera.play.quemanager.QueManager
+import com.itsovertime.overtimecamera.play.progress.ProgressManager
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import dagger.Module
 import dagger.Provides
 
+
 @Module
 class UploadsModule {
     @Provides
     @FragmentScope
     fun providePresenter(
-        fragment: UploadsFragment,
+        fragment: UploadsActivity,
         manager: VideosManager,
         wifiManager: WifiManager,
-        uploadsManager: UploadsManager,
-        queManager: QueManager
+        progress:ProgressManager
     ): UploadsPresenter =
-        UploadsPresenter(fragment, manager, wifiManager, uploadsManager, queManager)
+        UploadsPresenter(fragment, manager, wifiManager, progress)
 }
 

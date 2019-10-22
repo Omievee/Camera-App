@@ -1,34 +1,32 @@
 package com.itsovertime.overtimecamera.play.camera
 
 import android.annotation.SuppressLint
+import android.icu.text.SimpleDateFormat
+import android.os.CountDownTimer
 import android.os.Environment
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Transformation
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.Operation
+import androidx.work.WorkManager
+import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.model.Event
-import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
-import com.itsovertime.overtimecamera.play.videomanager.VideosManager
-import io.reactivex.disposables.Disposable
-import java.io.File
-import androidx.databinding.adapters.TextViewBindingAdapter.setText
-import android.os.CountDownTimer
-import android.os.SystemClock
-import android.widget.Chronometer
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
+import com.itsovertime.overtimecamera.play.model.User
+import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
+import com.itsovertime.overtimecamera.play.videomanager.VideosManager
+import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
+import io.reactivex.disposables.Disposable
+import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
-import android.os.SystemClock.elapsedRealtime
-import android.widget.Chronometer.OnChronometerTickListener
-import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
-import com.itsovertime.overtimecamera.play.model.User
-import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 
 
 class CameraPresenter(
@@ -49,45 +47,53 @@ class CameraPresenter(
         }
 
         filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
-        println("Path:: $filePath")
+
         return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
     var e: Event? = null
     var video: SavedVideo? = null
+    var clientId: String = ""
     fun saveVideo(videoEvent: Event?) {
+        println("SAVE VIDEO???")
         e = videoEvent
-        val clientId = UUID.randomUUID().toString()
+        clientId = UUID.randomUUID().toString()
         filePath?.let {
             video = SavedVideo(
                 clientId = clientId,
                 highRes = it,
-                is_favorite = fave,
-                event_id = e?.id,
-                eventName = e?.name,
-                starts_at = e?.starts_at,
-                address = e?.address,
-                latitude = e?.latitude,
-                city = e?.city,
+                is_favorite = false,
+                event_id = e?.id ?: "",
+                eventName = e?.name ?: "",
+                starts_at = e?.starts_at ?: "",
+                address = e?.address ?: "",
+                latitude = e?.latitude ?: 0.0,
+                city = e?.city ?: "",
                 duration_in_hours = e?.duration_in_hours ?: 0,
-                longitude = e?.longitude,
+                longitude = e?.longitude ?: 0.0,
                 uploadState = UploadState.QUEUED,
                 max_video_length = e?.max_video_length ?: 12,
                 created_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             )
         }
+        manager.saveHighQualityVideoToDB(video ?: return)
+
         view.engageCamera()
     }
 
-    fun timerRanOut() {
-        manager.determineTrim(video ?: return)
-    }
 
     fun onCreate() {
-        checkGallerySize()
+        subscribeToGallerySize()
         manager.loadFFMPEG()
+        manager.loadFromDB()
         user()
     }
+
+
+    fun onResume() {
+
+    }
+
 
     private var countDownTimer: CountDownTimer? = null
     @SuppressLint("CheckResult")
@@ -107,16 +113,15 @@ class CameraPresenter(
             }
 
             override fun onFinish() {
-                view?.activity?.runOnUiThread {
-                    text.text = "                 ${maxTime}s"
+                view.activity?.runOnUiThread {
+                    text.text = "                        ${maxTime}s"
                 }
             }
         }.start()
     }
 
-    var fave: Boolean = false
     fun updateFavoriteField() {
-        video?.is_favorite = true
+        manager.updateVideoFavorite(true, clientId)
     }
 
     fun cameraSwitch() {
@@ -140,7 +145,7 @@ class CameraPresenter(
     }
 
 
-    private fun checkGallerySize() {
+    private fun subscribeToGallerySize() {
         totalDisposable?.dispose()
         totalDisposable = manager
             .subscribeToVideoGallerySize()
@@ -150,6 +155,8 @@ class CameraPresenter(
 
             })
     }
+
+
 
     fun onDestroy() {
         totalDisposable?.dispose()
@@ -165,33 +172,31 @@ class CameraPresenter(
         view.showOrHideViewsForCamera()
     }
 
-    var videographerArray = emptyArray<String>()
-    var ev: List<Event>? = null
+
     var eventName: String? = ""
     fun getEvents() {
+        val eventsList = mutableListOf<Event>()
         eventDisposable?.dispose()
         eventDisposable = eventsManager
             .getEvents()
             .map { er ->
-                er.events.forEach { e ->
-                    videographerArray = e.videographer_ids
-                    videographerArray.forEach {
-                        eventName = when (it == user?.id) {
-                            true -> e.name
-                            else -> er.events[0].name ?: ""
+                er.events.forEachIndexed { i, event ->
+                    event.videographer_ids.forEach { s ->
+                        if (s == user?.id) {
+                            eventName = er.events[i].name
                         }
                     }
                 }
-                ev = er.events
+                eventsList.addAll(er.events)
             }
             .subscribe({
-                view.setUpEventViewData(ev)
+                view.setUpEventViewData(eventsList)
                 view.updateEventTitle(eventName?.trim() ?: "")
             }, {
             })
     }
 
-    var authdisp: Disposable? = null
+    private var authdisp: Disposable? = null
     var user: User? = null
     fun user() {
         authdisp?.dispose()
@@ -267,6 +272,3 @@ class CameraPresenter(
     }
 
 }
-
-//TODO  Selfie Cam has no live cam & options
-//TODO:

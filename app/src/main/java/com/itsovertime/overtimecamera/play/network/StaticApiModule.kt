@@ -34,9 +34,9 @@ class StaticApiModule {
                 logging.level = HttpLoggingInterceptor.Level.BODY
                 this.addInterceptor(logging)
             }
-            connectTimeout(5, TimeUnit.MINUTES)
-            writeTimeout(5, TimeUnit.MINUTES)
-            readTimeout(5, TimeUnit.MINUTES)
+            connectTimeout(2, TimeUnit.MINUTES)
+            writeTimeout(2, TimeUnit.MINUTES)
+            readTimeout(2, TimeUnit.MINUTES)
             cache(cache)
         }
     }
@@ -66,7 +66,7 @@ class StaticApiModule {
         return Retrofit.Builder()
             .baseUrl(Constants.mainUploadURL)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
             .client(client.build())
             .build()
             .create(Api::class.java)
@@ -75,7 +75,7 @@ class StaticApiModule {
     @Provides
     @Singleton
     fun provideCache(application: OTApplication): Cache {
-        return Cache(application.cacheDir, 10 * 1024 * 1024)
+        return Cache(application.cacheDir, 20 * 1024 * 1024)
     }
 
     @Provides

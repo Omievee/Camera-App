@@ -22,6 +22,7 @@
             android:name=".application.OTApplication"
             android:allowBackup="true"
             android:configChanges="orientation|screenSize"
+            android:hardwareAccelerated="false"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:largeHeap="true"
@@ -29,7 +30,8 @@
             android:supportsRtl="true"
             android:theme="@style/AppFullScreenTheme"
             tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".onboarding.OnboardingActivity"></activity>
+        <activity android:name=".uploads.UploadsActivity" />
+        <activity android:name=".onboarding.OnboardingActivity" />
         <activity android:name=".splashscreen.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,9 +41,8 @@
         </activity>
         <activity
                 android:name=".baseactivity.BaseActivity"
-                android:screenOrientation="portrait">
-
-        </activity>
+                android:hardwareAccelerated="true"
+                android:screenOrientation="portrait" />
 
         <meta-data
                 android:name="io.fabric.ApiKey"
@@ -51,6 +52,13 @@
                 android:name=".network.NetworkSchedulerService"
                 android:exported="true"
                 android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <provider
+                android:name="androidx.work.impl.WorkManagerInitializer"
+                android:authorities="com.your.app.package.workmanager-init"
+                android:enabled="false"
+                android:exported="false"
+                tools:replace="android:authorities" />
     </application>
 
 </manifest>

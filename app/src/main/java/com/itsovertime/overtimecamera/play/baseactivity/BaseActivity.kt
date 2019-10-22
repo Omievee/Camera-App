@@ -2,19 +2,24 @@ package com.itsovertime.overtimecamera.play.baseactivity
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import android.os.PowerManager
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.OrientationEventListener
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.StringRes
@@ -28,21 +33,30 @@ import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.onboarding.OnBoardingFragment
 import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
-import com.itsovertime.overtimecamera.play.uploads.UploadsFragment
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.events_item_view.*
+import kotlinx.android.synthetic.main.events_recycler_view.*
 import kotlinx.android.synthetic.main.permissions_view.*
 import kotlinx.android.synthetic.main.phone_verification.*
 import javax.inject.Inject
 
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
-    View.OnClickListener, SettingsFragment.SettingsInterface {
-    override fun onSettingsOptionClicked() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    View.OnClickListener {
+    override fun disregardPermissions() {
+        phoneVerificationView.visibility = View.GONE
     }
+
+    override fun onRefreshFragmentFromDisconnect() {
+        supportFragmentManager.beginTransaction()
+            .detach(CameraFragment())
+            .attach(CameraFragment())
+            .commit();
+    }
+
 
     override fun hideKeyboard() {
         val imm = this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -50,7 +64,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         if (view == null) {
             view = View(this);
         }
-        imm.hideSoftInputFromWindow(view.windowToken, 0);
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
     override fun logOut() {
@@ -60,15 +74,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         finishAffinity()
     }
 
-    override fun allowAccess() {
-
-    }
-
     override fun beginPermissionsFlow() {
         permissions.visibility = View.VISIBLE
     }
 
-    var orientation: OrientationEventListener? = null
     private val permissionsCode = 0
     private val requiredAppPermissions = arrayOf(
         Manifest.permission.CAMERA,
@@ -85,7 +94,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        presenter.displayPermission()
+        println("code :::: $requestCode && $resultCode && $data")
+        if (resultCode == 0 && presenter.checkPermissions()) {
+            presenter.setUpAdapter()
+        } else presenter.displayPermission()
     }
 
     override fun resetViews() {
@@ -125,16 +137,13 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.submit -> {
-                println("access code :: $accessCodeSent")
                 if (accessCodeSent) {
                     submitAccessCode()
                 } else {
-                    println("else?")
                     submitNumberForCode()
                 }
             }
             R.id.resend -> {
-
                 presenter.resendAccessCode()
             }
             R.id.changeNum -> presenter.resetViews()
@@ -199,6 +208,11 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         resend.setOnClickListener(this)
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
+        val w = window
+        w.setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        );
 
         when (intent?.extras?.get("logIn")) {
             true -> {
@@ -213,7 +227,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             }
         }
         scheduleJob()
-        detectOrientation()
         keepScreenUnlocked()
     }
 
@@ -252,44 +265,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onResume() {
         super.onResume()
-        orientation?.let {
-            if (it.canDetectOrientation()) {
-                it.enable()
-            }
-        }
         presenter.retrieveFullUser()
-
-
         wakeLockAcquire()
     }
 
-    private fun detectOrientation() {
-        orientation = object : OrientationEventListener(this) {
-            override fun onOrientationChanged(orientation: Int) {
-                println("Orientation : $orientation")
-                when (orientation) {
-                    in 0..65 -> {
-                        showWarnings()
-                    }
-                    in 360 downTo 290 -> {
-                        showWarnings()
-                    }
-                    in 65..165 -> {
-                        hideWarnings()
-                    }
-                    in 290 downTo 235 -> {
-                        hideWarnings()
-                    }
-                    else -> {
-                        showWarnings()
-                    }
-                }
-            }
-
-        }
-        orientation?.enable()
-
-    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -298,28 +277,36 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == permissionsCode) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                presenter.setUpAdapter()
-            } else {
-                presenter.permissionsDenied()
+            grantResults.forEachIndexed { index, i ->
+                val permission = permissions[index]
+                if (i == PackageManager.PERMISSION_GRANTED) {
+                    presenter.setUpAdapter()
+                } else if (i == PackageManager.PERMISSION_DENIED) {
+                    val rational = shouldShowRequestPermissionRationale(permission)
+                    if (!rational) {
+                        val uri = Uri.fromParts("package", packageName, null);
+                        AlertDialog.Builder(this, R.style.CUSTOM_ALERT).apply {
+                            setTitle("Please enable all permissions to continue")
+                            setCancelable(false)
+                        }.setPositiveButton("Ok") { dialog, which ->
+                            startActivityForResult(
+                                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = uri
+                                },
+                                0
+                            )
+                        }.show()
+                    }
+                    presenter.permissionsDenied()
+                }
             }
+
         }
-    }
-
-    fun showWarnings() {
-        println("SHOW WARNINGS")
-        rotateWarning.visibility = View.VISIBLE
-        viewPager.visibility = View.GONE
-    }
-
-    fun hideWarnings() {
-        rotateWarning.visibility = View.GONE
-        viewPager.visibility = View.VISIBLE
     }
 
     override fun onPause() {
         super.onPause()
-        orientation?.disable()
+        println("ON PAUSE FROM BASE")
         if (wakeLock?.isHeld == true) {
             wakeLock?.release()
         }
@@ -335,14 +322,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onBackPressed() {
         supportFragmentManager.fragments.forEach {
             when (it) {
-                is UploadsFragment -> {
-                    println("uploads..... ${it.isVisible}")
-                    if (it.childFragmentManager.backStackEntryCount > 0) {
-                        it.childFragmentManager.popBackStack()
-                    } else if (it.childFragmentManager.backStackEntryCount == 0 && viewPager.currentItem == 1) {
-                        viewPager.currentItem = 0
-                    }
-                }
                 is CameraFragment -> {
                     println("camera..... ${it.isVisible}")
                     if (it.childFragmentManager.backStackEntryCount > 0) {
@@ -414,7 +393,7 @@ class CustomViewPageAdapter(
     override fun getCount(): Int {
         TABS = when (isMainViewPager) {
             true -> {
-                2
+                1
             }
             else -> data.size
         }
@@ -427,7 +406,6 @@ class CustomViewPageAdapter(
             true -> {
                 when (position) {
                     0 -> CameraFragment()
-                    1 -> UploadsFragment()
                     else -> null
                 }
             }

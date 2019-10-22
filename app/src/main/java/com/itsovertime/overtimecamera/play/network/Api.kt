@@ -15,15 +15,15 @@ interface Api {
 
     /*  Step 1: Post for Video Instance */
     @POST("/api/writer/videos")
-    fun getVideoInstance(@Body request: VideoInstanceRequest): Single<VideoInstanceResponse>
+    fun getVideoInstance(@Body request: VideoInstanceRequest): Observable<VideoInstanceResponse>
 
     /*Step 2: Post for video upload token*/
     @POST("/api/media/upload_token")
-    fun uploadToken(@Body request: VideoSourceRequest): Single<TokenResponse>
+    fun uploadToken(@Body request: VideoSourceRequest): Observable<TokenResponse>
 
     /*Step 3:  md5 for given video*/
     @POST("api/uploads")
-    fun uploadDataForMd5(@Body token: UploadRequest): Single<EncryptedResponse>
+    fun uploadDataForMd5(@Body token: UploadRequest): Observable<EncryptedResponse>
 
     /*Step 4: Upload for selected video*/
     @Headers("Content-Type: application/octet-stream")
@@ -38,7 +38,7 @@ interface Api {
 
     /*Step 6: Write to server after a COMPLETE response from previous step...*/
     @PUT("/api/writer/videos/{uploadId}")
-    fun writeToSeverAfterComplete(@Path("uploadId") uploadId: String, @Body request: ServerRequest): Single<ServerResponse>
+    fun writeToSeverAfterComplete(@Path("uploadId") uploadId: String, @Body request: ServerRequest): Observable<ServerResponse>
 
     /*Events endpoint*/
     @GET("api/events?")

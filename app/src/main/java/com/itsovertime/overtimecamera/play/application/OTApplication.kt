@@ -3,6 +3,9 @@ package com.itsovertime.overtimecamera.play.application
 import android.app.Activity
 import android.app.Application
 import android.app.Service
+import androidx.work.Configuration
+import androidx.work.WorkManager
+import androidx.work.WorkerFactory
 import com.crashlytics.android.Crashlytics
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.itsovertime.overtimecamera.play.di.DaggerAppComponent
@@ -23,6 +26,10 @@ class OTApplication : Application(), HasActivityInjector, HasServiceInjector {
     lateinit var activityDispatchingAndroidInjector: DispatchingAndroidInjector<Activity>
 
     @Inject
+    lateinit var workerFactory: WorkerFactory
+
+
+    @Inject
     lateinit var serviceInjector: DispatchingAndroidInjector<Service>
 
     override fun onCreate() {
@@ -34,6 +41,8 @@ class OTApplication : Application(), HasActivityInjector, HasServiceInjector {
         RxJavaPlugins.setErrorHandler { throwable ->
             println("throws ::::::::::: ${throwable.message}")
         }
+
+        configureWorkManager()
     }
 
     fun inject() {
@@ -50,5 +59,14 @@ class OTApplication : Application(), HasActivityInjector, HasServiceInjector {
 
     override fun serviceInjector(): AndroidInjector<Service> {
         return serviceInjector
+    }
+
+
+    private fun configureWorkManager() {
+        val config = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
+
+        WorkManager.initialize(this, config)
     }
 }

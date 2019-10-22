@@ -1,0 +1,40 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:viewportWidth="24"
+    android:viewportHeight="22"
+    android:width="24dp"
+    android:height="22dp">
+    <group
+        android:translateX="-88"
+        android:translateY="-1196">
+        <path
+            android:pathData="M0 0H893V3019H0V0Z"
+            android:fillType="evenOdd"
+            android:fillColor="#EFEFEF" />
+    </group>
+    <group
+        android:translateX="-20"
+        android:translateY="-76">
+        <path
+            android:pathData="M0 0H667V375H0V0Z"
+            android:fillType="evenOdd"
+            android:fillColor="#4A4A4A" />
+        <group
+            android:translateY="57">
+            <path
+                android:pathData="M0 0L667 0 667 100 0 100Z"
+                android:fillType="evenOdd"
+                android:fillColor="#F9F9F9" />
+        </group>
+        <group
+            android:translateX="19"
+            android:translateY="76">
+            <path
+                android:pathData="M15.6177004 1.76498445L24.602604 17.4885657C25.4288494 18.9344952 24.9264962 20.776457 23.4805667 21.6027024C23.024949 21.8630554 22.5092751 22 21.984517 22L4.01470987 22C2.34935893 22 0.999325256 20.6499663 0.999325256 18.9846154C0.999325256 18.4598572 1.13626991 17.9441833 1.39662286 17.4885657L10.3815264 1.76498445C11.2077719 0.319054919 13.0497336 -0.183298288 14.4956631 0.642947158C14.9631421 0.910077974 15.3505696 1.29750552 15.6177004 1.76498445Z"
+                android:fillType="evenOdd"
+                android:fillColor="#FF6E40" />
+            <path
+                android:pathData="M14.27257 16.34691L14.27257 16.34691Q14.27257 16.69475 14.02766 16.95031Q13.78275 17.20587 13.41361 17.20587L13.41361 17.20587Q13.04447 17.20587 12.79956 16.95031Q12.55465 16.69475 12.55465 16.34691L12.55465 16.34691Q12.55465 15.98486 12.80311 15.7364Q13.05157 15.48794 13.41361 15.48794L13.41361 15.48794Q13.77565 15.48794 14.02411 15.7364Q14.27257 15.98486 14.27257 16.34691ZM13.07997 14.23854L12.63984 7.480431L14.18739 7.480431L13.74726 14.23854L13.07997 14.23854Z"
+                android:fillColor="#FFFFFF" />
+        </group>
+    </group>
+</vector>

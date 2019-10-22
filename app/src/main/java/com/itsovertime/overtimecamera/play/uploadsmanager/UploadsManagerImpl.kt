@@ -9,6 +9,7 @@ import com.itsovertime.overtimecamera.play.network.*
 import com.itsovertime.overtimecamera.play.utils.Constants
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import io.reactivex.Observable
+import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -26,66 +27,56 @@ class UploadsManagerImpl(
     val api: Api,
     val manager: WifiManager
 ) : UploadsManager {
-    override fun onGetNextVideoForUpload(): SavedVideo? {
-        var next: SavedVideo? = null
-        if (!vid.isNullOrEmpty()) {
-            next = vid[0]
-        }
-        return next
-    }
 
     private val subject: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
     private var currentVideo: SavedVideo? = null
 
-    var vid = mutableListOf<SavedVideo>()
-    override fun onProcessUploadQue(list: MutableList<SavedVideo>) {
-        println("UPDATE QUE LIST --------- ${list.size}")
-        if (list != vid) {
-            vid = list
-            vid.sortBy {
-                it.is_favorite
-            }
-            // subject.onNext(vid)
-        }
-    }
-
     @Synchronized
-    override fun getVideoInstance(video: SavedVideo): Single<VideoInstanceResponse> {
+    override fun getVideoInstance(video: SavedVideo?): Observable<VideoInstanceResponse> {
         currentVideo = video
-
+        println("Getting insacneeeeeee...")
         return api
             .getVideoInstance(
                 VideoInstanceRequest(
-                    client_id = UUID.fromString(video.clientId),
-                    is_favorite = video.is_favorite,
-                    is_selfie = video.is_selfie,
-                    latitude = video.latitude ?: 0.0,
-                    longitude = video.longitude ?: 0.0,
-                    event_id = video.event_id,
-                    address = video.address,
-                    duration_in_hours = video.duration_in_hours,
-                    max_video_length = video.max_video_length
+                    client_id = UUID.fromString(video?.clientId),
+                    is_favorite = video?.is_favorite ?: false,
+                    is_selfie = video?.is_selfie ?: false,
+                    latitude = video?.latitude ?: 0.0,
+                    longitude = video?.longitude ?: 0.0,
+                    event_id = video?.event_id,
+                    address = video?.address,
+                    duration_in_hours = video?.duration_in_hours,
+                    max_video_length = video?.max_video_length
                 )
-            )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            ).observeOn(AndroidSchedulers.mainThread())
     }
 
     @Synchronized
-    override fun getAWSDataForUpload(): Single<TokenResponse> {
+    override fun getAWSDataForUpload(): Observable<TokenResponse> {
         return api
             .uploadToken(VideoSourceRequest(type = Constants.Source))
             .doOnError {
                 println("token error ${it.message}")
             }
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
 
     @Synchronized
-    override fun registerWithMD5(data: TokenResponse): Single<EncryptedResponse> {
-        val md5 = md5(File(currentVideo?.mediumRes).readBytes())
+    override fun registerWithMD5(
+        data: TokenResponse,
+        hdReady: Boolean
+    ): Observable<EncryptedResponse> {
+        val md5: String = when (hdReady) {
+            true -> {
+                when (currentVideo?.trimmedVidPath) {
+                    null -> md5(File(currentVideo?.highRes).readBytes()) ?: ""
+                    "" -> md5(File(currentVideo?.highRes).readBytes()) ?: ""
+                    else -> md5(File(currentVideo?.trimmedVidPath).readBytes()) ?: ""
+                }
+            }
+            false -> md5(File(currentVideo?.mediumRes).readBytes()) ?: ""
+        }
         return api
             .uploadDataForMd5(
                 UploadRequest(
@@ -98,9 +89,8 @@ class UploadsManagerImpl(
                 )
             )
             .doOnError {
-                println("aws error ${it.message}")
+
             }
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
@@ -124,11 +114,11 @@ class UploadsManagerImpl(
                 uploadChunk = chunk,
                 file = request
             )
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
     fun md5(array: ByteArray): String? {
+        println("MD5 HASH STARTED")
         val m = MessageDigest.getInstance("MD5")
         m.reset()
         m.update(array)
@@ -144,13 +134,12 @@ class UploadsManagerImpl(
     override fun onCompleteUpload(uploadId: String): Observable<retrofit2.Response<CompleteResponse>> {
         return api
             .checkStatusForComplete(uploadId, CompleteRequest(async = true))
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
     override fun writerToServerAfterComplete(
         uploadId: String, S3Key: String, vidWidth: Int, vidHeight: Int, hq: Boolean, vid: SavedVideo
-    ): Single<ServerResponse> {
+    ): Observable<ServerResponse> {
         val r: ServerRequest
         when (hq) {
             false -> {
@@ -160,7 +149,6 @@ class UploadsManagerImpl(
                     source_medium_quality_width = vidWidth,
                     source_medium_quality_progress = 1.0
                 )
-
             }
             else -> {
                 r = ServerRequest(
@@ -176,14 +164,7 @@ class UploadsManagerImpl(
                 uploadId = uploadId,
                 request = r
             )
-            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-
-    override fun onUpdateQue(): Observable<MutableList<SavedVideo>> {
-        return subject
-            .observeOn(Schedulers.io())
-            .subscribeOn(AndroidSchedulers.mainThread())
-    }
 }

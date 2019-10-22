@@ -2,8 +2,9 @@ package com.itsovertime.overtimecamera.play.settings
 
 import android.content.Intent
 import android.net.Uri
+import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 
-class SettingsPresenter(val view: SettingsFragment) {
+class SettingsPresenter(val view: SettingsFragment, val auth: AuthenticationManager) {
 
 
     fun clickedContactUs() {
@@ -21,7 +22,8 @@ class SettingsPresenter(val view: SettingsFragment) {
     }
 
     fun clickedLogOut() {
-        //TODO: Login / Logout logic
+        auth.logOut()
+        view.onLogOut()
     }
 
 

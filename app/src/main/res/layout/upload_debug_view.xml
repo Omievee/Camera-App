@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+    <ImageView
+            android:id="@+id/thumbNail"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="@dimen/margin_standard"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/guide"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent=".25" />
+
+
+    <TextView
+            android:id="@+id/statusText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_min"
+            android:text="Uploading High"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@id/statusText2"
+            app:layout_constraintStart_toEndOf="@id/guide"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+            android:id="@+id/statusText2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_min"
+            android:text="Waiting to upload HD"
+            android:textSize="13sp"
+            app:layout_constraintBottom_toTopOf="@id/statusText3"
+            app:layout_constraintStart_toEndOf="@id/guide"
+            app:layout_constraintTop_toBottomOf="@id/statusText" />
+
+    <TextView
+            android:id="@+id/statusText3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_min"
+            android:text="Client: FCBD24 Server:0ad005"
+            android:textSize="13sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/guide"
+            app:layout_constraintTop_toBottomOf="@id/statusText2" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

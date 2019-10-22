@@ -73,8 +73,6 @@ enum class UploadState {
     QUEUED,
     REGISTERING,
     REGISTERED,
-    UPLOADING_LOW,
-    UPLOADED_LOW,
     UPLOADING_MEDIUM,
     UPLOADED_MEDIUM,
     UPLOADING_HIGH,
@@ -92,6 +90,11 @@ object enumConverter {
     @JvmStatic
     fun toEnum(ordinal: Int): UploadState = UploadState.values().first { it.ordinal == ordinal }
 }
+
+
+
+
+
 
 
 //@ColumnInfo(name = "tagged")

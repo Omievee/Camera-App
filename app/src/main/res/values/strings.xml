@@ -46,5 +46,6 @@
     <string name="auth_invalid_access_code">Invalid Code</string>
     <string name="auth_logout_not_authorized">You are not authorized</string>
     <string name="auth_invalid_code">Invalid Code</string>
+    <string name="selfie_message">Record game recap.</string>
 
 </resources>

@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent=".8" />
+            app:layout_constraintGuide_begin="329dp" />
 
 
     <com.itsovertime.overtimecamera.play.camera.EventPickVIew
@@ -47,18 +47,43 @@
             app:layout_constraintStart_toStartOf="@id/verticalGuide"
             app:layout_constraintTop_toBottomOf="@id/topGuide" />
 
+    <TextView
+            android:id="@+id/selfieMsg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:rotation="90"
+            android:text="@string/selfie_message"
+            android:textColor="@color/OT_White"
+            android:textSize="18sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.recyclerview.widget.RecyclerView
+    <Chronometer
+            android:id="@+id/selfieTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:rotation="90"
+            android:textColor="@color/OT_White"
+            android:textSize="18sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/bottomGuide"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/verticalGuide"
+            app:layout_constraintTop_toBottomOf="@id/topGuide" />
+
+
+    <com.itsovertime.overtimecamera.play.camera.EventsRecyclerView
             android:id="@+id/hiddenEvents"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@android:drawable/screen_background_dark_transparent"
-            android:orientation="horizontal"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/bottomGuide"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="@id/vert"
-            app:layout_constraintTop_toTopOf="@id/topGuide" />
+            app:layout_constraintTop_toBottomOf="@id/topGuide" />
 
     <androidx.constraintlayout.widget.Guideline
             android:id="@+id/verticalGuide"
@@ -116,14 +141,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent=".1" />
+            app:layout_constraintGuide_percent=".12" />
 
     <androidx.constraintlayout.widget.Guideline
             android:id="@+id/bottomGuide"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_end="85dp" />
+            app:layout_constraintGuide_percent=".87" />
 
 
     <ProgressBar
@@ -172,6 +197,7 @@
             android:layout_height="wrap_content"
             android:gravity="bottom"
             android:rotation="90"
+            android:text="Save the last 12s"
             android:textColor="@color/OT_White"
             android:textSize="16sp"
             android:textStyle="bold"
@@ -180,13 +206,23 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
+    <com.itsovertime.overtimecamera.play.camera.TaggedPlayersView
+            android:id="@+id/taggedView"
+            android:layout_width="200dp"
+            android:layout_height="160dp"
+            android:padding="@dimen/margin_half"
+            android:rotation="90"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/bottomView"
+            app:layout_constraintStart_toStartOf="parent" />
+
 
     <androidx.constraintlayout.widget.Guideline
             android:id="@+id/clockGuide"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_percent=".84" />
+            app:layout_constraintGuide_percent=".80" />
 
     <ImageButton
             android:id="@+id/tapToSave"
@@ -200,6 +236,13 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottomView" />
+
+    <com.itsovertime.overtimecamera.play.baseactivity.RotatWarningView
+            android:id="@+id/rotateWarning"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
 
     <com.itsovertime.overtimecamera.play.camera.UploadButtonView
             android:id="@+id/uploadButton"
