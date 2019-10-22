@@ -10,6 +10,8 @@ import com.itsovertime.overtimecamera.play.network.Api
 import com.itsovertime.overtimecamera.play.network.JobBindingModule
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.network.StaticApiModule
+import com.itsovertime.overtimecamera.play.notifications.NotificationManager
+import com.itsovertime.overtimecamera.play.notifications.NotificationManagerImpl
 import com.itsovertime.overtimecamera.play.progress.ProgressManager
 import com.itsovertime.overtimecamera.play.progress.ProgressManagerImpl
 import com.itsovertime.overtimecamera.play.workmanager.DaggerWorkerFactory
@@ -77,12 +79,14 @@ class AppModule {
     fun workerFactory(
         uploads: UploadsManager,
         videos: VideosManager,
-        progress: ProgressManager
+        progress: ProgressManager,
+        notifications: NotificationManager
     ): WorkerFactory {
         return DaggerWorkerFactory(
             uploads,
             videos,
-            progress
+            progress,
+            notifications
         )
     }
 
@@ -91,6 +95,13 @@ class AppModule {
     @Singleton
     fun provideProgressManager(context: OTApplication): ProgressManager {
         return ProgressManagerImpl(context)
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideNotificationManager(context: OTApplication): NotificationManager {
+        return NotificationManagerImpl(context)
     }
 
 }

@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
@@ -14,6 +13,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.itsovertime.overtimecamera.play.R
+import com.itsovertime.overtimecamera.play.baseactivity.BaseActivity
 import com.itsovertime.overtimecamera.play.itemsame.ItemSame
 import dagger.android.support.AndroidSupportInjection
 import kotlinx.android.synthetic.main.fragment_settings.*
@@ -26,7 +26,8 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
     lateinit var presenter: SettingsPresenter
 
     override fun onLogOut() {
-
+        startActivity(Intent(context, BaseActivity::class.java))
+        activity?.finish()
     }
 
     override fun onTermsClicked(urlIntent: Intent) {
@@ -42,14 +43,7 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_settings, container, false)
-        view.setOnTouchListener { v, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                activity?.onBackPressed()
-            }
-            true
-        }
-        return view
+        return inflater.inflate(R.layout.fragment_settings, container, false)
     }
 
 
@@ -71,16 +65,10 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
     val adapter = SettingsAdapter(clickListener = clickListener)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        println("View craeted...")
         settingsRecycler.layoutManager =
             LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         adapter.data = SettingsAdapter.createData(context ?: return, adapter.data)
-        settingsRecycler.setOnTouchListener { v, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                activity?.onBackPressed()
-            }
-            true
-        }
         settingsRecycler.adapter = adapter
         val itemDecorator = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
         ContextCompat.getDrawable(
@@ -100,8 +88,7 @@ class SettingsFragment : BottomSheetDialogFragment(), SettingsImpl {
 
     companion object {
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            SettingsFragment()
+        fun newInstance() = SettingsFragment()
     }
 }
 

@@ -3,7 +3,9 @@ package com.itsovertime.overtimecamera.play.uploads
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.progress.ProgressManager
+import com.itsovertime.overtimecamera.play.progress.UploadsMessage
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
@@ -28,7 +30,7 @@ class UploadsPresenter(
         progDisp = progressManager
             .subscribeToUploadProgress()
             .subscribe({
-                view.updateProgressBar(it.id,it.prog, it.isHD)
+                view.updateProgressBar(it.id, it.prog, it.isHD)
             }, {
 
             })
@@ -41,21 +43,22 @@ class UploadsPresenter(
 
     fun onResume() {
         onRefresh()
-        subscribeToPendingUploads()
-        subcribeToQualityBeingUploaded()
+        subscribeToCurrentUploadMsg()
         subscribeToUploadProgress()
     }
 
     var qualityDisp: Disposable? = null
-    private fun subcribeToQualityBeingUploaded() {
+    private fun subscribeToCurrentUploadMsg() {
         qualityDisp?.dispose()
         qualityDisp =
             progressManager
-                .subscribeToCurrentVideoQuality()
+                .onUpdateUploadMessage()
                 .subscribe({
+                    println("This is.... $it")
                     when (it) {
-                        true -> view.setUploadingHdVideo()
-                        else -> view.setUploadingMedVideo()
+                        UploadsMessage.Uploading_High -> view.setUploadingHdVideo()
+                        UploadsMessage.Uploading_Medium -> view.setUploadingMedVideo()
+                        UploadsMessage.Pending_High -> view.onNotifyOfPendingHDUploads()
                     }
                 }, {
 
@@ -63,25 +66,17 @@ class UploadsPresenter(
     }
 
 
-    var pendingDisposable: Disposable? = null
-    private fun subscribeToPendingUploads() {
-        pendingDisposable = progressManager
-            .subscribeToPendingHQUploads()
-            .subscribe({
-                if (it) {
-                    view.notifyPendingUploads()
-                }
-            }, {
-
-            })
-    }
-
+    var type = UploadType.UserView
+    var list = mutableListOf<SavedVideo>()
     private var managerDisposable: Disposable? = null
     private fun subscribeToVideosFromGallery() {
         managerDisposable = manager
             .subscribeToVideoGallery()
+            .map {
+                this.list.addAll(it)
+            }
             .subscribe({
-                view.updateAdapter(it)
+                view.updateAdapter(list, type)
                 view.swipe2RefreshIsFalse()
             }, {
                 println("throwable: ${it.printStackTrace()}")
@@ -128,6 +123,17 @@ class UploadsPresenter(
                     .build()
             )
         }
+    }
+
+    fun displayBottomSheetSettings() {
+        view.displaySettings()
+    }
+
+    fun updateAdapterForDebug() {
+        type = if (type == UploadType.UserView) {
+            UploadType.DebugView
+        } else UploadType.UserView
+        view.updateAdapter(list, type)
     }
 }
 

@@ -10,50 +10,40 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 
 class ProgressManagerImpl(val context: OTApplication) : ProgressManager {
+    data class UploadProgress(val id: String, val prog: Int, val isHD: Boolean)
+
+    var uploadSubject = BehaviorSubject.create<UploadsMessage>()
+    override fun onCurrentUploadProcess(msg: UploadsMessage) {
+        uploadSubject.onNext(msg)
+    }
+
+    override fun onUpdateUploadMessage(): Observable<UploadsMessage> {
+        return uploadSubject
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
     override fun subscribeToUploadProgress(): Flowable<UploadProgress> {
         return progressSubject
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .toFlowable(BackpressureStrategy.LATEST)
-
     }
 
-    data class UploadProgress(val id: String, val prog: Int, val isHD: Boolean)
 
     private var progressSubject: BehaviorSubject<UploadProgress> = BehaviorSubject.create()
     override fun onUpdateProgress(id: String, progress: Int, hd: Boolean) {
-
-        println("progress...... $progress")
         progressSubject.onNext(UploadProgress(id, progress, hd))
     }
 
-    private var qualitySubject: BehaviorSubject<Boolean> = BehaviorSubject.create()
-    override fun subscribeToCurrentVideoQuality(): Observable<Boolean> {
-        return qualitySubject
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-    }
-
-    override fun onSetMessageToMediumUploads() {
-        qualitySubject.onNext(false)
-    }
-
-    override fun onSetMessageToHDUploads() {
-        qualitySubject.onNext(true)
-    }
-
-    override fun subscribeToPendingHQUploads(): Observable<Boolean> {
-        return subject
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-    }
 
     val subject: BehaviorSubject<Boolean> = BehaviorSubject.create()
 
+}
 
-    override fun onNotifyPendingUploads() {
-        subject.onNext(true)
-    }
-
-
+enum class UploadsMessage {
+    Uploading_Medium,
+    Uploading_High,
+    Pending_Medium,
+    Pending_High
 }

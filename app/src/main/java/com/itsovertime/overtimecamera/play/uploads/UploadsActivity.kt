@@ -2,6 +2,7 @@ package com.itsovertime.overtimecamera.play.uploads
 
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DiffUtil
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.itsovertime.overtimecamera.play.R
+import com.itsovertime.overtimecamera.play.baseactivity.OTActivity
 import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.itemsame.ItemSame
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -19,7 +21,7 @@ import kotlinx.android.synthetic.main.uploads_view_toolbar.*
 import javax.inject.Inject
 
 
-class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
+class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     CompoundButton.OnCheckedChangeListener,
     SwipeRefreshLayout.OnRefreshListener {
 
@@ -51,6 +53,11 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
             DiffUtil.calculateDiff(BasicDiffCallback(old, newD))
         )
         uploadsRecycler.adapter = adapter
+        val w = window
+        w.setFlags(
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        );
     }
 
     override fun setUploadingHdVideo() {
@@ -63,7 +70,7 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
         uploadsIcon.setImageResource(R.drawable.upload)
     }
 
-    override fun notifyPendingUploads() {
+    override fun onNotifyOfPendingHDUploads() {
         uploadsMessage.text =
             "HD videos are ready for upload. Turn on HD uploading. (WiFi Recommended)"
         uploadsIcon.setImageResource(R.drawable.warning)
@@ -80,7 +87,6 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
         this.prog = progress
         this.hd = hd
         this.id = id
-        println("Activity progress..... $progress")
         adapter.updateProgress(id, progress, hd)
     }
 
@@ -107,7 +113,7 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
     }
 
     override fun displaySettings() {
-        SettingsFragment.newInstance("", "")
+        SettingsFragment.newInstance().show(supportFragmentManager, "tag")
     }
 
     override fun onResume() {
@@ -119,9 +125,13 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.settingsButton -> {
-//                presenter.displayBottomSheetSettings()
+                presenter.displayBottomSheetSettings()
             }
             R.id.back -> onBackPressed()
+            R.id.debug -> {
+                println("CLICK!")
+                presenter.updateAdapterForDebug()
+            }
         }
     }
 
@@ -129,9 +139,10 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
     val old = adapter.data?.data ?: emptyList()
     var newD = mutableListOf<UploadsPresentation>()
 
-    override fun updateAdapter(videos: List<SavedVideo>) {
+    override fun updateAdapter(videos: List<SavedVideo>, type: UploadType) {
+        println("UPDATING!!! ${videos.size} && Type $type")
         if (!videos.isNullOrEmpty()) {
-            newD.add(UploadsPresentation(list = videos))
+            newD.add(UploadsPresentation(list = videos, type = type))
         }
         adapter.data = UploadsViewData(
             newD, DiffUtil.calculateDiff(
@@ -142,6 +153,7 @@ class UploadsActivity : AppCompatActivity(), UploadsInt, View.OnClickListener,
         )
         adapter.updateProgress(id, prog, hd)
         uploadsRecycler.adapter = adapter
+        adapter.notifyDataSetChanged()
         (uploadsRecycler.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = true
     }
 
@@ -164,7 +176,8 @@ data class ProgressData(
 
 data class UploadsPresentation(
     val list: List<SavedVideo>,
-    val progressData: ProgressData? = null
+    val progressData: ProgressData? = null,
+    val type: UploadType
 ) : ItemSame<UploadsPresentation> {
     override fun sameAs(same: UploadsPresentation): Boolean {
         return equals(same)
@@ -174,4 +187,10 @@ data class UploadsPresentation(
         return hashCode() == same.hashCode()
     }
 }
+
+enum class UploadType {
+    UserView,
+    DebugView
+}
+
 

@@ -7,11 +7,8 @@ import java.util.*
 
 interface ProgressManager {
 
-    fun onUpdateProgress(id:String,progress: Int, hd: Boolean)
-    fun onNotifyPendingUploads()
-    fun subscribeToPendingHQUploads(): io.reactivex.Observable<Boolean>
-    fun onSetMessageToMediumUploads()
-    fun onSetMessageToHDUploads()
-    fun subscribeToCurrentVideoQuality(): io.reactivex.Observable<Boolean>
+    fun onUpdateProgress(id: String, progress: Int, hd: Boolean)
+    fun onUpdateUploadMessage(): io.reactivex.Observable<UploadsMessage>
+    fun onCurrentUploadProcess(msg: UploadsMessage)
     fun subscribeToUploadProgress(): Flowable<ProgressManagerImpl.UploadProgress>
 }

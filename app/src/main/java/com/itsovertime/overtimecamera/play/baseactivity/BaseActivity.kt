@@ -2,15 +2,19 @@ package com.itsovertime.overtimecamera.play.baseactivity
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
 import android.content.ComponentName
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import android.os.PowerManager
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.OrientationEventListener
@@ -34,13 +38,18 @@ import dagger.android.AndroidInjection
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.events_item_view.*
+import kotlinx.android.synthetic.main.events_recycler_view.*
 import kotlinx.android.synthetic.main.permissions_view.*
 import kotlinx.android.synthetic.main.phone_verification.*
 import javax.inject.Inject
 
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
-    View.OnClickListener, SettingsFragment.SettingsInterface {
+    View.OnClickListener {
+    override fun disregardPermissions() {
+        phoneVerificationView.visibility = View.GONE
+    }
+
     override fun onRefreshFragmentFromDisconnect() {
         supportFragmentManager.beginTransaction()
             .detach(CameraFragment())
@@ -48,9 +57,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             .commit();
     }
 
-    override fun onSettingsOptionClicked() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     override fun hideKeyboard() {
         val imm = this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -66,10 +72,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         showToast(getString(R.string.auth_logout_not_authorized))
         phoneVerificationView.visibility = View.VISIBLE
         finishAffinity()
-    }
-
-    override fun allowAccess() {
-
     }
 
     override fun beginPermissionsFlow() {
@@ -92,7 +94,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        presenter.displayPermission()
+        println("code :::: $requestCode && $resultCode && $data")
+        if (resultCode == 0 && presenter.checkPermissions()) {
+            presenter.setUpAdapter()
+        } else presenter.displayPermission()
     }
 
     override fun resetViews() {
@@ -272,17 +277,36 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == permissionsCode) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                presenter.setUpAdapter()
-            } else {
-                presenter.permissionsDenied()
+            grantResults.forEachIndexed { index, i ->
+                val permission = permissions[index]
+                if (i == PackageManager.PERMISSION_GRANTED) {
+                    presenter.setUpAdapter()
+                } else if (i == PackageManager.PERMISSION_DENIED) {
+                    val rational = shouldShowRequestPermissionRationale(permission)
+                    if (!rational) {
+                        val uri = Uri.fromParts("package", packageName, null);
+                        AlertDialog.Builder(this, R.style.CUSTOM_ALERT).apply {
+                            setTitle("Please enable all permissions to continue")
+                            setCancelable(false)
+                        }.setPositiveButton("Ok") { dialog, which ->
+                            startActivityForResult(
+                                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = uri
+                                },
+                                0
+                            )
+                        }.show()
+                    }
+                    presenter.permissionsDenied()
+                }
             }
+
         }
     }
 
-
     override fun onPause() {
         super.onPause()
+        println("ON PAUSE FROM BASE")
         if (wakeLock?.isHeld == true) {
             wakeLock?.release()
         }
@@ -298,14 +322,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onBackPressed() {
         supportFragmentManager.fragments.forEach {
             when (it) {
-//                is UploadsFragment -> {
-//                    println("uploads..... ${it.isVisible}")
-//                    if (it.childFragmentManager.backStackEntryCount > 0) {
-//                        it.childFragmentManager.popBackStack()
-//                    } else if (it.childFragmentManager.backStackEntryCount == 0 && viewPager.currentItem == 1) {
-//                        viewPager.currentItem = 0
-//                    }
-//                }
                 is CameraFragment -> {
                     println("camera..... ${it.isVisible}")
                     if (it.childFragmentManager.backStackEntryCount > 0) {

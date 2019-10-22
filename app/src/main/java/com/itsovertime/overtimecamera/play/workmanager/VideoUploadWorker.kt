@@ -11,7 +11,9 @@ import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
 import com.itsovertime.overtimecamera.play.network.Upload
 import com.itsovertime.overtimecamera.play.network.VideoInstanceResponse
+import com.itsovertime.overtimecamera.play.notifications.NotificationManager
 import com.itsovertime.overtimecamera.play.progress.ProgressManager
+import com.itsovertime.overtimecamera.play.progress.UploadsMessage
 import com.itsovertime.overtimecamera.play.uploads.CompleteResponse
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
@@ -38,9 +40,11 @@ class VideoUploadWorker(
     @Inject
     lateinit var videosManager: VideosManager
 
-
     @Inject
     lateinit var progressManager: ProgressManager
+
+    @Inject
+    lateinit var notifications: NotificationManager
 
     var hdReady: Boolean? = false
     var videos = mutableListOf<SavedVideo>()
@@ -53,23 +57,6 @@ class VideoUploadWorker(
             hdReady = inputData.getBoolean("HD", false)
             getVideosFromDB().blockingGet()
 
-
-            when (hdReady) {
-                false -> progressManager.onSetMessageToMediumUploads()
-                else -> progressManager.onSetMessageToHDUploads()
-            }
-
-            if (faveListHQ.size > 0 && faveList.isEmpty() || standardListHQ.size > 0 && standardList.isEmpty()) {
-                // progressManager.onNotifyPendingUploads()
-            }
-            if (faveListHQ.isEmpty() || faveList.isEmpty() || standardListHQ.isEmpty() || standardList.isEmpty()) {
-                //TODO -- notify all uploads complete
-            }
-
-//            WorkerUtils().makeStatusNotification(
-//                message = "Uploading Video....",
-//                context = context
-//            )
             return Result.success()
         } catch (throwable: Throwable) {
             println("Error from worker... ${throwable.cause}")
@@ -137,7 +124,6 @@ class VideoUploadWorker(
                         it.remove()
                     }
                 }
-                println("HD READY??? $hdReady")
                 beginProcess()
             }
     }
@@ -152,33 +138,51 @@ class VideoUploadWorker(
         tokenDisposable?.dispose()
 
         println("List Sizes :::: ${faveList.size} && ${standardList.size} && ${faveListHQ.size} && ${standardListHQ.size}")
+        val notifMsg = when (hdReady) {
+            true -> "Uploading High Quality Videos.."
+            else -> "Uploading Medium Quality Videos.."
+        }
+        notifications.onCreateProgressNotification(notifMsg, 0, 0)
 
         when {
             faveList.size > 0 -> {
+                progressManager.onCurrentUploadProcess(
+                    UploadsMessage.Uploading_Medium
+                )
                 synchronized(this) {
                     getVideoInstance(faveList[0])
                     faveList.remove(faveList[0])
                 }
             }
             standardList.size > 0 -> {
+                progressManager.onCurrentUploadProcess(
+                    UploadsMessage.Uploading_Medium
+                )
                 synchronized(this) {
                     getVideoInstance(standardList[0])
                     standardList.remove(standardList[0])
                 }
             }
             faveListHQ.size > 0 && hdReady ?: false -> {
+                progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
                 synchronized(this) {
                     getVideoInstance(faveListHQ[0])
                     faveListHQ.remove(faveListHQ[0])
                 }
             }
-
             standardListHQ.size > 0 && hdReady ?: false -> {
+                progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
                 synchronized(this) {
                     getVideoInstance(standardListHQ[0])
                     standardListHQ.remove(standardListHQ[0])
                 }
             }
+        }
+
+        if (faveList.size == 0 && standardList.size == 0) {
+            if (faveListHQ.size > 0 && hdReady == false || standardListHQ.size > 0 && hdReady == false) progressManager.onCurrentUploadProcess(
+                UploadsMessage.Pending_High
+            )
         }
     }
 
@@ -305,12 +309,13 @@ class VideoUploadWorker(
                 end - 1
             )
         )
-
+        val progress = (end * 100L / fullFileSize).toInt()
         progressManager.onUpdateProgress(
             currentVideo?.clientId ?: "",
-            (end * 100L / fullFileSize).toInt(),
+            progress,
             hdReady ?: false
         )
+
 
         synchronized(this) {
             up = uploadsManager
@@ -492,7 +497,8 @@ class VideoUploadWorker(
 class DaggerWorkerFactory(
     private val uploads: UploadsManager,
     private val videos: VideosManager,
-    private val progress: ProgressManager
+    private val progress: ProgressManager,
+    private val notifications: NotificationManager
 ) : WorkerFactory() {
     override fun createWorker(
         appContext: Context,
@@ -508,6 +514,7 @@ class DaggerWorkerFactory(
             is VideoUploadWorker -> {
                 instance.uploadsManager = uploads
                 instance.videosManager = videos
+                instance.notifications = notifications
                 instance.progressManager = progress
             }
         }

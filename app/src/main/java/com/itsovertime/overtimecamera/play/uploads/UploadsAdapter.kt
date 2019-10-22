@@ -8,10 +8,19 @@ import com.itsovertime.overtimecamera.play.baseviewholder.BaseViewHolder
 class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     var holder: UploadsView? = null
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-        this.holder = holder.itemView as UploadsView
-        holder.itemView.bind(
-            list?.get(position) ?: return
-        )
+ //       this.holder = holder.itemView as UploadsView
+        val view = holder.itemView
+        when (view) {
+            is UploadsView -> {
+                view.bind(
+                    list?.get(position) ?: return
+                )
+            }
+            is UploadsDebugView -> {
+                view.bind(list?.get(position) ?: return)
+            }
+        }
+
     }
 
     var data: UploadsViewData? = null
@@ -24,17 +33,31 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         if (hd) {
             holder?.updateHighProgress(prog)
         } else holder?.updateMediumProgress(prog)
+    }
 
+    override fun getItemViewType(position: Int): Int {
+        val type = data?.data?.get(position)?.type?.ordinal!!
+        println("TYPE ? $type")
+        return type
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-        return BaseViewHolder(UploadsView(parent.context).apply {
-            layoutParams =
+        println("UPDATING TYPE $viewType")
+        return when (viewType) {
+            UploadType.UserView.ordinal -> BaseViewHolder(UploadsView(parent.context).apply {
+                layoutParams =
+                    ViewGroup.MarginLayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+            })
+            else -> BaseViewHolder(UploadsDebugView(parent.context).apply {
                 ViewGroup.MarginLayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
-        })
+            })
+        }
     }
 
     var list: List<SavedVideo>? = null

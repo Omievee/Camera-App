@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.camera
 
 import android.annotation.SuppressLint
+import android.icu.text.SimpleDateFormat
 import android.os.CountDownTimer
 import android.os.Environment
 import android.view.View
@@ -54,6 +55,7 @@ class CameraPresenter(
     var video: SavedVideo? = null
     var clientId: String = ""
     fun saveVideo(videoEvent: Event?) {
+        println("SAVE VIDEO???")
         e = videoEvent
         clientId = UUID.randomUUID().toString()
         filePath?.let {
@@ -81,7 +83,6 @@ class CameraPresenter(
 
 
     fun onCreate() {
-
         subscribeToGallerySize()
         manager.loadFFMPEG()
         manager.loadFromDB()
@@ -90,7 +91,7 @@ class CameraPresenter(
 
 
     fun onResume() {
-        beginUploadWork()
+
     }
 
 
@@ -136,7 +137,6 @@ class CameraPresenter(
     }
 
     fun deletePreviousFile() {
-
         val previousFile = File(filePath ?: return)
         if (previousFile.exists()) {
             previousFile.delete()
@@ -156,10 +156,6 @@ class CameraPresenter(
             })
     }
 
-    var worker: Operation? = null
-    private fun beginUploadWork() {
-
-    }
 
 
     fun onDestroy() {
@@ -176,33 +172,31 @@ class CameraPresenter(
         view.showOrHideViewsForCamera()
     }
 
-    var videographerArray = emptyArray<String>()
-    var ev: List<Event>? = null
+
     var eventName: String? = ""
     fun getEvents() {
+        val eventsList = mutableListOf<Event>()
         eventDisposable?.dispose()
         eventDisposable = eventsManager
             .getEvents()
             .map { er ->
-                er.events.forEach { e ->
-                    videographerArray = e.videographer_ids
-                    videographerArray.forEach {
-                        eventName = when (it == user?.id) {
-                            true -> e.name
-                            else -> er.events[0].name ?: ""
+                er.events.forEachIndexed { i, event ->
+                    event.videographer_ids.forEach { s ->
+                        if (s == user?.id) {
+                            eventName = er.events[i].name
                         }
                     }
                 }
-                ev = er.events
+                eventsList.addAll(er.events)
             }
             .subscribe({
-                view.setUpEventViewData(ev)
+                view.setUpEventViewData(eventsList)
                 view.updateEventTitle(eventName?.trim() ?: "")
             }, {
             })
     }
 
-    var authdisp: Disposable? = null
+    private var authdisp: Disposable? = null
     var user: User? = null
     fun user() {
         authdisp?.dispose()
@@ -278,6 +272,3 @@ class CameraPresenter(
     }
 
 }
-
-//TODO  Selfie Cam has no live cam & options
-//TODO:

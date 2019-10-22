@@ -36,7 +36,7 @@
 //        uploadsIcon.setImageResource(R.drawable.upload)
 //    }
 //
-//    override fun notifyPendingUploads() {
+//    override fun onNotifyOfPendingHDUploads() {
 //        uploadsMessage.text =
 //            "HD videos are ready for upload. Turn on HD uploading. (WiFi Recommended)"
 //        uploadsIcon.setImageResource(R.drawable.warning)

@@ -387,9 +387,14 @@ class VideosManagerImpl(
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
-            subject.onNext(it.asReversed())
-            total.onNext(it.size)
             videosList.addAll(it.asReversed())
+            subject.onNext(videosList)
+            val totalUploaded = mutableListOf<SavedVideo>()
+            totalUploaded.addAll(it)
+            totalUploaded.removeIf {
+                it.mediumUploaded
+            }
+            total.onNext(totalUploaded.size)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
@@ -407,13 +412,12 @@ class VideosManagerImpl(
                         isFirstRun = false
                     }
                 }
-
             }, {
                 it.printStackTrace()
             })
     }
 
-    var isFirstRun: Boolean = true
+    private var isFirstRun: Boolean = true
 
     private fun doWork() {
         WorkManager.getInstance(context).enqueue(

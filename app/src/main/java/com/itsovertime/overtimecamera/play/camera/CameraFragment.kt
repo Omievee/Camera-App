@@ -9,6 +9,7 @@ import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.graphics.drawable.Drawable
 import android.hardware.camera2.*
+import android.icu.text.SimpleDateFormat
 import android.media.CamcorderProfile
 import android.media.MediaRecorder
 import android.os.Bundle
@@ -20,6 +21,7 @@ import android.util.Range
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.*
+import android.widget.Chronometer
 import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
@@ -35,6 +37,7 @@ import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.Tagged_Teams
 import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
 import com.itsovertime.overtimecamera.play.uploads.UploadsActivity
+import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.support.AndroidSupportInjection
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -47,6 +50,7 @@ import kotlinx.android.synthetic.main.upload_button_view.*
 import java.io.File
 import java.io.IOException
 import java.lang.Long
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -59,41 +63,31 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     override fun hideEventsRV() {
-        //  presenter.collapse(hiddenEvents)
         hiddenEvents.visibility = View.GONE
-//        hiddenEvents.animate()
-//            .translationY(0f)
-//            .alpha(0.0f)
-//            .setListener(object : AnimatorListenerAdapter() {
-//                override fun onAnimationEnd(animation: Animator?) {
-//                    super.onAnimationEnd(animation)
-//
-//                }
-//            })
 
     }
 
     override fun openEvents() {
-        println("here...")
-        //presenter.expand(hiddenEvents)
         hiddenEvents.visibility = View.VISIBLE
-//        hiddenEvents.alpha = 0.0f;
-//        hiddenEvents.animate()
-//            .translationY(eventSpace.height.toFloat())
-//            .alpha(1.0f)
-//            .setListener(null);
     }
 
     var taggedAdapter = TaggedPlayersAdapter()
     var newData = mutableListOf<TaggedPlayersPresentation>()
     var old = taggedAdapter.data?.data ?: emptyList()
-    override fun setUpEventViewData(eventList: List<Event>?) {
-
+    override fun setUpEventViewData(eventList: MutableList<Event>?) {
+        println("size from frag... ${eventList?.size}")
         if (eventList.isNullOrEmpty()) {
             eventSpace.visibility = View.GONE
         }
 
-        selectedEvent = eventList?.get(0)
+        eventList?.forEachIndexed { i, event ->
+            event.videographer_ids.forEach { s ->
+                if (s == UserPreference.userId) {
+                    selectedEvent = eventList[i]
+                } else eventList[0]
+            }
+        }
+
         evAdapter = EventsAdapter(eventList, listener)
         eventsRecycler.adapter = evAdapter
         var tagged: Array<Tagged_Teams>
@@ -108,7 +102,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
         taggedAdapter.data =
             TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
-
         athleteRecycler.adapter = taggedAdapter
     }
 
@@ -150,7 +143,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         progressBar?.let {
             it.clearAnimation()
         }
-
     }
 
     override fun updateUploadsIconCount(count: String) {
@@ -249,6 +241,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun tapToSaveRegularRecording() {
+        println("TAP TO SAVE....")
         favoriteIcon.visibility = View.VISIBLE
         hahaIcon.visibility = View.VISIBLE
         if (!newData.isNullOrEmpty()) {
@@ -260,6 +253,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         }
     }
 
+    var count: Int = 0
     private fun tapToSaveSelfie() {
         if (!recording) {
             progress.visibility = View.GONE
@@ -268,7 +262,19 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             tapToSave.setImageResource(R.drawable.selfie_record_red_stop)
             selfieMsg.visibility = View.GONE
             mediaRecorder?.start()
+
             selfieTimer.start()
+
+            selfieTimer.onChronometerTickListener =
+                Chronometer.OnChronometerTickListener {
+                    count++
+                    println("Count = $count")
+                    if (count == 30) {
+                        progressBar.visibility = View.VISIBLE
+                        tapToSaveSelfie()
+                        count = 0
+                    }
+                }
         } else {
             selfieMsg.visibility = View.VISIBLE
             tapToSave.setImageResource(R.drawable.selfie_record_red)
@@ -277,7 +283,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             releaseCamera(tapToSave = true)
         }
     }
-
 
     private var callback: UploadsButtonClick? = null
     fun setUploadsClickListener(listener: UploadsButtonClick) {
@@ -495,7 +500,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 Handler().postDelayed(runnable, 5000)
             }
             1 -> {
-
                 recording = false
             }
         }
@@ -673,15 +677,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun onPause() {
         releaseCamera(tapToSave = false)
-        println("PRE SUPER ON PAUSE")
-        super.onPause()
         deleteUnsavedFile()
-        println("POST SUPER ON PAUSE")
-//        orientation?.disable()
+        super.onPause()
     }
 
     override fun onResume() {
         super.onResume()
+        println("ON RESUME FROM FRAGMENT")
         if (pausedView.visibility == View.GONE && this.fragmentIsVisibleToUser != false) {
             paused = false
             progress.visibility = View.VISIBLE
@@ -692,8 +694,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 it.enable()
             }
         }
-        presenter.onResume()
-
     }
 
     var selfieCameraEngaged: Boolean? = false
@@ -743,6 +743,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     override fun onDestroy() {
+        releaseCamera(tapToSave = false)
+        deleteUnsavedFile()
         super.onDestroy()
         presenter.onDestroy()
     }

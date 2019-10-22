@@ -17,6 +17,13 @@ class AuthenticationManagerImpl(
     val context: OTApplication,
     val api: Api
 ) : AuthenticationManager {
+    override fun logOut() {
+        UserPreference.authToken = ""
+        UserPreference.accessAllowed = false
+        UserPreference.userId = ""
+        UserPreference.isSignUpComplete = false
+    }
+
     var user: User? = null
     override fun getUserId(): Single<User>? {
         return when (user) {

@@ -10,11 +10,10 @@ interface BaseActivityInt {
     fun displayEnterResponseView(number: String)
     fun resetViews()
     fun displaySignUpPage()
-
     fun beginPermissionsFlow()
-    fun allowAccess()
     fun logOut()
     fun hideKeyboard()
+    fun disregardPermissions()
 
 
 }
