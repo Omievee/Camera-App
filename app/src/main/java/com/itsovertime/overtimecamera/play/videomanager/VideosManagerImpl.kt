@@ -38,7 +38,7 @@ class VideosManagerImpl(
         println("high uploaded?? $qualityUploaded && $clientId")
         Single.fromCallable {
             with(videoDao) {
-                this?.updateHighUpload(qualityUploaded, clientId)
+                this?.updateHighUpload(qualityUploaded, clientId, UploadState.UPLOADED_HIGH)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -54,7 +54,7 @@ class VideosManagerImpl(
     override fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String) {
         Single.fromCallable {
             with(videoDao) {
-                this?.updateMediumUpload(qualityUploaded, clientId)
+                this?.updateMediumUpload(qualityUploaded, clientId, UploadState.UPLOADED_MEDIUM)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -383,7 +383,7 @@ class VideosManagerImpl(
     @Synchronized
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
-        videosList = mutableListOf()
+        videosList?.clear()
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {

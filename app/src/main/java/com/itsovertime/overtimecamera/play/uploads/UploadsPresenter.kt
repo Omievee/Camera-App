@@ -66,17 +66,18 @@ class UploadsPresenter(
     }
 
 
-    var type = UploadType.UserView
     var list = mutableListOf<SavedVideo>()
+    var debug: Boolean = false
     private var managerDisposable: Disposable? = null
     private fun subscribeToVideosFromGallery() {
         managerDisposable = manager
             .subscribeToVideoGallery()
             .map {
+                this.list.clear()
                 this.list.addAll(it)
             }
             .subscribe({
-                view.updateAdapter(list, type)
+                view.updateAdapter(list, debug)
                 view.swipe2RefreshIsFalse()
             }, {
                 println("throwable: ${it.printStackTrace()}")
@@ -130,10 +131,8 @@ class UploadsPresenter(
     }
 
     fun updateAdapterForDebug() {
-        type = if (type == UploadType.UserView) {
-            UploadType.DebugView
-        } else UploadType.UserView
-        view.updateAdapter(list, type)
+        debug = !debug
+        view.updateAdapter(list, debug)
     }
 }
 

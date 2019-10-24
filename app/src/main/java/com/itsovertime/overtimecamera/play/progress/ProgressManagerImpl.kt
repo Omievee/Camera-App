@@ -1,7 +1,6 @@
 package com.itsovertime.overtimecamera.play.progress
 
 import com.itsovertime.overtimecamera.play.application.OTApplication
-import com.itsovertime.overtimecamera.play.uploads.ProgressData
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Flowable
 import io.reactivex.Observable

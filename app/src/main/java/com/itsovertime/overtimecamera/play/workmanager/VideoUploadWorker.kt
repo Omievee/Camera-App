@@ -197,6 +197,10 @@ class VideoUploadWorker(
             }
             .doAfterNext {
                 currentVideo?.id = videoInstanceResponse?.video?.id.toString()
+                videosManager.updateUploadId(
+                    videoInstanceResponse?.video?.id.toString(),
+                    currentVideo?.clientId.toString()
+                )
                 requestTokenForUpload()
 
             }
@@ -436,8 +440,9 @@ class VideoUploadWorker(
                     )
                     println("STATE IS ::: ${currentVideo?.uploadState}")
                     if (currentVideo?.uploadState == UploadState.UPLOADING_MEDIUM) {
-                        videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
                         currentVideo?.uploadState = UploadState.UPLOADED_MEDIUM
+                        videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
+
                     } else {
                         currentVideo?.uploadState = UploadState.UPLOADED_HIGH
                         videosManager.updateHighuploaded(true, currentVideo?.clientId ?: "")

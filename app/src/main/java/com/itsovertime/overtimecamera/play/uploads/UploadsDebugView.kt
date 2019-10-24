@@ -24,6 +24,5 @@ class UploadsDebugView(context: Context, attributeSet: AttributeSet? = null) :
             .load(File(savedVideo.highRes).path)
             .transition(DrawableTransitionOptions.withCrossFade())
             .into(thumbNail)
-
     }
 }

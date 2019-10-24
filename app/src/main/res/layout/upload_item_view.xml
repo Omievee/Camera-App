@@ -2,7 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="75dp">
 
 
     <ImageView
@@ -16,6 +16,14 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/horiz"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent=".9" />
+
+
     <TextView
             android:id="@+id/medQT"
             android:layout_width="0dp"
@@ -26,7 +34,9 @@
             android:textAlignment="textStart"
             android:textColor="@android:color/black"
             android:textSize="18sp"
+            android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@id/medQProgressBar"
+            app:layout_constraintEnd_toStartOf="@id/check1"
             app:layout_constraintStart_toEndOf="@id/guide"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -34,12 +44,12 @@
             android:id="@+id/check1"
             android:layout_width="0dp"
             android:layout_height="15dp"
+            android:layout_marginTop="@dimen/margin_half"
             android:src="@drawable/check"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@id/medQProgressBar"
+            android:visibility="invisible"
             app:layout_constraintEnd_toStartOf="@id/guide2"
             app:layout_constraintStart_toEndOf="@id/medQT"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@id/medQT" />
 
 
     <androidx.constraintlayout.widget.Guideline
@@ -63,15 +73,27 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent=".75" />
 
-    <TextView
-            android:id="@+id/highQT"
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent=".85" />
+
+
+    <TextView
+            android:id="@+id/highQT"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_half"
             android:layout_marginTop="@dimen/margin_standard"
             android:text="@string/uploads_high"
             android:textAlignment="textStart"
             android:textColor="@android:color/black"
             android:textSize="18sp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@id/highQProgressBar"
+            app:layout_constraintEnd_toStartOf="@id/check2"
             app:layout_constraintStart_toEndOf="@id/guide2"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -79,12 +101,78 @@
             android:id="@+id/check2"
             android:layout_width="0dp"
             android:layout_height="15dp"
+            android:layout_marginTop="@dimen/margin_half"
             android:src="@drawable/check"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@id/highQProgressBar"
+            android:visibility="invisible"
             app:layout_constraintEnd_toStartOf="@id/guide3"
             app:layout_constraintStart_toEndOf="@id/highQT"
+            app:layout_constraintTop_toTopOf="@id/highQT" />
+
+
+    <TextView
+            android:id="@+id/uploadedText"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/margin_standard"
+            android:text="Uploading High"
+            android:textColor="@color/OT_DarkGray"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@id/statusText2"
+            app:layout_constraintEnd_toStartOf="@id/guide4"
+            app:layout_constraintStart_toEndOf="@id/guide"
             app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+
+    <TextView
+            android:id="@+id/statusText2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="Waiting to upload HD"
+            android:textColor="@color/OT_DarkGray"
+            android:textSize="12sp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@id/clientText"
+            app:layout_constraintEnd_toStartOf="@id/guide4"
+            app:layout_constraintStart_toEndOf="@id/guide"
+            app:layout_constraintTop_toBottomOf="@id/uploadedText" />
+
+    <TextView
+            android:id="@+id/clientText"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:maxLength="15"
+            android:textColor="@color/OT_DarkGray"
+            android:textSize="11sp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/guide2"
+            app:layout_constraintStart_toEndOf="@id/guide"
+            app:layout_constraintTop_toBottomOf="@id/statusText2" />
+
+
+    <TextView
+            android:id="@+id/serverText"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:maxLength="15"
+            android:textColor="@color/OT_DarkGray"
+            android:textSize="11sp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/guide4"
+            app:layout_constraintStart_toEndOf="@id/clientText"
+            app:layout_constraintTop_toBottomOf="@id/statusText2" />
 
 
     <ProgressBar
@@ -92,8 +180,11 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/margin_standard"
+            android:layout_marginStart="@dimen/margin_half"
+            android:layout_marginEnd="@dimen/margin_half"
+            android:layout_marginBottom="@dimen/margin_half"
             android:progressTint="@color/OT_Orange"
+            android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/guide3"
             app:layout_constraintStart_toEndOf="@id/guide2"
@@ -104,8 +195,12 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/margin_standard"
+            android:layout_marginStart="@dimen/margin_half"
+            android:layout_marginEnd="@dimen/margin_half"
+            android:layout_marginBottom="@dimen/margin_half"
             android:progressTint="@color/OT_Orange"
+
+            android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/guide2"
             app:layout_constraintStart_toEndOf="@id/guide"

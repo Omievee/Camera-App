@@ -1,7 +1,6 @@
 package com.itsovertime.overtimecamera.play.progress
 
 import android.database.Observable
-import com.itsovertime.overtimecamera.play.uploads.ProgressData
 import io.reactivex.Flowable
 import java.util.*
 
