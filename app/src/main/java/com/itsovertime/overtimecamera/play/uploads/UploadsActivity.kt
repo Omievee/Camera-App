@@ -48,10 +48,6 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
             CustomLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
         presenter.onRefresh()
-        adapter.data = UploadsViewData(
-            newD,
-            DiffUtil.calculateDiff(BasicDiffCallback(old, newD))
-        )
         uploadsRecycler.adapter = adapter
         val w = window
         w.setFlags(
@@ -129,7 +125,6 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
             }
             R.id.back -> onBackPressed()
             R.id.debug -> {
-                println("CLICK!")
                 presenter.updateAdapterForDebug()
             }
         }
@@ -138,11 +133,15 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     var adapter: UploadsAdapter = UploadsAdapter()
     val old = adapter.data?.data ?: emptyList()
     var newD = mutableListOf<UploadsPresentation>()
-
-    override fun updateAdapter(videos: List<SavedVideo>, type: UploadType) {
-        println("UPDATING!!! ${videos.size} && Type $type")
+    var debugBool: Boolean = false
+    override fun updateAdapter(videos: List<SavedVideo>, dBug: Boolean) {
+        this.debugBool = dBug
+        when (debugBool) {
+            true -> debug.setImageResource(R.drawable.debug_click)
+            false -> debug.setImageResource(R.drawable.tool)
+        }
         if (!videos.isNullOrEmpty()) {
-            newD.add(UploadsPresentation(list = videos, type = UploadType.DebugView))
+            newD.add(UploadsPresentation(list = videos, debug = dBug))
         }
         adapter.data = UploadsViewData(
             newD, DiffUtil.calculateDiff(
@@ -168,16 +167,9 @@ class UploadsViewData(
     val diffResult: DiffUtil.DiffResult
 )
 
-data class ProgressData(
-    val progress: Int? = 0,
-    val fullSize: Int? = 0,
-    val id: String = ""
-)
-
 data class UploadsPresentation(
     val list: List<SavedVideo>,
-    val progressData: ProgressData? = null,
-    val type: UploadType
+    val debug: Boolean
 ) : ItemSame<UploadsPresentation> {
     override fun sameAs(same: UploadsPresentation): Boolean {
         return equals(same)
@@ -188,9 +180,5 @@ data class UploadsPresentation(
     }
 }
 
-enum class UploadType {
-    UserView,
-    DebugView
-}
 
 
