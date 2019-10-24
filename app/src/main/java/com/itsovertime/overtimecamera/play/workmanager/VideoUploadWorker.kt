@@ -52,7 +52,7 @@ class VideoUploadWorker(
 
     @SuppressLint("CheckResult")
     override fun doWork(): Result {
-
+        println()
         try {
             hdReady = inputData.getBoolean("HD", false)
             getVideosFromDB().blockingGet()
@@ -142,7 +142,7 @@ class VideoUploadWorker(
             true -> "Uploading High Quality Videos.."
             else -> "Uploading Medium Quality Videos.."
         }
-        notifications.onCreateProgressNotification(notifMsg, 0, 0)
+        // notifications.onCreateProgressNotification(notifMsg, 0, 0)
 
         when {
             faveList.size > 0 -> {
@@ -177,7 +177,11 @@ class VideoUploadWorker(
                     standardListHQ.remove(standardListHQ[0])
                 }
             }
+
+            standardList.size == 0 && faveList.size == 0 -> videosManager.onNotifyWorkIsDone()
+
         }
+
 
         if (faveList.size == 0 && standardList.size == 0) {
             if (faveListHQ.size > 0 && hdReady == false || standardListHQ.size > 0 && hdReady == false) progressManager.onCurrentUploadProcess(
@@ -202,7 +206,6 @@ class VideoUploadWorker(
                     currentVideo?.clientId.toString()
                 )
                 requestTokenForUpload()
-
             }
             .doOnError {
                 videosManager.resetUploadStateForCurrentVideo(

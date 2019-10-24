@@ -46,17 +46,20 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                     UploadState.UPLOADED_HIGH -> "Uploaded high quality"
                     else -> "Waiting to upload"
                 }
-                statusText2.text = when (savedVideo.mediumUploaded) {
-                    true -> "Waiting to upload HD"
-                    else -> "Waiting to upload"
+                if (savedVideo.mediumUploaded) {
+                    statusText2.text = "Waiting to upload HD"
+                }
+                if (savedVideo.highUploaded) {
+                    statusText2.text = "Finished"
                 }
                 clientText.text = "Client: ${savedVideo.clientId}"
                 serverText.text = "Server: ${savedVideo.uploadId}"
-
             }
             else -> {
                 medQProgressBar.visibility = View.VISIBLE
+                medQProgressBar.setProgress(0, false)
                 highQProgressBar.visibility = View.VISIBLE
+                highQProgressBar.setProgress(0, false)
                 medQT.visibility = View.VISIBLE
                 highQT.visibility = View.VISIBLE
                 pendingProgress.visibility = View.VISIBLE

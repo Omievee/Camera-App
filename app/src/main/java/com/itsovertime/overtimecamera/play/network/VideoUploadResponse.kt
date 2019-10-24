@@ -18,8 +18,8 @@ class ServerResponse(
 )
 
 class ServerRequest(
-    val source_high_quality_path: String? = "",
-    val source_medium_quality_path: String = "",
+    val source_high_quality_path: String? = null,
+    val source_medium_quality_path: String?=null,
     val source_medium_quality_progress: Double = 1.0,
     val source_high_quality_progress: Double = 1.0,
     val source_medium_quality_width: Int = 0,

@@ -636,11 +636,15 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     fun showWarnings() {
-        rotateWarning.visibility = View.VISIBLE
+        rotateWarning?.let {
+            it.visibility = View.VISIBLE
+        }
     }
 
     fun hideWarnings() {
-        rotateWarning.visibility = View.GONE
+        rotateWarning?.let {
+            it.visibility = View.GONE
+        }
     }
 
 
@@ -767,7 +771,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 throw RuntimeException("Time out waiting to lock overtimecamera opening.")
             }
             val cameraId = when (camera) {
-                0 -> manager?.cameraIdList?.get(0)
+                0 -> {
+                    manager?.cameraIdList?.get(0)
+                }
                 else -> manager?.cameraIdList?.get(1)
             } ?: "0"
 

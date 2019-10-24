@@ -54,7 +54,6 @@ class UploadsPresenter(
             progressManager
                 .onUpdateUploadMessage()
                 .subscribe({
-                    println("This is.... $it")
                     when (it) {
                         UploadsMessage.Uploading_High -> view.setUploadingHdVideo()
                         UploadsMessage.Uploading_Medium -> view.setUploadingMedVideo()
@@ -77,6 +76,7 @@ class UploadsPresenter(
                 this.list.addAll(it)
             }
             .subscribe({
+                println("ADAPTER UPDATE!")
                 view.updateAdapter(list, debug)
                 view.swipe2RefreshIsFalse()
             }, {

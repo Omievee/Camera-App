@@ -27,4 +27,5 @@ interface VideosManager {
     fun loadFFMPEG()
     fun updateHighuploaded(qualityUploaded: Boolean, clientId: String)
     fun determineTrim(savedVideo: SavedVideo)
+    fun onNotifyWorkIsDone()
 }

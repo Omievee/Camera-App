@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.lifecycle.LifecycleOwner
+import androidx.work.*
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
@@ -32,6 +32,7 @@ class VideosManagerImpl(
     val context: OTApplication,
     val manager: UploadsManager
 ) : VideosManager {
+
 
     @SuppressLint("CheckResult")
     override fun updateHighuploaded(qualityUploaded: Boolean, clientId: String) {
@@ -400,7 +401,6 @@ class VideosManagerImpl(
             .subscribe({
                 if (!videosList.isNullOrEmpty()) {
                     for (savedVideo in videosList) {
-                        println("Med Res: ${savedVideo.mediumRes}")
                         if (savedVideo.mediumRes.isNullOrEmpty() || File(savedVideo.mediumRes).readBytes().isEmpty()) {
                             if (savedVideo.trimmedVidPath.isNullOrEmpty()) {
                                 transcodeVideo(savedVideo, File(savedVideo.highRes))
@@ -417,14 +417,31 @@ class VideosManagerImpl(
             })
     }
 
+    private fun checkForVideoNotUploaded() {
+        val vid = videosList.find { !it.mediumUploaded }
+        println("Video is... $vid")
+        if (vid != null) {
+            doWork()
+        }
+    }
+
+    override fun onNotifyWorkIsDone() {
+        println("WORK IS DONE NOTIFICATION!")
+        checkForVideoNotUploaded()
+    }
+
     private var isFirstRun: Boolean = true
 
+
+    private var workRequest: OneTimeWorkRequest? = null
+    var work: Operation? = null
     private fun doWork() {
-        WorkManager.getInstance(context).enqueue(
-            OneTimeWorkRequestBuilder<VideoUploadWorker>()
-                .build()
-        )
+        workRequest = OneTimeWorkRequestBuilder<VideoUploadWorker>().addTag("UploadWork").build()
+
+        work = WorkManager.getInstance(context)
+            .enqueueUniqueWork("UploadWork", ExistingWorkPolicy.KEEP, workRequest ?: return)
     }
+
 
     @SuppressLint("CheckResult")
     override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
