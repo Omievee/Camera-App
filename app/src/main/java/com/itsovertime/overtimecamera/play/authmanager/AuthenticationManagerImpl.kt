@@ -73,7 +73,7 @@ class AuthenticationManagerImpl(
             })
     }
 
-    override fun onRefreshAuth(): Single<RestrictionsResponse> {
+    override fun onRefreshAuth(): Observable<retrofit2.Response<RestrictionsResponse>> {
         return api
             .validateTokenCheckRestrictions()
             .subscribeOn(Schedulers.io())

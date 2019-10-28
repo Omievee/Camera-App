@@ -130,10 +130,20 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:background="@android:drawable/screen_background_dark_transparent"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/navSpace"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottomGuide" />
+
+    <View
+            android:id="@+id/navSpace"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@android:drawable/screen_background_dark_transparent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/bottomView" />
 
 
     <androidx.constraintlayout.widget.Guideline
@@ -159,7 +169,7 @@
             android:background="@drawable/circular_shape"
             android:progress="0"
             android:progressDrawable="@drawable/circular_progress"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/navSpace"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottomView" />
@@ -224,6 +234,7 @@
             android:orientation="horizontal"
             app:layout_constraintGuide_percent=".80" />
 
+
     <ImageButton
             android:id="@+id/tapToSave"
             android:layout_width="85dp"
@@ -232,7 +243,7 @@
             android:rotation="90"
             android:textAllCaps="false"
             android:textColor="@color/OT_White"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/navSpace"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottomView" />

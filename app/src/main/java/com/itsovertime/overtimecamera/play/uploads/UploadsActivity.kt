@@ -37,7 +37,13 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         switchHD.setOnCheckedChangeListener(this)
         swipe2refresh.setOnRefreshListener(this)
 
-
+        window.apply {
+            addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            );
+        }
         swipe2refresh.setColorSchemeResources(
             R.color.OT_Orange,
             R.color.OT_White,
@@ -49,11 +55,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
 
         presenter.onRefresh()
         uploadsRecycler.adapter = adapter
-        val w = window
-        w.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        );
+
     }
 
     override fun setUploadingHdVideo() {
@@ -72,7 +74,10 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         uploadsIcon.setImageResource(R.drawable.warning)
     }
 
+
+    var isHD: Boolean = false
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
+        isHD = true
         presenter.hdSwitchWasChecked(isChecked)
     }
 
@@ -134,14 +139,15 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     val old = adapter.data?.data ?: emptyList()
     var newD = mutableListOf<UploadsPresentation>()
     var debugBool: Boolean = false
-    override fun updateAdapter(videos: List<SavedVideo>, dBug: Boolean) {
+    override fun updateAdapter(videos: List<SavedVideo>, dBug: Boolean, isHD: Boolean) {
         this.debugBool = dBug
+        this.isHD = isHD
         when (debugBool) {
             true -> debug.setImageResource(R.drawable.debug_click)
             false -> debug.setImageResource(R.drawable.tool)
         }
         if (!videos.isNullOrEmpty()) {
-            newD.add(UploadsPresentation(list = videos, debug = dBug))
+            newD.add(UploadsPresentation(list = videos, debug = dBug, isHD = isHD))
         }
         adapter.data = UploadsViewData(
             newD, DiffUtil.calculateDiff(
@@ -169,7 +175,8 @@ class UploadsViewData(
 
 data class UploadsPresentation(
     val list: List<SavedVideo>,
-    val debug: Boolean
+    val debug: Boolean,
+    val isHD: Boolean
 ) : ItemSame<UploadsPresentation> {
     override fun sameAs(same: UploadsPresentation): Boolean {
         return equals(same)

@@ -39,16 +39,14 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     }
 
     fun permissionsDenied() {
-
         view.showToast(view.applicationContext.getString(R.string.permissions_required_msg))
     }
 
     fun setUpAdapter() {
-        println("set up presenter..")
+        println("SETTING ADAPTER")
         if (!checkPermissions()) {
             view.beginPermissionsFlow()
         } else view.setUpAdapter()
-
     }
 
     fun submitClicked(number: String) {
@@ -123,9 +121,9 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
         authDis?.dispose()
         authDis = auth
             .onRefreshAuth()
-            .doOnSuccess {
-                println("Successful refresh... $it")
-                UserPreference.userId = it.data.user.id
+            .doOnNext {
+                val res = it.body() ?:return@doOnNext
+                UserPreference.userId = res.data.user.id
                 retrieveFullUser()
             }
             .doOnError {
@@ -156,7 +154,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
                 auth.saveUserToDB(it.user)
                 UserPreference.accessAllowed = it.user.is_camera_authorized ?: false
                 if (!UserPreference.accessAllowed) {
-                    if (it.user.is_banned == true || it.user.is_suspended == true || it.user.is_camera_rejected == true) {
+                    if (it.user.is_banned || it.user.is_suspended || it.user.is_camera_rejected) {
                         logOut()
                     }
                     view.displaySignUpPage()

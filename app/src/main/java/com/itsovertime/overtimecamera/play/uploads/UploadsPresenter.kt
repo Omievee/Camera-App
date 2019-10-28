@@ -77,7 +77,7 @@ class UploadsPresenter(
             }
             .subscribe({
                 println("ADAPTER UPDATE!")
-                view.updateAdapter(list, debug)
+                view.updateAdapter(list, debug, userEnabledHDUploads)
                 view.swipe2RefreshIsFalse()
             }, {
                 println("throwable: ${it.printStackTrace()}")
@@ -124,6 +124,8 @@ class UploadsPresenter(
                     .build()
             )
         }
+        userEnabledHDUploads = true
+        view.updateAdapter(list, debug, userEnabledHDUploads)
     }
 
     fun displayBottomSheetSettings() {
@@ -132,7 +134,7 @@ class UploadsPresenter(
 
     fun updateAdapterForDebug() {
         debug = !debug
-        view.updateAdapter(list, debug)
+        view.updateAdapter(list, debug, userEnabledHDUploads)
     }
 }
 

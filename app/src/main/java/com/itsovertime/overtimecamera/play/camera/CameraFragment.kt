@@ -23,6 +23,7 @@ import android.util.SparseIntArray
 import android.view.*
 import android.widget.Chronometer
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
@@ -603,6 +604,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         eventsRecycler.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         athleteRecycler.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         detectOrientation()
+
+        val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        val params = navSpace.layoutParams as ConstraintLayout.LayoutParams
+        if (resourceId > 0) {
+            params.height = resources.getDimensionPixelSize(resourceId)
+        } else {
+            params.height = 0
+        }
+        println("heigh?? ${params.height}")
+        navSpace.layoutParams = params
     }
 
     var orientation: OrientationEventListener? = null

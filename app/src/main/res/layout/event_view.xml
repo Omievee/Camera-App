@@ -26,7 +26,6 @@
         android:background="@android:color/transparent"
         android:lines="1"
         android:maxLines="1"
-        android:text="Beta Testing"
         android:textColor="@color/OT_White"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"

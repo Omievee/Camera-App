@@ -10,7 +10,7 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         this.holder = holder.itemView as UploadsView
         holder.itemView.bind(
-            list?.get(position) ?: return , debug
+            list?.get(position) ?: return, debug, isHD
         )
     }
 
@@ -37,12 +37,14 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         })
     }
 
+    var isHD: Boolean = false
     var list: List<SavedVideo>? = null
-    var debug: Boolean= false
+    var debug: Boolean = false
     override fun getItemCount(): Int {
         data?.data?.forEach {
             list = it.list
             debug = it.debug
+            isHD = it.isHD
         }
         return list?.size ?: 0
     }

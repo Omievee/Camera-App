@@ -29,7 +29,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
         View.inflate(context, R.layout.upload_item_view, this)
     }
 
-    fun bind(savedVideo: SavedVideo, debug: Boolean) {
+    fun bind(savedVideo: SavedVideo, debug: Boolean, hd: Boolean) {
         this.savedVideo = savedVideo
         when (debug) {
             true -> {
@@ -54,6 +54,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                 }
                 clientText.text = "Client: ${savedVideo.clientId}"
                 serverText.text = "Server: ${savedVideo.uploadId}"
+
             }
             else -> {
                 medQProgressBar.visibility = View.VISIBLE
@@ -62,7 +63,10 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                 highQProgressBar.setProgress(0, false)
                 medQT.visibility = View.VISIBLE
                 highQT.visibility = View.VISIBLE
-                pendingProgress.visibility = View.VISIBLE
+                pendingProgress.visibility = when (hd) {
+                    true -> View.GONE
+                    else -> View.VISIBLE
+                }
 
                 if (savedVideo.mediumUploaded) {
                     medQProgressBar.setProgress(100, false)
@@ -78,7 +82,6 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                 }
             }
         }
-
 
         faveIcon.visibility = when (savedVideo.is_favorite) {
             true -> View.VISIBLE

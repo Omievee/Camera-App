@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
@@ -69,9 +70,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun logOut() {
         viewPager.visibility = View.GONE
-        showToast(getString(R.string.auth_logout_not_authorized))
+      //  showToast(getString(R.string.auth_logout_not_authorized))
         phoneVerificationView.visibility = View.VISIBLE
-        finishAffinity()
+//        finishAffinity()
     }
 
     override fun beginPermissionsFlow() {
@@ -94,7 +95,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        println("code :::: $requestCode && $resultCode && $data")
         if (resultCode == 0 && presenter.checkPermissions()) {
             presenter.setUpAdapter()
         } else presenter.displayPermission()
@@ -179,8 +179,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun setUpAdapter() {
         permissions.visibility = View.GONE
         phoneVerificationView.visibility = View.GONE
-        val viewPager = findViewById<ViewPager>(R.id.viewPager)
+        viewPager.visibility = View.VISIBLE
         viewPager.adapter = CustomViewPageAdapter(supportFragmentManager, true)
+
     }
 
     override fun displayAlert() {
@@ -190,12 +191,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         )
     }
 
-
-    private var wakeLock: PowerManager.WakeLock? = null
-    private fun keepScreenUnlocked() {
-        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "screen_on:tag")
-    }
 
     @Inject
     lateinit var presenter: BaseActivityPresenter
@@ -208,12 +203,16 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         resend.setOnClickListener(this)
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
-        val w = window
-        w.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        );
 
+        window.apply {
+            setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            )
+            addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+
+        println("INTENT::: ${intent?.extras?.get("logIn")}")
         when (intent?.extras?.get("logIn")) {
             true -> {
                 if (UserPreference.accessAllowed) {
@@ -223,16 +222,14 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                 }
             }
             else -> {
-                phoneVerificationView.visibility = View.VISIBLE
+                logOut()
             }
         }
         scheduleJob()
-        keepScreenUnlocked()
     }
 
 
     private fun scheduleJob() {
-
         val myJob = JobInfo.Builder(0, ComponentName(this, NetworkSchedulerService::class.java))
             .setRequiresCharging(false)
             .setMinimumLatency(1000)
@@ -266,7 +263,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onResume() {
         super.onResume()
         presenter.retrieveFullUser()
-        wakeLockAcquire()
+
     }
 
 
@@ -280,7 +277,8 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             grantResults.forEachIndexed { index, i ->
                 val permission = permissions[index]
                 if (i == PackageManager.PERMISSION_GRANTED) {
-                    presenter.setUpAdapter()
+                    println("PERMISSION GRANDTED")
+                    setUpAdapter()
                 } else if (i == PackageManager.PERMISSION_DENIED) {
                     val rational = shouldShowRequestPermissionRationale(permission)
                     if (!rational) {
@@ -288,7 +286,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                         AlertDialog.Builder(this, R.style.CUSTOM_ALERT).apply {
                             setTitle("Please enable all permissions to continue")
                             setCancelable(false)
-                        }.setPositiveButton("Ok") { dialog, which ->
+                        }.setPositiveButton("Ok") { _, _ ->
                             startActivityForResult(
                                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                     data = uri
@@ -300,22 +298,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                     presenter.permissionsDenied()
                 }
             }
-
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        println("ON PAUSE FROM BASE")
-        if (wakeLock?.isHeld == true) {
-            wakeLock?.release()
-        }
-
-    }
-
-    private fun wakeLockAcquire() {
-        if (wakeLock?.isHeld == false) {
-            wakeLock?.acquire(5 * 60 * 1000L /*5 minutes*/)
         }
     }
 
@@ -323,7 +305,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         supportFragmentManager.fragments.forEach {
             when (it) {
                 is CameraFragment -> {
-                    println("camera..... ${it.isVisible}")
                     if (it.childFragmentManager.backStackEntryCount > 0) {
                         it.childFragmentManager.popBackStack()
                     }
@@ -341,22 +322,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             fragment.setUploadsClickListener(this)
         }
     }
-
-    inner class CustomTextWatcher() : TextWatcher {
-        override fun afterTextChanged(s: Editable?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-    }
-
 
 }
 

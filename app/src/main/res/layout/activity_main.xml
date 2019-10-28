@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@android:color/black">
@@ -26,23 +24,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone" />
-
-
-
-    <TextView
-            android:id="@+id/noNetwork"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="@color/OT_White"
-            android:padding="@dimen/margin_half"
-            android:text="@string/auth_no_network"
-            android:textAlignment="center"
-            android:textColor="@android:color/black"
-            android:textSize="18sp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
 
     <com.itsovertime.overtimecamera.play.permissions.PermissionsView

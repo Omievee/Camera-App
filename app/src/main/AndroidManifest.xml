@@ -30,10 +30,11 @@
             android:supportsRtl="true"
             android:theme="@style/AppFullScreenTheme"
             tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".uploads.UploadsActivity"
-               />
+        <activity android:name=".uploads.UploadsActivity" />
         <activity android:name=".onboarding.OnboardingActivity" />
-        <activity android:name=".splashscreen.SplashActivity">
+        <activity
+                android:name=".splashscreen.SplashActivity"
+                android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -22,9 +22,9 @@ class User(
     @ColumnInfo(name = "linked_dynamodb_id")
     val linked_dynamodb_id: String? = null,
     @ColumnInfo(name = "is_suspended")
-    val is_suspended: Boolean? = false,
+    val is_suspended: Boolean = false,
     @ColumnInfo(name = "is_banned")
-    val is_banned: Boolean? = false,
+    val is_banned: Boolean = false,
     @ColumnInfo(name = "last_login")
     val last_login: String? = null,
     @ColumnInfo(name = "pic")
@@ -80,11 +80,11 @@ class User(
     @ColumnInfo(name = "college")
     val college: String? = null,
     @ColumnInfo(name = "is_camera_authorized")
-    val is_camera_authorized: Boolean? = false,
+    val is_camera_authorized: Boolean?,
     @ColumnInfo(name = "is_camera_requested")
     val is_camera_requested: Boolean? = true,
     @ColumnInfo(name = "is_camera_rejected")
-    val is_camera_rejected: Boolean? = false,
+    val is_camera_rejected: Boolean = false,
     @ColumnInfo(name = "is_verified_athlete")
     val is_verified_athlete: Boolean? = false,
     @ColumnInfo(name = "camera_tos_agreed_at")

@@ -60,7 +60,7 @@ interface Api {
     fun submitApplication(@Path("userId") id: String, @Body request: ApplicationRequest): Single<ApplicationResponse>
 
     @GET("api/auth/refresh_token")
-    fun validateTokenCheckRestrictions(): Single<RestrictionsResponse>
+    fun validateTokenCheckRestrictions(): Observable<retrofit2.Response<RestrictionsResponse>>
 
     @PUT("api/writer/users/{userId}/agree_to_tos/{bundleId}")
     fun acceptToTOS(@Path("userId") userId: String, @Path("bundleId") bundle: String): Single<TOSResponse>
