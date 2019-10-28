@@ -38,7 +38,8 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                 clientText.visibility = View.VISIBLE
                 pendingProgress.visibility = View.GONE
                 serverText.visibility = View.VISIBLE
-
+                medQProgressBar.visibility = View.INVISIBLE
+                highQProgressBar.visibility = View.INVISIBLE
                 uploadedText.text = when (savedVideo.uploadState) {
                     UploadState.UPLOADING_MEDIUM -> "Uploading medium quality"
                     UploadState.UPLOADED_MEDIUM -> "Uploaded medium quality"
@@ -57,6 +58,11 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
 
             }
             else -> {
+                println("Views:: ${View.VISIBLE}")
+                println("Views:: ${View.INVISIBLE}")
+                println("Views:: ${View.GONE}")
+
+
                 medQProgressBar.visibility = View.VISIBLE
                 medQProgressBar.setProgress(0, false)
                 highQProgressBar.visibility = View.VISIBLE
@@ -67,7 +73,6 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                     true -> View.GONE
                     else -> View.VISIBLE
                 }
-
                 if (savedVideo.mediumUploaded) {
                     medQProgressBar.setProgress(100, false)
                     check1.visibility = View.VISIBLE

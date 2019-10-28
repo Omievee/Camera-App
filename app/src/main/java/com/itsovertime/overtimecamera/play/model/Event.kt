@@ -8,6 +8,7 @@ import kotlinx.android.parcel.Parcelize
 import java.util.*
 
 @Parcelize
+@Entity(tableName = "Event")
 data class Event(
     val id: String,
     val latitude: Double?,
@@ -23,13 +24,14 @@ data class Event(
     val created_at: String? = "",
     val updated_at: String? = "",
     val isVideographer: Boolean = false,
-    val tagged_teams: Array<Tagged_Teams> = emptyArray(),
+//    val tagged_teams: Array<Tagged_Teams> = emptyArray(),
     val videographer_ids: Array<String> = emptyArray()
 ) : Parcelable
 
 
 @Parcelize
 data class Tagged_Teams(
+    @PrimaryKey
     val id: String,
     val elasticsearch_id: String,
     val unstructured_tag: String,
@@ -50,8 +52,8 @@ data class Tagged_Teams(
     val updatedAt: String? = null,
     val taggable_athletes: Array<User> = emptyArray()
 
-
 ) : Parcelable
+
 
 /*
 

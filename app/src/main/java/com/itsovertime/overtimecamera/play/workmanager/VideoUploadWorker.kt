@@ -51,19 +51,22 @@ class VideoUploadWorker(
     var instanceDisp: Disposable? = null
 
     @SuppressLint("CheckResult")
+
+
     override fun doWork(): Result {
         println()
-        try {
+        return try {
             hdReady = inputData.getBoolean("HD", false)
             getVideosFromDB().blockingGet()
-
-            return Result.success()
+            Result.success()
         } catch (throwable: Throwable) {
             println("Error from worker... ${throwable.cause}")
             throwable.printStackTrace()
-            return Result.failure()
+            Result.failure()
         }
     }
+
+
 
     var queList = mutableListOf<SavedVideo>()
     var standardList = mutableListOf<SavedVideo>()

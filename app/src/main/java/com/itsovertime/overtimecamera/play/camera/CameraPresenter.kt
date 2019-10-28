@@ -22,6 +22,7 @@ import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
+import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 import java.io.File
 import java.time.Instant
@@ -157,7 +158,6 @@ class CameraPresenter(
     }
 
 
-
     fun onDestroy() {
         totalDisposable?.dispose()
         eventDisposable?.dispose()
@@ -179,8 +179,9 @@ class CameraPresenter(
         eventDisposable?.dispose()
         eventDisposable = eventsManager
             .getEvents()
-            .map { er ->
-                er.events.forEachIndexed { i, event ->
+            .doOnSuccess { er ->
+                er ?: return@doOnSuccess
+                er?.events?.forEachIndexed { i, event ->
                     event.videographer_ids.forEach { s ->
                         if (s == user?.id) {
                             eventName = er.events[i].name
@@ -189,12 +190,17 @@ class CameraPresenter(
                 }
                 eventsList.addAll(er.events)
             }
+            .doOnError {
+                println("ERROR from events.... ${it.message}")
+            }
             .subscribe({
                 view.setUpEventViewData(eventsList)
                 view.updateEventTitle(eventName?.trim() ?: "")
             }, {
             })
     }
+
+
 
     private var authdisp: Disposable? = null
     var user: User? = null

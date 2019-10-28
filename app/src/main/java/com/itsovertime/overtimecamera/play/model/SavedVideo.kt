@@ -2,7 +2,9 @@ package com.itsovertime.overtimecamera.play.model
 
 import android.os.Parcelable
 import androidx.room.*
+import com.squareup.moshi.Moshi
 import kotlinx.android.parcel.Parcelize
+import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.*
 
 
@@ -81,7 +83,7 @@ enum class UploadState {
 }
 
 
-object enumConverter {
+object customConverter {
     @TypeConverter
     @JvmStatic
     fun toOrdinal(type: UploadState): Int = type.ordinal
@@ -89,12 +91,9 @@ object enumConverter {
     @TypeConverter
     @JvmStatic
     fun toEnum(ordinal: Int): UploadState = UploadState.values().first { it.ordinal == ordinal }
+
+
 }
-
-
-
-
-
 
 
 //@ColumnInfo(name = "tagged")

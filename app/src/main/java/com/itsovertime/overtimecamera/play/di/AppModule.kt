@@ -63,8 +63,8 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideEventManager(api: Api): EventManager {
-        return EventManagerImpl(api)
+    fun provideEventManager(api: Api, context: OTApplication): EventManager {
+        return EventManagerImpl(api, context)
     }
 
 

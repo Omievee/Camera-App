@@ -204,6 +204,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
 
+
         window.apply {
             setFlags(
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
