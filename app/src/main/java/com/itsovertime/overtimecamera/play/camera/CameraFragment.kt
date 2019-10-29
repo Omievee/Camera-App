@@ -60,12 +60,12 @@ import javax.inject.Inject
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
     override fun updateEventTitle(event: String) {
+        println("Event name? $event")
         eventTitle.text = event
     }
 
     override fun hideEventsRV() {
         hiddenEvents.visibility = View.GONE
-
     }
 
     override fun openEvents() {
@@ -76,11 +76,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var newData = mutableListOf<TaggedPlayersPresentation>()
     var old = taggedAdapter.data?.data ?: emptyList()
     override fun setUpEventViewData(eventList: MutableList<Event>?) {
-        println("size from frag... ${eventList?.size}")
         if (eventList.isNullOrEmpty()) {
             eventSpace.visibility = View.GONE
         }
-
         eventList?.forEachIndexed { i, event ->
             event.videographer_ids.forEach { s ->
                 if (s == UserPreference.userId) {
@@ -91,11 +89,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
         evAdapter = EventsAdapter(eventList, listener)
         eventsRecycler.adapter = evAdapter
+
         var tagged: Array<Tagged_Teams>
         eventList?.forEach {
             tagged = it.tagged_teams
             tagged.forEach {
-                it.taggable_athletes.forEach {
+                it.taggable_athletes?.forEach {
                     newData.add(TaggedPlayersPresentation(it))
                 }
             }
@@ -141,9 +140,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     override fun stopProgressAnimation() {
-        progressBar?.let {
-            it.clearAnimation()
-        }
+        progressBar?.clearAnimation()
     }
 
     override fun updateUploadsIconCount(count: String) {
@@ -582,8 +579,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             old = newData
             newData.clear()
             event.tagged_teams.forEach {
-                if (it.taggable_athletes.isNotEmpty()) {
-                    it.taggable_athletes.forEach {
+                if (it.taggable_athletes?.isNotEmpty() != false) {
+                    it.taggable_athletes?.forEach {
                         newData.add(TaggedPlayersPresentation(it))
                     }
                 } else newData.clear()

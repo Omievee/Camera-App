@@ -3,9 +3,14 @@ package com.itsovertime.overtimecamera.play.model
 import android.os.Parcelable
 import androidx.room.*
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import kotlinx.android.parcel.Parcelize
-import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.*
+import kotlin.collections.ArrayList
+import com.mixpanel.android.mpmetrics.Tweaks.TweakValue.fromJson
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import java.lang.reflect.ParameterizedType
 
 
 @Parcelize
@@ -92,7 +97,26 @@ object customConverter {
     @JvmStatic
     fun toEnum(ordinal: Int): UploadState = UploadState.values().first { it.ordinal == ordinal }
 
-
+//    val moshi = Moshi
+//        .Builder()
+//        .add(KotlinJsonAdapterFactory())
+//        .build()
+//
+//    val mapOfStringsType: ParameterizedType =
+//        Types.newParameterizedType(Map::class.java, String::class.java, String::class.java)
+//    val mapOfStringsAdapter: JsonAdapter<Map<String, String>> =
+//        moshi.adapter<Map<String, String>>(mapOfStringsType)
+//
+//
+//    @TypeConverter
+//    fun stringToMap(data: String): Map<String, String> {
+//        return mapOfStringsAdapter.fromJson(data).orEmpty()
+//    }
+//
+//    @TypeConverter
+//    fun mapToString(map: Map<String, String>): String {
+//        return mapOfStringsAdapter.toJson(map)
+//    }
 }
 
 

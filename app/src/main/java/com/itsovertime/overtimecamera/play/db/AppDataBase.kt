@@ -10,13 +10,13 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.model.customConverter
 
-@Database(entities = [SavedVideo::class, User::class, Event::class], version = 3)
+@Database(entities = [SavedVideo::class, User::class], version = 3)
 @TypeConverters(value = [customConverter::class])
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun videoDao(): VideoObjectDAO
     abstract fun userDao(): UserObjectDAO
-    abstract fun eventDao(): EventObjectDAO
+    //abstract fun eventDao(): EventObjectDAO
 
     companion object {
         private var databaseInstance: AppDatabase? = null

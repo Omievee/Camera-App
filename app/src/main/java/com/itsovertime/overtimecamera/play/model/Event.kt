@@ -24,7 +24,7 @@ data class Event(
     val created_at: String? = "",
     val updated_at: String? = "",
     val isVideographer: Boolean = false,
-//    val tagged_teams: Array<Tagged_Teams> = emptyArray(),
+    val tagged_teams: Array<Tagged_Teams> = emptyArray(),
     val videographer_ids: Array<String> = emptyArray()
 ) : Parcelable
 
@@ -32,25 +32,25 @@ data class Event(
 @Parcelize
 data class Tagged_Teams(
     @PrimaryKey
-    val id: String,
-    val elasticsearch_id: String,
-    val unstructured_tag: String,
-    val display_name: String,
-    val team_name: String,
-    val organization_name: String,
+    val id: String?,
+    val elasticsearch_id: String?,
+    val unstructured_tag: String?,
+    val display_name: String?,
+    val team_name: String?,
+    val organization_name: String?,
     val address: String,
-    val coordinates: Int? = 0,
+//    val coordinates: Int? = 0,
     val longitude: Double? = 0.0,
     val latitude: Double? = 0.0,
-    val item_most_recent: String,
+    val item_most_recent: String?,
     val total_loops: Int? = 0,
-    val colors: Array<String> = emptyArray(),
+    val colors: Array<String>? = emptyArray(),
     val resource_type: String? = null,
     val sport_type: String? = null,
-    val taggable_athlete_ids: Array<String> = emptyArray(),
+    val taggable_athlete_ids: Array<String>? = emptyArray(),
     val createdAt: String? = null,
     val updatedAt: String? = null,
-    val taggable_athletes: Array<User> = emptyArray()
+    val taggable_athletes: Array<User>?
 
 ) : Parcelable
 

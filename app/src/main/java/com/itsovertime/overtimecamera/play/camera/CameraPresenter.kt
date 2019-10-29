@@ -180,8 +180,9 @@ class CameraPresenter(
         eventDisposable = eventsManager
             .getEvents()
             .doOnSuccess { er ->
+                println("User ID Is ${user?.id}")
                 er ?: return@doOnSuccess
-                er?.events?.forEachIndexed { i, event ->
+                er.events.forEachIndexed { i, event ->
                     event.videographer_ids.forEach { s ->
                         if (s == user?.id) {
                             eventName = er.events[i].name
@@ -195,11 +196,10 @@ class CameraPresenter(
             }
             .subscribe({
                 view.setUpEventViewData(eventsList)
-                view.updateEventTitle(eventName?.trim() ?: "")
+                view.updateEventTitle(eventName?.trim() ?: "Unknown Event")
             }, {
             })
     }
-
 
 
     private var authdisp: Disposable? = null

@@ -14,7 +14,7 @@
             android:padding="@dimen/margin_half"
             android:text="Tag atheletes in last video"
             android:textColor="@color/OT_White"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

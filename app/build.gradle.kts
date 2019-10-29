@@ -15,7 +15,7 @@ android {
     compileSdkVersion(28)
     defaultConfig {
         applicationId = "com.itsovertime.overtimecamera.play"
-        minSdkVersion(26)
+        minSdkVersion(28)
         targetSdkVersion(28)
         versionCode = 1
         versionName = "1.0"

@@ -216,15 +216,33 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
+
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/taggedGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent=".65" />
+
+
+    <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/taggedGuide2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent=".45" />
+
     <com.itsovertime.overtimecamera.play.camera.TaggedPlayersView
             android:id="@+id/taggedView"
-            android:layout_width="200dp"
-            android:layout_height="160dp"
-            android:padding="@dimen/margin_half"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="@dimen/margin_half"
             android:rotation="90"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@id/bottomView"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintEnd_toStartOf="@id/taggedGuide2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/taggedGuide" />
 
 
     <androidx.constraintlayout.widget.Guideline

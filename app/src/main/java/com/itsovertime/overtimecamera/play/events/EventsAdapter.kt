@@ -6,8 +6,8 @@ import com.itsovertime.overtimecamera.play.baseviewholder.BaseViewHolder
 import com.itsovertime.overtimecamera.play.model.Event
 
 class EventsAdapter(
-        val list: List<Event>?,
-        val listener: EventsClickListener
+    val list: List<Event>?,
+    val listener: EventsClickListener
 ) : RecyclerView.Adapter<BaseViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
@@ -19,10 +19,7 @@ class EventsAdapter(
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-        ((holder.itemView) as EventsView).bind(list?.get(position)
-                ?: return
-        )
+        ((holder.itemView) as EventsView).bind(list?.get(position) ?: return)
         (holder.itemView).listener = listener
-
     }
 }

@@ -54,7 +54,6 @@ class VideoUploadWorker(
 
 
     override fun doWork(): Result {
-        println()
         return try {
             hdReady = inputData.getBoolean("HD", false)
             getVideosFromDB().blockingGet()
@@ -191,6 +190,10 @@ class VideoUploadWorker(
                 UploadsMessage.Pending_High
             )
         }
+
+        if(faveList.size == 0 && standardList.size == 0 && standardListHQ.size == 0 && faveListHQ.size == 0) progressManager.onCurrentUploadProcess(
+            UploadsMessage.Pending_High
+        )
     }
 
     private var currentVideo: SavedVideo? = null

@@ -14,20 +14,20 @@ import java.util.*
 class EventManagerImpl(val api: Api, val context: OTApplication) : EventManager {
 
     var db = AppDatabase.getAppDataBase(context = context)
-    private var eventDao = db?.eventDao()
+   // private var eventDao = db?.eventDao()
     @SuppressLint("CheckResult")
     override fun saveEventsToDB(events: List<Event>) {
-        Single.fromCallable {
-            with(eventDao) {
-                this?.saveEventData(event = events)
-            }
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
-
-            }, {
-                it.printStackTrace()
-            })
+//        Single.fromCallable {
+//            with(eventDao) {
+//                this?.saveEventData(event = events)
+//            }
+//        }.subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .subscribe({
+//
+//            }, {
+//                it.printStackTrace()
+//            })
     }
 
     private var eventResponse: EventsResponse? = null

@@ -44,5 +44,5 @@ enum class UploadsMessage {
     Uploading_Medium,
     Uploading_High,
     Pending_Medium,
-    Pending_High
+    Pending_High,
 }

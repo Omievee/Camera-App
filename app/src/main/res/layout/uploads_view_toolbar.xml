@@ -79,13 +79,12 @@
             android:id="@+id/switchHD"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/OT_White"
-            android:buttonTint="@color/OT_DarkGray"
             android:textOn="HD"
+            android:theme="@style/SwitchStyle"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:trackTint="@color/OT_Orange" />
+            app:trackTint="@android:color/darker_gray" />
 
     <ImageView
             android:id="@+id/uploadsIcon"
@@ -104,7 +103,6 @@
             android:layout_marginStart="@dimen/margin_half"
             android:layout_marginTop="@dimen/margin_standard"
             android:maxLines="2"
-            android:text="@string/upload_queue_uploading_hd"
             android:textColor="@android:color/black"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"

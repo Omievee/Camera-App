@@ -37,6 +37,7 @@ class EventsView(context: Context, attributeSet: AttributeSet? = null) :
     }
 
     fun bind(event: Event) {
+
         this.event = event
         name.text = event.name
         location.text = "${event.address}"
