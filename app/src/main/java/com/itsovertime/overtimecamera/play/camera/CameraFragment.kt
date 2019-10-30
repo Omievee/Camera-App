@@ -59,7 +59,7 @@ import javax.inject.Inject
 
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
-    override fun updateEventTitle(event: String) {
+    override fun updateEventTitle(event: String?) {
         println("Event name? $event")
         eventTitle.text = event
     }

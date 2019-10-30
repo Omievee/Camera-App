@@ -173,15 +173,14 @@ class CameraPresenter(
     }
 
 
-    var eventName: String? = ""
     fun getEvents() {
+        var eventName: String? = "Unknown Event"
         val eventsList = mutableListOf<Event>()
         eventDisposable?.dispose()
         eventDisposable = eventsManager
             .getEvents()
-            .doOnSuccess { er ->
+            .map { er ->
                 println("User ID Is ${user?.id}")
-                er ?: return@doOnSuccess
                 er.events.forEachIndexed { i, event ->
                     event.videographer_ids.forEach { s ->
                         if (s == user?.id) {
@@ -196,7 +195,7 @@ class CameraPresenter(
             }
             .subscribe({
                 view.setUpEventViewData(eventsList)
-                view.updateEventTitle(eventName?.trim() ?: "Unknown Event")
+                view.updateEventTitle(eventName)
             }, {
             })
     }
