@@ -238,7 +238,7 @@
             android:layout_height="0dp"
             android:layout_margin="@dimen/margin_half"
             android:rotation="90"
-            android:visibility="gone"
+            android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@id/bottomView"
             app:layout_constraintEnd_toStartOf="@id/taggedGuide2"
             app:layout_constraintStart_toStartOf="parent"

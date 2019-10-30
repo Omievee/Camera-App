@@ -5,6 +5,7 @@ import android.icu.text.SimpleDateFormat
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
+import com.itsovertime.overtimecamera.play.model.TaggedUsers
 import com.itsovertime.overtimecamera.play.network.*
 import com.itsovertime.overtimecamera.play.utils.Constants
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
@@ -34,7 +35,6 @@ class UploadsManagerImpl(
     @Synchronized
     override fun getVideoInstance(video: SavedVideo?): Observable<VideoInstanceResponse> {
         currentVideo = video
-        println("Getting insacneeeeeee...")
         return api
             .getVideoInstance(
                 VideoInstanceRequest(
@@ -46,7 +46,8 @@ class UploadsManagerImpl(
                     event_id = video?.event_id,
                     address = video?.address,
                     duration_in_hours = video?.duration_in_hours,
-                    max_video_length = video?.max_video_length
+                    max_video_length = video?.max_video_length,
+                    tagged_user_ids = video?.taggedUsers ?: arrayListOf()
                 )
             ).observeOn(AndroidSchedulers.mainThread())
     }

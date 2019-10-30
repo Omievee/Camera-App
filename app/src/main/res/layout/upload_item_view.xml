@@ -2,15 +2,14 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="75dp">
-
+        android:layout_height="80dp">
 
     <ImageView
             android:id="@+id/thumbNail"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_margin="@dimen/margin_standard"
-            android:scaleType="fitCenter"
+            android:scaleType="fitXY"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/guide"
             app:layout_constraintStart_toStartOf="parent"
@@ -126,11 +125,6 @@
 
 
     <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-
-    <TextView
             android:id="@+id/statusText2"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -183,7 +177,9 @@
             android:layout_marginStart="@dimen/margin_half"
             android:layout_marginEnd="@dimen/margin_half"
             android:layout_marginBottom="@dimen/margin_half"
+            android:progressBackgroundTint="@android:color/darker_gray"
             android:progressTint="@color/OT_Orange"
+            android:secondaryProgressTint="@color/OT_DarkGray"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/guide3"
@@ -198,7 +194,9 @@
             android:layout_marginStart="@dimen/margin_half"
             android:layout_marginEnd="@dimen/margin_half"
             android:layout_marginBottom="@dimen/margin_half"
+            android:progressBackgroundTint="@android:color/darker_gray"
             android:progressTint="@color/OT_Orange"
+            android:secondaryProgressTint="@color/OT_DarkGray"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/guide2"
@@ -207,7 +205,7 @@
 
     <ProgressBar
             android:id="@+id/pendingProgress"
-            android:layout_width="35dp"
+            android:layout_width="25dp"
             android:layout_height="0dp"
             android:layout_margin="@dimen/margin_double"
             android:indeterminateTint="@android:color/darker_gray"

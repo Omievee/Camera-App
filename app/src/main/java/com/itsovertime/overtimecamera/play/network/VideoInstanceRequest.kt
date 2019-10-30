@@ -7,18 +7,19 @@ import com.squareup.moshi.JsonClass
 import kotlinx.android.parcel.Parcelize
 import retrofit2.http.Field
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 @Parcelize
 data class VideoInstanceRequest(
     @field:Json(name = "client_id")
-    val client_id: UUID? = null,
+    val client_id: UUID?,
     val is_favorite: Boolean,
     val is_selfie: Boolean,
     val latitude: Double,
     val longitude: Double,
-    val tagged_user_ids: String? = null,
-    val event_id: String? = "",
+    val tagged_user_ids: ArrayList<String> = arrayListOf(),
+    val event_id: String?,
     val address: String? = "",
     val duration_in_hours: Int? = 0,
     val max_video_length: Int? = 12

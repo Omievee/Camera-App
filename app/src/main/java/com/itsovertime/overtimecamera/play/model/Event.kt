@@ -31,7 +31,6 @@ data class Event(
 
 @Parcelize
 data class Tagged_Teams(
-    @PrimaryKey
     val id: String?,
     val elasticsearch_id: String?,
     val unstructured_tag: String?,

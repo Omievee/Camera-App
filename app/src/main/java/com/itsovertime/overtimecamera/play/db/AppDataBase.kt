@@ -5,13 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.itsovertime.overtimecamera.play.model.Event
-import com.itsovertime.overtimecamera.play.model.SavedVideo
-import com.itsovertime.overtimecamera.play.model.User
-import com.itsovertime.overtimecamera.play.model.customConverter
+import com.itsovertime.overtimecamera.play.model.*
 
-@Database(entities = [SavedVideo::class, User::class], version = 3)
-@TypeConverters(value = [customConverter::class])
+@Database(entities = [SavedVideo::class, User::class], version = 4)
+@TypeConverters(value = [customConverter::class, stringArrayConvertor::class, taggedUserConvertor::class])
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun videoDao(): VideoObjectDAO

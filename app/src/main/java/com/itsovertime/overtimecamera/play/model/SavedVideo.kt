@@ -2,15 +2,15 @@ package com.itsovertime.overtimecamera.play.model
 
 import android.os.Parcelable
 import androidx.room.*
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import kotlinx.android.parcel.Parcelize
-import java.util.*
-import kotlin.collections.ArrayList
-import com.mixpanel.android.mpmetrics.Tweaks.TweakValue.fromJson
-import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import kotlinx.android.parcel.Parcelize
 import java.lang.reflect.ParameterizedType
+import kotlin.collections.ArrayList
 
 
 @Parcelize
@@ -72,7 +72,10 @@ data class SavedVideo(
     @ColumnInfo(name = "mediumUploaded")
     val mediumUploaded: Boolean = false,
     @ColumnInfo(name = "highUploaded")
-    val highUploaded: Boolean = false
+    val highUploaded: Boolean = false,
+    @ColumnInfo(name = "tagged")
+    val taggedUsers: ArrayList<String>? = arrayListOf()
+
 
 ) : Parcelable
 
@@ -96,27 +99,35 @@ object customConverter {
     @TypeConverter
     @JvmStatic
     fun toEnum(ordinal: Int): UploadState = UploadState.values().first { it.ordinal == ordinal }
+}
 
-//    val moshi = Moshi
-//        .Builder()
-//        .add(KotlinJsonAdapterFactory())
-//        .build()
-//
-//    val mapOfStringsType: ParameterizedType =
-//        Types.newParameterizedType(Map::class.java, String::class.java, String::class.java)
-//    val mapOfStringsAdapter: JsonAdapter<Map<String, String>> =
-//        moshi.adapter<Map<String, String>>(mapOfStringsType)
-//
-//
-//    @TypeConverter
-//    fun stringToMap(data: String): Map<String, String> {
-//        return mapOfStringsAdapter.fromJson(data).orEmpty()
-//    }
-//
-//    @TypeConverter
-//    fun mapToString(map: Map<String, String>): String {
-//        return mapOfStringsAdapter.toJson(map)
-//    }
+class stringArrayConvertor {
+    @TypeConverter
+    fun fromString(value: String): ArrayList<String> {
+        val listType = object : TypeToken<ArrayList<String>>() {
+        }.type
+        return Gson().fromJson(value, listType)
+    }
+
+    @TypeConverter
+    fun fromArrayList(list: ArrayList<String>): String {
+        return Gson().toJson(list)
+    }
+}
+
+class taggedUserConvertor {
+    @TypeConverter
+    fun fromTaggedString(value: String): ArrayList<TaggedUsers> {
+        val listType = object : TypeToken<ArrayList<String>>() {
+        }.type
+        return Gson().fromJson(value, listType)
+    }
+
+    @TypeConverter
+    fun fromTaggedArray(list: ArrayList<TaggedUsers>): String {
+        return Gson().toJson(list)
+    }
+
 }
 
 

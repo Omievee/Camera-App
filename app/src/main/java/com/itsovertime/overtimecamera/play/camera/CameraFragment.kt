@@ -60,7 +60,6 @@ import javax.inject.Inject
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
     override fun updateEventTitle(event: String?) {
-        println("Event name? $event")
         eventTitle.text = event
     }
 
@@ -72,10 +71,19 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         hiddenEvents.visibility = View.VISIBLE
     }
 
-    var taggedAdapter = TaggedPlayersAdapter()
+
+    var taggedAthletesArray = arrayListOf<String>()
+    val taggedListener: TaggedAthleteClickListener = object : TaggedAthleteClickListener {
+        override fun onAtheleteSelected(id: String) {
+            println("Tagged Id: $id")
+        }
+
+    }
+    var taggedAdapter = TaggedPlayersAdapter(listener = taggedListener)
     var newData = mutableListOf<TaggedPlayersPresentation>()
     var old = taggedAdapter.data?.data ?: emptyList()
     override fun setUpEventViewData(eventList: MutableList<Event>?) {
+
         if (eventList.isNullOrEmpty()) {
             eventSpace.visibility = View.GONE
         }
@@ -86,7 +94,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 } else eventList[0]
             }
         }
-
         evAdapter = EventsAdapter(eventList, listener)
         eventsRecycler.adapter = evAdapter
 
@@ -99,6 +106,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 }
             }
         }
+
+        println("new data... ${newData.size}")
 
         taggedAdapter.data =
             TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
@@ -433,14 +442,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                         surfaces, object : CameraCaptureSession.StateCallback() {
                             override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                                 captureSession = cameraCaptureSession
-                                previewRequestBuilder.set(
-                                    CaptureRequest.CONTROL_MODE,
-                                    CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
-                                )
-                                previewRequestBuilder.set(
-                                    CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
-                                    Range<Int>(30, 60)
-                                );
+                                previewRequestBuilder.apply {
+                                    set(
+                                        CaptureRequest.CONTROL_MODE,
+                                        CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
+                                    )
+                                    set(
+                                        CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
+                                        Range<Int>(60, 60)
+                                    )
+                                }
+
                                 try {
                                     setUpCaptureRequestBuilder(previewRequestBuilder)
                                     HandlerThread("CameraPreview").start()
@@ -511,13 +523,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun stopRecording(isPaused: Boolean) {
         stopRecordingThread()
         recording = false
-        println("Paused? $isPaused && Recording? $recording")
+
         try {
             mediaRecorder?.stop()
             mediaRecorder?.reset()
             mediaRecorder = null
             when (isPaused) {
-                false -> presenter.saveVideo(selectedEvent)
+                false -> presenter.saveVideo(selectedEvent, arrayListOf())
                 else -> deleteUnsavedFile()
             }
         } catch (r: RuntimeException) {
@@ -567,13 +579,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     var selectedEvent: Event? = null
+
+
     val listener: EventsClickListener = object : EventsClickListener {
         override fun onEventSelected(event: Event) {
             presenter.changeEvent(event.name ?: "")
             presenter.hideEvents()
-
             eventSpace.visibility = View.VISIBLE
-            eventTitle.text = event.name
 
             selectedEvent = event
             old = newData
@@ -583,7 +595,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                     it.taggable_athletes?.forEach {
                         newData.add(TaggedPlayersPresentation(it))
                     }
-                } else newData.clear()
+                }
+            }
+            println("NEW DATA:::: ${newData.size}")
+            if (newData.isEmpty()) {
+                taggedView.visibility = View.GONE
             }
 
             taggedAdapter.data =

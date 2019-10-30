@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -24,19 +25,30 @@ class TaggedPlayersView(context: Context, attributeSet: AttributeSet? = null) :
 }
 
 class TaggedAthletesList(context: Context, attributeSet: AttributeSet? = null) :
-    ConstraintLayout(context, attributeSet) {
+    ConstraintLayout(context, attributeSet), CompoundButton.OnCheckedChangeListener {
+    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
+        listener?.onAtheleteSelected(user?.id ?: "")
+    }
+
+    var listener: TaggedAthleteClickListener? = null
 
     init {
         View.inflate(context, R.layout.tagged_list_view, this)
+        button.setOnCheckedChangeListener(this)
     }
 
+    var user: User? = null
     fun bind(user: User) {
+        this.user = user
+        println("binding...")
+        button.isChecked = false
         name.text = user.name
     }
 }
 
 
 class TaggedPlayersAdapter(
+    val listener: TaggedAthleteClickListener
 ) : RecyclerView.Adapter<BaseViewHolder>() {
 
     var data: TaggedPlayersData? = null
@@ -61,7 +73,7 @@ class TaggedPlayersAdapter(
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         println("data?: ${data?.data?.get(position)}")
         (holder.itemView as TaggedAthletesList).bind(data?.data?.get(position)?.user ?: return)
-        //  holder.itemView.settingsClickListener = clickListener
+        holder.itemView.listener = listener
     }
 
 
@@ -83,4 +95,9 @@ data class TaggedPlayersPresentation(
     override fun contentsSameAs(same: TaggedPlayersPresentation): Boolean {
         return hashCode() == same.hashCode()
     }
+}
+
+
+interface TaggedAthleteClickListener {
+    fun onAtheleteSelected(id: String)
 }

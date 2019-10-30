@@ -126,7 +126,7 @@ class VideoUploadWorker(
                         it.remove()
                     }
                 }
-                beginProcess()
+               // beginProcess()
             }
     }
 
