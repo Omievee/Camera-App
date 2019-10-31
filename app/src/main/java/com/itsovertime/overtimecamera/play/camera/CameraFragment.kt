@@ -64,14 +64,14 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun setUpDefaultEvent(event: Event?) {
         eventTitle.text = event?.name ?: "Unkown Event"
         selectedEvent = event
-
-        event?.tagged_users?.forEach {
-            newData.add(TaggedPlayersPresentation(it))
-        }
-
-        taggedAdapter.data =
-            TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
-        athleteRecycler.adapter = taggedAdapter
+        setUpTaggedUsersView(event)
+//        event?.tagged_users?.forEach {
+//            newData.add(TaggedPlayersPresentation(it))
+//        }
+//
+//        taggedAdapter.data =
+//            TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
+//        athleteRecycler.adapter = taggedAdapter
     }
 
     override fun hideEventsRV() {
@@ -107,14 +107,31 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         evAdapter = EventsAdapter(eventList, listener)
         eventsRecycler.adapter = evAdapter
 
-        var tagged: Array<Tagged_Teams>
         eventList?.forEach {
-            tagged = it.tagged_teams
-            tagged.forEach {
-                it.taggable_athletes?.forEach {
-                    newData.add(TaggedPlayersPresentation(it))
-                }
-            }
+            setUpTaggedUsersView(it)
+        }
+    }
+
+    val listener: EventsClickListener = object : EventsClickListener {
+        override fun onEventSelected(event: Event) {
+            presenter.changeEvent(event)
+            presenter.hideEvents()
+            eventSpace.visibility = View.VISIBLE
+            selectedEvent = event
+            old = newData
+            newData.clear()
+
+            setUpTaggedUsersView(event)
+        }
+    }
+
+    private fun setUpTaggedUsersView(event: Event?) {
+        old = newData
+        event?.tagged_users?.forEach {
+            newData.add(TaggedPlayersPresentation(it))
+        }
+        if (newData.isEmpty()) {
+            taggedView.visibility = View.GONE
         }
 
         taggedAdapter.data =
@@ -538,7 +555,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             mediaRecorder?.reset()
             mediaRecorder = null
             when (isPaused) {
-                false -> presenter.saveVideo(selectedEvent, arrayListOf())
+                false -> {
+                    presenter.saveVideo(selectedEvent, taggedAthletesArray)
+                    taggedAthletesArray.clear()
+                }
                 else -> deleteUnsavedFile()
             }
         } catch (r: RuntimeException) {
@@ -589,27 +609,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     var selectedEvent: Event? = null
 
-
-    val listener: EventsClickListener = object : EventsClickListener {
-        override fun onEventSelected(event: Event) {
-            presenter.changeEvent(event)
-            presenter.hideEvents()
-            eventSpace.visibility = View.VISIBLE
-            selectedEvent = event
-            old = newData
-            newData.clear()
-            event.tagged_users.forEach {
-                newData.add(TaggedPlayersPresentation(it))
-            }
-            if (newData.isEmpty()) {
-                taggedView.visibility = View.GONE
-            }
-
-            taggedAdapter.data =
-                TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
-            athleteRecycler.adapter = taggedAdapter
-        }
-    }
 
     private var evAdapter: EventsAdapter? = null
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
