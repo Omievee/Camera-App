@@ -66,7 +66,6 @@ class VideoUploadWorker(
     }
 
 
-
     var queList = mutableListOf<SavedVideo>()
     var standardList = mutableListOf<SavedVideo>()
     var standardListHQ = mutableListOf<SavedVideo>()
@@ -99,7 +98,6 @@ class VideoUploadWorker(
         standardList.clear()
         faveListHQ.clear()
         standardListHQ.clear()
-        println("Started..")
         return db!!.videoDao()
             .getVideosForUpload()
             .subscribeOn(Schedulers.io())
@@ -126,7 +124,7 @@ class VideoUploadWorker(
                         it.remove()
                     }
                 }
-               // beginProcess()
+                beginProcess()
             }
     }
 
@@ -181,7 +179,6 @@ class VideoUploadWorker(
             }
 
             standardList.size == 0 && faveList.size == 0 -> videosManager.onNotifyWorkIsDone()
-
         }
 
 
@@ -191,7 +188,7 @@ class VideoUploadWorker(
             )
         }
 
-        if(faveList.size == 0 && standardList.size == 0 && standardListHQ.size == 0 && faveListHQ.size == 0) progressManager.onCurrentUploadProcess(
+        if (faveList.size == 0 && standardList.size == 0 && standardListHQ.size == 0 && faveListHQ.size == 0) progressManager.onCurrentUploadProcess(
             UploadsMessage.Pending_High
         )
     }
@@ -457,8 +454,8 @@ class VideoUploadWorker(
                         videosManager.updateHighuploaded(true, currentVideo?.clientId ?: "")
                     }
 
-                    println("PRE PROCESS..")
-                    beginProcess()
+
+                    //  beginProcess()
                 }
                 .subscribe({
 

@@ -1,16 +1,15 @@
 package com.itsovertime.overtimecamera.play.model
 
 import android.os.Parcelable
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.TypeConverter
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.android.parcel.Parcelize
-import java.lang.reflect.ParameterizedType
-import kotlin.collections.ArrayList
 
 
 @Parcelize
@@ -102,6 +101,7 @@ object customConverter {
 }
 
 class stringArrayConvertor {
+
     @TypeConverter
     fun fromString(value: String): ArrayList<String> {
         val listType = object : TypeToken<ArrayList<String>>() {

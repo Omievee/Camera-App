@@ -29,7 +29,7 @@ class UploadsManagerImpl(
     val manager: WifiManager
 ) : UploadsManager {
 
-    private val subject: BehaviorSubject<MutableList<SavedVideo>> = BehaviorSubject.create()
+
     private var currentVideo: SavedVideo? = null
 
     @Synchronized
@@ -46,8 +46,8 @@ class UploadsManagerImpl(
                     event_id = video?.event_id,
                     address = video?.address,
                     duration_in_hours = video?.duration_in_hours,
-                    max_video_length = video?.max_video_length,
-                    tagged_user_ids = video?.taggedUsers ?: arrayListOf()
+                    max_video_length = video?.max_video_length
+//                    tagged_user_ids = video?.taggedUsers ?: arrayListOf()
                 )
             ).observeOn(AndroidSchedulers.mainThread())
     }

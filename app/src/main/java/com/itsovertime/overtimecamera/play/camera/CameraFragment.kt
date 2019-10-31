@@ -252,6 +252,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         favoriteIcon.visibility = View.VISIBLE
         hahaIcon.visibility = View.VISIBLE
         if (!newData.isNullOrEmpty()) {
+            taggedAdapter.notifyDataSetChanged()
             taggedView.visibility = View.VISIBLE
         }
         if (recording) {
@@ -586,24 +587,19 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             presenter.changeEvent(event.name ?: "")
             presenter.hideEvents()
             eventSpace.visibility = View.VISIBLE
-
             selectedEvent = event
             old = newData
             newData.clear()
-            event.tagged_teams.forEach {
-                if (it.taggable_athletes?.isNotEmpty() != false) {
-                    it.taggable_athletes?.forEach {
-                        newData.add(TaggedPlayersPresentation(it))
-                    }
-                }
+            event.tagged_users.forEach {
+                newData.add(TaggedPlayersPresentation(it))
             }
-            println("NEW DATA:::: ${newData.size}")
             if (newData.isEmpty()) {
                 taggedView.visibility = View.GONE
             }
 
             taggedAdapter.data =
                 TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
+            athleteRecycler.adapter = taggedAdapter
         }
     }
 

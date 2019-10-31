@@ -60,7 +60,6 @@ class UploadsPresenter(
                         UploadsMessage.Pending_High -> view.onNotifyOfPendingHDUploads()
                     }
                 }, {
-
                 })
     }
 

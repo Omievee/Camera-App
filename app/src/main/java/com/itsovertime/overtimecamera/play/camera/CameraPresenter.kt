@@ -79,8 +79,8 @@ class CameraPresenter(
                 longitude = e?.longitude ?: 0.0,
                 uploadState = UploadState.QUEUED,
                 max_video_length = e?.max_video_length ?: 12,
-                created_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
-                taggedUsers = arrayOfTaggedUsers
+                created_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+//                taggedUsers = arrayOfTaggedUsers
             )
         }
         manager.saveHighQualityVideoToDB(video ?: return)
