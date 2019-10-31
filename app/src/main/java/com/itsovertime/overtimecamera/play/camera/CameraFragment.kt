@@ -59,8 +59,19 @@ import javax.inject.Inject
 
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
-    override fun updateEventTitle(event: String?) {
-        eventTitle.text = event
+
+
+    override fun setUpDefaultEvent(event: Event?) {
+        eventTitle.text = event?.name ?: "Unkown Event"
+        selectedEvent = event
+
+        event?.tagged_users?.forEach {
+            newData.add(TaggedPlayersPresentation(it))
+        }
+
+        taggedAdapter.data =
+            TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
+        athleteRecycler.adapter = taggedAdapter
     }
 
     override fun hideEventsRV() {
@@ -71,11 +82,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         hiddenEvents.visibility = View.VISIBLE
     }
 
-
     var taggedAthletesArray = arrayListOf<String>()
-    val taggedListener: TaggedAthleteClickListener = object : TaggedAthleteClickListener {
+    private val taggedListener: TaggedAthleteClickListener = object : TaggedAthleteClickListener {
         override fun onAtheleteSelected(id: String) {
-            println("Tagged Id: $id")
+            taggedAthletesArray.add(id)
         }
 
     }
@@ -106,8 +116,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 }
             }
         }
-
-        println("new data... ${newData.size}")
 
         taggedAdapter.data =
             TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
@@ -584,7 +592,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     val listener: EventsClickListener = object : EventsClickListener {
         override fun onEventSelected(event: Event) {
-            presenter.changeEvent(event.name ?: "")
+            presenter.changeEvent(event)
             presenter.hideEvents()
             eventSpace.visibility = View.VISIBLE
             selectedEvent = event

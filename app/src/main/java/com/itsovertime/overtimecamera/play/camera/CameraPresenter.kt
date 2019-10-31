@@ -1,7 +1,6 @@
 package com.itsovertime.overtimecamera.play.camera
 
 import android.annotation.SuppressLint
-import android.icu.text.SimpleDateFormat
 import android.os.CountDownTimer
 import android.os.Environment
 import android.view.View
@@ -10,9 +9,6 @@ import android.view.animation.Transformation
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.Operation
-import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.model.Event
@@ -21,8 +17,6 @@ import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
-import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
-import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 import java.io.File
 import java.time.Instant
@@ -180,7 +174,7 @@ class CameraPresenter(
 
 
     fun getEvents() {
-        var eventName: String? = "Unknown Event"
+        var defaultEvent: Event? = null
         val eventsList = mutableListOf<Event>()
         eventDisposable?.dispose()
         eventDisposable = eventsManager
@@ -190,7 +184,7 @@ class CameraPresenter(
                 er.events.forEachIndexed { i, event ->
                     event.videographer_ids.forEach { s ->
                         if (s == user?.id) {
-                            eventName = er.events[i].name
+                            defaultEvent = er.events[i]
                         }
                     }
                 }
@@ -201,7 +195,7 @@ class CameraPresenter(
             }
             .subscribe({
                 view.setUpEventViewData(eventsList)
-                view.updateEventTitle(eventName)
+                view.setUpDefaultEvent(defaultEvent)
             }, {
             })
     }
@@ -274,8 +268,8 @@ class CameraPresenter(
         v.startAnimation(a)
     }
 
-    fun changeEvent(event: String) {
-        view.updateEventTitle(event)
+    fun changeEvent(event: Event) {
+        view.setUpDefaultEvent(event)
     }
 
     fun hideEvents() {
