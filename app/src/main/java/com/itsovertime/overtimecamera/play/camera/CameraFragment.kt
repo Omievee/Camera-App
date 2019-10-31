@@ -65,13 +65,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         eventTitle.text = event?.name ?: "Unkown Event"
         selectedEvent = event
         setUpTaggedUsersView(event)
-//        event?.tagged_users?.forEach {
-//            newData.add(TaggedPlayersPresentation(it))
-//        }
-//
-//        taggedAdapter.data =
-//            TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
-//        athleteRecycler.adapter = taggedAdapter
     }
 
     override fun hideEventsRV() {
@@ -86,6 +79,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     private val taggedListener: TaggedAthleteClickListener = object : TaggedAthleteClickListener {
         override fun onAtheleteSelected(id: String) {
             taggedAthletesArray.add(id)
+            println("TAGGED ARRAY ::::: ${taggedAthletesArray.size}")
         }
 
     }
@@ -93,20 +87,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var newData = mutableListOf<TaggedPlayersPresentation>()
     var old = taggedAdapter.data?.data ?: emptyList()
     override fun setUpEventViewData(eventList: MutableList<Event>?) {
-
         if (eventList.isNullOrEmpty()) {
             eventSpace.visibility = View.GONE
         }
-        eventList?.forEachIndexed { i, event ->
-            event.videographer_ids.forEach { s ->
-                if (s == UserPreference.userId) {
-                    selectedEvent = eventList[i]
-                } else eventList[0]
-            }
-        }
         evAdapter = EventsAdapter(eventList, listener)
         eventsRecycler.adapter = evAdapter
-
         eventList?.forEach {
             setUpTaggedUsersView(it)
         }
@@ -118,8 +103,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             presenter.hideEvents()
             eventSpace.visibility = View.VISIBLE
             selectedEvent = event
-            old = newData
-            newData.clear()
+
 
             setUpTaggedUsersView(event)
         }
@@ -127,6 +111,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     private fun setUpTaggedUsersView(event: Event?) {
         old = newData
+        newData.clear()
         event?.tagged_users?.forEach {
             newData.add(TaggedPlayersPresentation(it))
         }

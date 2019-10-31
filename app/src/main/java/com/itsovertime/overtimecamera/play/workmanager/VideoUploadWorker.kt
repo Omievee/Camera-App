@@ -124,7 +124,7 @@ class VideoUploadWorker(
                         it.remove()
                     }
                 }
-                beginProcess()
+                //beginProcess()
             }
     }
 
@@ -455,7 +455,7 @@ class VideoUploadWorker(
                     }
 
 
-                    //  beginProcess()
+                    beginProcess()
                 }
                 .subscribe({
 
