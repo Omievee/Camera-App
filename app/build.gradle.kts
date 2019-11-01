@@ -109,11 +109,15 @@ dependencies {
     implementation("android.arch.persistence.room:runtime:1.1.1")
     kapt("android.arch.persistence.room:compiler:1.1.1")
     implementation("android.arch.persistence.room:rxjava2:1.1.1")
-
     //NEW Transcoder:
     implementation("com.otaliastudios:transcoder:0.7.3")
+    //Old Transcoder:
+    implementation ("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
     //FFMPJEG - trimming
     implementation("com.writingminds:FFmpegAndroid:0.3.2")
+    //MP4 Parser - trimming
+    implementation("org.mp4parser:isoparser:1.9.27")
+
     //Fabric
     implementation("com.crashlytics.sdk.android:crashlytics:2.10.1@aar") {
         isTransitive = true

@@ -22,6 +22,7 @@ interface VideosManager {
     fun updateUploadId(uplaodId: String, clientId: String)
     fun updateVideoInstanceId(videoId: String, clientId: String)
     fun updateVideoStatus(video: SavedVideo, state: UploadState)
+    fun updateTaggedAthleteField(taggedAthletesArray: ArrayList<String>, clientId: String)
     fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo)
     fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String)
     fun loadFFMPEG()

@@ -53,6 +53,10 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET highUploaded = :highUploaded , uploadState =:uploadState WHERE clientId = :lastID")
     fun updateHighUpload(highUploaded: Boolean?, lastID: String, uploadState: UploadState)
 
+
+    @Query("UPDATE SavedVideo SET  tagged= :taggedAthletes  WHERE clientId = :lastID")
+    fun updateTaggedAthletesField(taggedAthletes: ArrayList<String>?, lastID: String)
+
     @Query("UPDATE SavedVideo SET isProcessed = :isProcessed WHERE clientId = :lastID")
     fun updateVideoIsProcessed(isProcessed: Boolean, lastID: String)
 

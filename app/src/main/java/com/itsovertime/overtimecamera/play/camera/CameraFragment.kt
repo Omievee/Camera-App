@@ -62,7 +62,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
 
     override fun setUpDefaultEvent(event: Event?) {
-        eventTitle.text = event?.name ?: "Unkown Event"
+        eventTitle.text = event?.name ?: "Unknown Event"
         selectedEvent = event
         setUpTaggedUsersView(event)
     }
@@ -79,7 +79,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     private val taggedListener: TaggedAthleteClickListener = object : TaggedAthleteClickListener {
         override fun onAtheleteSelected(id: String) {
             taggedAthletesArray.add(id)
-            println("TAGGED ARRAY ::::: ${taggedAthletesArray.size}")
         }
 
     }
@@ -261,6 +260,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         println("TAP TO SAVE....")
         favoriteIcon.visibility = View.VISIBLE
         hahaIcon.visibility = View.VISIBLE
+
         if (!newData.isNullOrEmpty()) {
             taggedAdapter.notifyDataSetChanged()
             taggedView.visibility = View.VISIBLE
@@ -280,13 +280,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             tapToSave.setImageResource(R.drawable.selfie_record_red_stop)
             selfieMsg.visibility = View.GONE
             mediaRecorder?.start()
-
             selfieTimer.start()
-
             selfieTimer.onChronometerTickListener =
                 Chronometer.OnChronometerTickListener {
                     count++
-                    println("Count = $count")
                     if (count == 30) {
                         progressBar.visibility = View.VISIBLE
                         tapToSaveSelfie()
@@ -500,6 +497,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     private fun startMediaRecorder() {
         when (CAMERA) {
             0 -> {
+                println("======================== ${taggedAthletesArray.size}")
                 favoriteIcon?.let {
                     if (it.visibility == View.VISIBLE) {
                         runnable = Runnable {
@@ -512,6 +510,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                 }
                                 taggedView?.let {
                                     it.visibility = View.INVISIBLE
+                                }
+                                if (taggedAthletesArray.isNotEmpty()) {
+                                    presenter.updateTaggedAthletesField(taggedAthletesArray)
+                                    taggedAthletesArray.clear()
                                 }
                             }
                         }
@@ -534,16 +536,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     override fun stopRecording(isPaused: Boolean) {
         stopRecordingThread()
         recording = false
-
         try {
             mediaRecorder?.stop()
             mediaRecorder?.reset()
             mediaRecorder = null
             when (isPaused) {
-                false -> {
-                    presenter.saveVideo(selectedEvent, taggedAthletesArray)
-                    taggedAthletesArray.clear()
-                }
+                false -> presenter.saveVideo(selectedEvent)
+
                 else -> deleteUnsavedFile()
             }
         } catch (r: RuntimeException) {
@@ -613,7 +612,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         } else {
             params.height = 0
         }
-        println("heigh?? ${params.height}")
+
         navSpace.layoutParams = params
     }
 
@@ -819,6 +818,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         backgroundThread = HandlerThread("CameraBackground")
         backgroundThread?.start()
         backgroundHandler = Handler(backgroundThread?.looper)
+
     }
 
     fun startRecordingThread() {
@@ -830,6 +830,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var recordHandler: Handler? = null
     private fun stopRecordingThread() {
         recordThread?.quitSafely()
+
         try {
             recordThread?.join()
             recordThread = null

@@ -75,7 +75,6 @@ class UploadsPresenter(
                 this.list.addAll(it)
             }
             .subscribe({
-                println("ADAPTER UPDATE!")
                 view.updateAdapter(list, debug, userEnabledHDUploads)
                 view.swipe2RefreshIsFalse()
             }, {

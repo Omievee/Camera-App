@@ -31,6 +31,8 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
 
     fun bind(savedVideo: SavedVideo, debug: Boolean, hd: Boolean) {
         this.savedVideo = savedVideo
+        medQProgressBar.setProgress(0, false)
+        highQProgressBar.setProgress(0, false)
         when (debug) {
             true -> {
                 uploadedText.visibility = View.VISIBLE

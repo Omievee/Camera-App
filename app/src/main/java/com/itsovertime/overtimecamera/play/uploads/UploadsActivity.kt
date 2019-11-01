@@ -5,7 +5,9 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -55,6 +57,16 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
 
         presenter.onRefresh()
         uploadsRecycler.adapter = adapter
+
+        val itemDecorator = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
+        ContextCompat.getDrawable(
+            this, R.drawable.divider
+        )?.let {
+            itemDecorator.setDrawable(
+                it
+            )
+        }
+        uploadsRecycler.addItemDecoration(itemDecorator)
 
     }
 

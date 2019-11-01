@@ -50,7 +50,7 @@ class CameraPresenter(
     var e: Event? = null
     var video: SavedVideo? = null
     var clientId: String = ""
-    fun saveVideo(videoEvent: Event?, arrayOfTaggedUsers: ArrayList<String>) {
+    fun saveVideo(videoEvent: Event?) {
         e = videoEvent
         clientId = UUID.randomUUID().toString()
         filePath?.let {
@@ -68,8 +68,7 @@ class CameraPresenter(
                 longitude = e?.longitude ?: 0.0,
                 uploadState = UploadState.QUEUED,
                 max_video_length = e?.max_video_length ?: 12,
-                created_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
-                taggedUsers = arrayOfTaggedUsers
+                created_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             )
         }
         manager.saveHighQualityVideoToDB(video ?: return)
@@ -269,6 +268,13 @@ class CameraPresenter(
 
     fun hideEvents() {
         view.hideEventsRV()
+    }
+
+    fun updateTaggedAthletesField(taggedAthletesArray: ArrayList<String>) {
+        manager.updateTaggedAthleteField(
+            taggedAthletesArray = taggedAthletesArray,
+            clientId = clientId
+        )
     }
 
 }

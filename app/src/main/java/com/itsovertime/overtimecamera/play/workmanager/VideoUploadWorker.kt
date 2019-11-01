@@ -55,6 +55,8 @@ class VideoUploadWorker(
 
     override fun doWork(): Result {
         return try {
+
+            println("SStarted work.....")
             hdReady = inputData.getBoolean("HD", false)
             getVideosFromDB().blockingGet()
             Result.success()
@@ -124,7 +126,7 @@ class VideoUploadWorker(
                         it.remove()
                     }
                 }
-                //beginProcess()
+                beginProcess()
             }
     }
 
