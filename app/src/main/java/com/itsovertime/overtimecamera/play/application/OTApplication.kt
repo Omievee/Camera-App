@@ -39,7 +39,9 @@ class OTApplication : Application(), HasActivityInjector, HasServiceInjector {
         UserPreference.load(this)
         inject()
         RxJavaPlugins.setErrorHandler { throwable ->
+            println("throws ::::::::::: ${throwable.cause}")
             println("throws ::::::::::: ${throwable.message}")
+            println("throws ::::::::::: ${throwable.printStackTrace()}")
         }
 
         configureWorkManager()

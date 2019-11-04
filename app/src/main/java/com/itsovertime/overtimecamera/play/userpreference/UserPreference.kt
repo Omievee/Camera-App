@@ -14,7 +14,13 @@ object UserPreference {
     }
 
 
-
+    var isChecked: Boolean
+        get() {
+            return sPrefs.getBoolean(Constants.HD_UPLOAD, false)
+        }
+        set(value) {
+            sPrefs.edit().putBoolean(Constants.HD_UPLOAD, value).apply()
+        }
 
     var accessAllowed: Boolean
         get() {

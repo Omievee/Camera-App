@@ -79,6 +79,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         permissions.visibility = View.VISIBLE
     }
 
+
     private val permissionsCode = 0
     private val requiredAppPermissions = arrayOf(
         Manifest.permission.CAMERA,
@@ -249,15 +250,18 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun onStop() {
+        UserPreference.isChecked = false
         stopService(Intent(this, NetworkSchedulerService::class.java))
         super.onStop()
     }
 
 
     override fun onDestroy() {
-        super.onDestroy()
+        UserPreference.isChecked = false
         stopService(Intent(this, NetworkSchedulerService::class.java))
         presenter.onDestroy()
+        super.onDestroy()
+
     }
 
 

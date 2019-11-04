@@ -55,9 +55,9 @@ class VideoUploadWorker(
 
     override fun doWork(): Result {
         return try {
-
             println("SStarted work.....")
             hdReady = inputData.getBoolean("HD", false)
+
             getVideosFromDB().blockingGet()
             Result.success()
         } catch (throwable: Throwable) {
@@ -144,7 +144,6 @@ class VideoUploadWorker(
             true -> "Uploading High Quality Videos.."
             else -> "Uploading Medium Quality Videos.."
         }
-        // notifications.onCreateProgressNotification(notifMsg, 0, 0)
 
         when {
             faveList.size > 0 -> {
@@ -179,16 +178,16 @@ class VideoUploadWorker(
                     standardListHQ.remove(standardListHQ[0])
                 }
             }
-
+            faveList.size == 0 && standardList.size == 0 && faveListHQ.size >0 && hdReady == false || standardListHQ.size > 0 && hdReady==false -> {
+                progressManager.onCurrentUploadProcess(
+                    UploadsMessage.Pending_High
+                )
+            }
             standardList.size == 0 && faveList.size == 0 -> videosManager.onNotifyWorkIsDone()
         }
 
 
-        if (faveList.size == 0 && standardList.size == 0) {
-            if (faveListHQ.size > 0 && hdReady == false || standardListHQ.size > 0 && hdReady == false) progressManager.onCurrentUploadProcess(
-                UploadsMessage.Pending_High
-            )
-        }
+
 
         if (faveList.size == 0 && standardList.size == 0 && standardListHQ.size == 0 && faveListHQ.size == 0) progressManager.onCurrentUploadProcess(
             UploadsMessage.Pending_High
@@ -252,7 +251,6 @@ class VideoUploadWorker(
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?) {
-        println("BEGIN UPLOAD>... $token")
         tokenDisposable =
             uploadsManager
                 .registerWithMD5(token ?: return, hdReady ?: false)

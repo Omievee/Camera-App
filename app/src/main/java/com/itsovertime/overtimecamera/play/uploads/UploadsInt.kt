@@ -13,6 +13,6 @@ interface UploadsInt {
     fun onNotifyOfPendingHDUploads()
     fun setUploadingHdVideo()
     fun setUploadingMedVideo()
-
+    fun setNoVideosMsg()
 
 }

@@ -54,10 +54,12 @@ class UploadsPresenter(
             progressManager
                 .onUpdateUploadMessage()
                 .subscribe({
+                    println("THIS IS THE MSG $it")
                     when (it) {
                         UploadsMessage.Uploading_High -> view.setUploadingHdVideo()
                         UploadsMessage.Uploading_Medium -> view.setUploadingMedVideo()
                         UploadsMessage.Pending_High -> view.onNotifyOfPendingHDUploads()
+                        else -> view.setNoVideosMsg()
                     }
                 }, {
                 })
@@ -121,9 +123,9 @@ class UploadsPresenter(
                     .setInputData(inputData.build())
                     .build()
             )
+            userEnabledHDUploads = isChecked
+            view.updateAdapter(list, debug, userEnabledHDUploads)
         }
-        userEnabledHDUploads = true
-        view.updateAdapter(list, debug, userEnabledHDUploads)
     }
 
     fun displayBottomSheetSettings() {

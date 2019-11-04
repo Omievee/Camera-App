@@ -4,6 +4,7 @@
     <string name="uploads_header">Upload Queue</string>
     <string name="upload_queue_turn_on_wifi">Turn on HD uploading to finish (WiFi Recommended)</string>
     <string name="upload_queue_uploading_hd">Uploading high quality videos…</string>
+    <string name="upload_queue_uploading_med">Uploading medium quality videos…</string>
     <string name="settings_view_terms"><![CDATA[Terms Of Service & Privacy Policy]]></string>
     <string name="settings_view_contact">Contact Overtime</string>
     <string name="settings_view_logout">Logout</string>
@@ -11,7 +12,6 @@
     <string name="med">Med</string>
     <string name="paused_view_message">Camera Paused \n Tap To Resume</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="auth_enter_phone">Enter Phone Number</string>
     <string name="auth_message">An access code will be sent to your phone via text message</string>
@@ -47,5 +47,11 @@
     <string name="auth_logout_not_authorized">You are not authorized</string>
     <string name="auth_invalid_code">Invalid Code</string>
     <string name="selfie_message">Record game recap.</string>
+    <string name="hd_videos_ready">HD videos are ready for upload. Turn on HD uploading. (WiFi Recommended)</string>
+    <string name="no_hd_videos_msg">No HD videos to upload..</string>
+    <string name="hd_uploads_title">Turn on HD Uploads</string>
+    <string name="hd_uploads_msg">A Wifi connection is recommended for HD uploads. Please do not close the app until uploads are complete</string>
+    <string name="hd_uploads_button">Upload</string>
+    <string name="hd_uploads_cancel_button">Cancel</string>
 
 </resources>

@@ -33,6 +33,8 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
         this.savedVideo = savedVideo
         medQProgressBar.setProgress(0, false)
         highQProgressBar.setProgress(0, false)
+        check1.visibility = View.GONE
+        check2.visibility = View.GONE
         when (debug) {
             true -> {
                 uploadedText.visibility = View.VISIBLE
@@ -40,6 +42,8 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                 clientText.visibility = View.VISIBLE
                 pendingProgress.visibility = View.GONE
                 serverText.visibility = View.VISIBLE
+                medQProgressBar.visibility = View.GONE
+                highQProgressBar.visibility = View.GONE
 
                 uploadedText.text = when (savedVideo.uploadState) {
                     UploadState.UPLOADING_MEDIUM -> "Uploading medium quality"

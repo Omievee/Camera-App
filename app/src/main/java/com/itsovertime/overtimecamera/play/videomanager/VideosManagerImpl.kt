@@ -475,20 +475,20 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 if (!videosList.isNullOrEmpty()) {
-                    for (savedVideo in videosList) {
-                        if (!File(savedVideo.mediumRes).exists()) {
-                            resetUploadStateForCurrentVideo(savedVideo)
+                    val it = videosList.iterator()
+                    while (it.hasNext()) {
+                        val video = it.next()
+                        if (!File(video.mediumRes).exists()) {
+                            resetUploadStateForCurrentVideo(video)
                         }
-                        if (savedVideo.mediumRes.isNullOrEmpty() || File(savedVideo.mediumRes).readBytes().isEmpty()) {
-                            when (savedVideo.trimmedVidPath.isNullOrEmpty()) {
-                                true -> transcodeVideo(savedVideo, File(savedVideo.highRes))
-                                else -> transcodeVideo(savedVideo, File(savedVideo.trimmedVidPath))
+                        if (video.mediumRes.isNullOrEmpty() || File(video.mediumRes).readBytes().isEmpty()) {
+                            when (video.trimmedVidPath.isNullOrEmpty()) {
+                                true -> transcodeVideo(video, File(video.highRes))
+                                else -> transcodeVideo(video, File(video.trimmedVidPath))
                             }
                         }
-
                     }
                     if (isFirstRun) {
-                        println("First run........")
                         doWork()
                         isFirstRun = false
                     }
@@ -499,8 +499,9 @@ class VideosManagerImpl(
     }
 
     override fun onNotifyWorkIsDone() {
-        println("WORK IS DONE NOTIFICATION!")
+
         val vid = videosList.find { !it.mediumUploaded }
+        println("WORK IS DONE NOTIFICATION! $vid")
         if (vid != null) {
             doWork()
         }

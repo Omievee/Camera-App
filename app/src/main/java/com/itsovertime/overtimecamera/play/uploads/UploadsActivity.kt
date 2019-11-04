@@ -1,9 +1,11 @@
 package com.itsovertime.overtimecamera.play.uploads
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import android.widget.CompoundButton
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
@@ -17,8 +19,10 @@ import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.itemsame.ItemSame
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
+import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.fragment_uploads.*
+import kotlinx.android.synthetic.main.upload_item_view.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
 import javax.inject.Inject
 
@@ -26,6 +30,11 @@ import javax.inject.Inject
 class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     CompoundButton.OnCheckedChangeListener,
     SwipeRefreshLayout.OnRefreshListener {
+
+
+    override fun setNoVideosMsg() {
+        uploadedText.text = ""
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -38,7 +47,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         debug.setOnClickListener(this)
         switchHD.setOnCheckedChangeListener(this)
         swipe2refresh.setOnRefreshListener(this)
-
+        switchHD.isChecked = UserPreference.isChecked
         window.apply {
             addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             setFlags(
@@ -71,26 +80,55 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     }
 
     override fun setUploadingHdVideo() {
-        uploadsMessage.text = "Uploading High Quality Videos.."
+        uploadsMessage.text = getString(R.string.upload_queue_uploading_hd)
         uploadsIcon.setImageResource(R.drawable.upload)
     }
 
     override fun setUploadingMedVideo() {
-        uploadsMessage.text = "Uploading Medium Quality Videos.."
+        uploadsMessage.text = getString(R.string.upload_queue_uploading_med)
         uploadsIcon.setImageResource(R.drawable.upload)
     }
 
     override fun onNotifyOfPendingHDUploads() {
-        uploadsMessage.text =
-            "HD videos are ready for upload. Turn on HD uploading. (WiFi Recommended)"
         uploadsIcon.setImageResource(R.drawable.warning)
+        uploadsMessage.text =
+            getString(R.string.hd_videos_ready)
+
     }
 
 
     var isHD: Boolean = false
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
-        isHD = true
-        presenter.hdSwitchWasChecked(isChecked)
+        println("button?? $buttonView")
+        println("button?? $isChecked")
+        if (UserPreference.isChecked != isChecked) {
+            if (this.list?.isNotEmpty() != false) {
+                AlertDialog.Builder(this, R.style.CUSTOM_ALERT).apply {
+                    setTitle(getString(R.string.hd_uploads_title))
+                    setMessage(getString(R.string.hd_uploads_msg))
+                    setCancelable(false)
+                }.setPositiveButton(getString(R.string.hd_uploads_button)) { _, _ ->
+                    isHD = true
+                    UserPreference.isChecked = true
+                    presenter.hdSwitchWasChecked(isChecked)
+                }.setNegativeButton(getString(R.string.hd_uploads_cancel_button)) { d, i ->
+                    switchHD.isChecked = false
+                    d.dismiss()
+                }.create().show()
+
+            } else {
+                switchHD.isChecked = false
+                showToast(getString(R.string.no_hd_videos_msg))
+            }
+        } else {
+            switchHD.isChecked = false
+            UserPreference.isChecked = false
+        }
+
+    }
+
+    private fun showToast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 
     var prog: Int = 0
@@ -110,7 +148,6 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
 
     override fun displayWifiReady() {
         uploadsIcon.visibility = View.VISIBLE
-        uploadsMessage.text = getString(R.string.upload_queue_uploading_hd)
     }
 
     override fun onRefresh() {
@@ -151,7 +188,9 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     val old = adapter.data?.data ?: emptyList()
     var newD = mutableListOf<UploadsPresentation>()
     var debugBool: Boolean = false
+    var list: List<SavedVideo>? = null
     override fun updateAdapter(videos: List<SavedVideo>, dBug: Boolean, isHD: Boolean) {
+        this.list = videos
         this.debugBool = dBug
         this.isHD = isHD
         when (debugBool) {

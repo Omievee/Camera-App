@@ -2,7 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@color/OT_White">
 
 
     <ImageView
@@ -37,6 +38,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_min"
             android:background="@color/OT_White"
+
+            android:padding="@dimen/margin_standard"
             android:src="@drawable/settings_icon"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/debug"
@@ -48,6 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/OT_White"
+            android:padding="@dimen/margin_standard"
             android:src="@drawable/tool"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/uploadIcon"
@@ -89,9 +93,11 @@
     <ImageView
             android:id="@+id/uploadsIcon"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_standard"
+            android:layout_height="0dp"
+            android:layout_marginStart="@dimen/margin_half"
             android:layout_marginTop="@dimen/margin_standard"
+            android:layout_marginBottom="@dimen/margin_half"
+            android:src="@drawable/upload"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/header" />
@@ -103,6 +109,7 @@
             android:layout_marginStart="@dimen/margin_half"
             android:layout_marginTop="@dimen/margin_standard"
             android:maxLines="2"
+            android:textSize="13sp"
             android:textColor="@android:color/black"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"

@@ -76,7 +76,10 @@ class UploadsManagerImpl(
                     else -> md5(File(currentVideo?.trimmedVidPath).readBytes()) ?: ""
                 }
             }
-            false -> md5(File(currentVideo?.mediumRes).readBytes()) ?: ""
+            false -> {
+
+                md5(File(currentVideo?.mediumRes).readBytes()) ?: ""
+            }
         }
         return api
             .uploadDataForMd5(
@@ -90,7 +93,7 @@ class UploadsManagerImpl(
                 )
             )
             .doOnError {
-
+                println("MD5 ERROR ${it.printStackTrace()}")
             }
             .observeOn(AndroidSchedulers.mainThread())
     }

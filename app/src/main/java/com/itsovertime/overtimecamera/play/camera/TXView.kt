@@ -15,13 +15,13 @@ class TXView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
 
     @Throws(IllegalArgumentException::class)
     fun setAspectRatio(width: Int, height: Int) {
-        if (width < 0 || height < 0) {
-            throw IllegalArgumentException("Size cannot be negative.")
-        }
+        require(!(width < 0 || height < 0)) { "Size cannot be negative." }
         ratioWidth = width
         ratioHeight = height
         requestLayout()
     }
+
+
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)

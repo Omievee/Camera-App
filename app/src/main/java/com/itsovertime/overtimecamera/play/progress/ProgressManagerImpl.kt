@@ -13,6 +13,7 @@ class ProgressManagerImpl(val context: OTApplication) : ProgressManager {
 
     var uploadSubject = BehaviorSubject.create<UploadsMessage>()
     override fun onCurrentUploadProcess(msg: UploadsMessage) {
+        println("CURRENT UPLOAD>..... $msg")
         uploadSubject.onNext(msg)
     }
 
