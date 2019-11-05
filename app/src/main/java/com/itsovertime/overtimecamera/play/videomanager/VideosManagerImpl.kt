@@ -193,7 +193,6 @@ class VideosManagerImpl(
             val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: ""
             val timeInMillisec = time.toLong() / 1000
             retriever.release()
-            println("Time in file... $timeInMillisec")
             return timeInMillisec > file.max_video_length
         } catch (e: IllegalArgumentException) {
             e.printStackTrace()
@@ -460,6 +459,18 @@ class VideosManagerImpl(
                 if (videosList.size > 0 && isFirstRun) {
                     doWork()
                     isFirstRun = false
+                }
+                val iter = videosList.iterator()
+                while (iter.hasNext()) {
+                    val vid = iter.next()
+                    if (vid.mediumRes.isNullOrEmpty()) {
+                        determineTrim(vid)
+                        iter.remove()
+                    }
+
+                    if (!File(vid.mediumRes).exists()) {
+                        resetUploadStateForCurrentVideo(vid)
+                    }
                 }
 
 //                for (savedVideo in videosList) {

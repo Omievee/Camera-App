@@ -159,8 +159,13 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    getVideoInstance(faveList[0])
-                    faveList.remove(faveList[0])
+                    if (!File(faveList[0].mediumRes).exists()) {
+                        videosManager.resetUploadStateForCurrentVideo(faveList[0])
+                    } else {
+                        getVideoInstance(faveList[0])
+                        faveList.remove(faveList[0])
+                    }
+
                 }
             }
             standardList.size > 0 -> {
@@ -168,8 +173,13 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    getVideoInstance(standardList[0])
-                    standardList.remove(standardList[0])
+                    if (!File(standardList[0].mediumRes).exists()) {
+                        videosManager.resetUploadStateForCurrentVideo(standardList[0])
+                    } else {
+                        getVideoInstance(standardList[0])
+                        standardList.remove(standardList[0])
+                    }
+
                 }
             }
             faveListHQ.size > 0 && hdReady ?: false -> {

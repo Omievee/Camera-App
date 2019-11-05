@@ -77,7 +77,7 @@ class UploadsManagerImpl(
                 }
             }
             false -> {
-
+                println("MD5 logic started... ${File(currentVideo?.mediumRes).exists()}")
                 md5(File(currentVideo?.mediumRes).readBytes()) ?: ""
             }
         }
