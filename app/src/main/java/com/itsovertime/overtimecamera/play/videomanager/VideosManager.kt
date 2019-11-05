@@ -29,4 +29,5 @@ interface VideosManager {
     fun updateHighuploaded(qualityUploaded: Boolean, clientId: String)
     fun determineTrim(savedVideo: SavedVideo)
     fun onNotifyWorkIsDone()
+    fun onGetVideosForUpload(): Single<List<SavedVideo>>
 }

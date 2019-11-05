@@ -22,6 +22,7 @@ class PermissionsView(context: Context, attributeSet: AttributeSet? = null) :
     init {
         View.inflate(context, R.layout.permissions_view, this)
 
+
         permissionsRV.layoutManager =
             LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
 

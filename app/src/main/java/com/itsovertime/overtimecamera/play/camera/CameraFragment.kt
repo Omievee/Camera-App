@@ -542,7 +542,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             mediaRecorder = null
             when (isPaused) {
                 false -> presenter.saveVideo(selectedEvent)
-
                 else -> deleteUnsavedFile()
             }
         } catch (r: RuntimeException) {
@@ -692,7 +691,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun onPause() {
         releaseCamera(tapToSave = false)
-        deleteUnsavedFile()
         super.onPause()
     }
 

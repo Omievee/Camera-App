@@ -13,11 +13,9 @@ class PermissionsItemView(context: Context, attributeSet: AttributeSet? = null) 
 
     init {
         View.inflate(context, R.layout.permissions_item_view, this)
-
     }
 
     fun bind(pres: PermissionPresentation) {
-        println("Permission??? ${pres.permissionTitle}")
         permission.text = pres.permissionTitle
     }
 }

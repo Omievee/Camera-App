@@ -11,9 +11,8 @@ import io.reactivex.subjects.BehaviorSubject
 class ProgressManagerImpl(val context: OTApplication) : ProgressManager {
     data class UploadProgress(val id: String, val prog: Int, val isHD: Boolean)
 
-    var uploadSubject = BehaviorSubject.create<UploadsMessage>()
+    private var uploadSubject = BehaviorSubject.create<UploadsMessage>()
     override fun onCurrentUploadProcess(msg: UploadsMessage) {
-        println("CURRENT UPLOAD>..... $msg")
         uploadSubject.onNext(msg)
     }
 
@@ -36,9 +35,7 @@ class ProgressManagerImpl(val context: OTApplication) : ProgressManager {
         progressSubject.onNext(UploadProgress(id, progress, hd))
     }
 
-
     val subject: BehaviorSubject<Boolean> = BehaviorSubject.create()
-
 }
 
 enum class UploadsMessage {
@@ -46,4 +43,5 @@ enum class UploadsMessage {
     Uploading_High,
     Pending_Medium,
     Pending_High,
+    Finished
 }

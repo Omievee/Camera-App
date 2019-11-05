@@ -29,6 +29,7 @@ import io.reactivex.subjects.BehaviorSubject
 import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 
 
@@ -36,6 +37,17 @@ class VideosManagerImpl(
     val context: OTApplication,
     val manager: UploadsManager
 ) : VideosManager {
+    override fun onGetVideosForUpload(): Single<List<SavedVideo>> {
+        return db!!.videoDao()
+            .getVideosForUpload()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSuccess {
+                println("success....")
+            }
+
+    }
+
     @SuppressLint("CheckResult")
     override fun updateTaggedAthleteField(
         taggedAthletesArray: ArrayList<String>,
@@ -189,12 +201,9 @@ class VideosManagerImpl(
         return false
     }
 
-    @Synchronized
     override fun determineTrim(savedVideo: SavedVideo) {
         if (isVideoDurationLongerThanMaxTime(savedVideo)) {
-            synchronized(this) {
-                trimVideo(savedVideo)
-            }
+            trimVideo(savedVideo)
         } else transcodeVideo(savedVideo, File(savedVideo.highRes))
     }
 
@@ -238,13 +247,18 @@ class VideosManagerImpl(
                 ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                     override fun onSuccess(message: String?) {
                         super.onSuccess(message)
-                        println("success from trim :$message")
-                        loadFromDB()
+                        println("SUCCESSFUL TRIM :$message")
+
                     }
 
                     override fun onProgress(message: String?) {
                         super.onProgress(message)
                         println("Trim progress -- $message")
+                    }
+
+                    override fun onFinish() {
+                        super.onFinish()
+                        transcodeVideo(savedVideo, newFile)
                     }
 
                     override fun onFailure(message: String?) {
@@ -288,6 +302,7 @@ class VideosManagerImpl(
             File(mediaStorageDir.path + File.separator + "trim.$fileName").absolutePath,
             clientId
         )
+
         return File(mediaStorageDir.path + File.separator + "trim.$fileName")
     }
 
@@ -309,22 +324,18 @@ class VideosManagerImpl(
             })
     }
 
-    @Synchronized
     private fun compressedFile(file: File, video: SavedVideo): File {
-        synchronized(this) {
-            val mediaStorageDir =
-                File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
-            if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-            }
-
-            val filePath = mediaStorageDir.path + File.separator + "720.${file.name}"
-
-            updateMediumFilePath(
-                File(filePath).absolutePath,
-                video.clientId
-            )
-            return File(filePath)
+        val mediaStorageDir =
+            File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "OverTime720")
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
         }
+
+        val filePath = mediaStorageDir.path + File.separator + "720.${file.name}"
+        updateMediumFilePath(
+            File(filePath).absolutePath,
+            video.clientId
+        )
+        return File(filePath)
     }
 
 
@@ -369,72 +380,43 @@ class VideosManagerImpl(
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
     @Synchronized
     override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
-        synchronized(this) {
-            val file = Uri.fromFile(videoFile)
-            val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
+        val file = Uri.fromFile(videoFile)
+        val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
 
-            val fileDescriptor = parcelFileDescriptor?.fileDescriptor
-//            if(!fileDescriptor?.valid()!!){
-//                println("NOT VALID!!!")
-//            }
-
-
-            val listener = object : MediaTranscoder.Listener {
-                override fun onTranscodeProgress(progress: Double) {
-                }
-
-                override fun onTranscodeCanceled() {}
-                override fun onTranscodeFailed(exception: Exception?) {
-                    exception?.printStackTrace()
-                }
-
-                override fun onTranscodeCompleted() {
-                    loadFromDB()
-                }
+        val fileDescriptor = parcelFileDescriptor?.fileDescriptor
+        val listener = object : MediaTranscoder.Listener {
+            override fun onTranscodeProgress(progress: Double) {
             }
-            try {
-                MediaTranscoder.getInstance().transcodeVideo(
-                    fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
-                    MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
-                )
-            } catch (r: RuntimeException) {
-                Crashlytics.log("MediaTranscoder-Error ${r.message}")
-                r.printStackTrace()
-            } catch (io: IOException) {
-                Crashlytics.log("MediaTranscoder-Error ${io.message}")
-                io.printStackTrace()
-            } catch (ia: IllegalArgumentException) {
-                Crashlytics.log("MediaTranscoder-Error ${ia.message}")
-                ia.printStackTrace()
+
+            override fun onTranscodeCanceled() {}
+            override fun onTranscodeFailed(exception: Exception?) {
+                exception?.printStackTrace()
             }
-//            Transcoder.into(compressedFile(videoFile, savedVideo).absolutePath)
-//                .addDataSource(context, Uri.fromFile(videoFile))
-//                .setListener(object : TranscoderListener {
-//                    override fun onTranscodeCompleted(successCode: Int) {
-//                        loadFromDB()
-//                    }
-//
-//                    override fun onTranscodeProgress(progress: Double) {
-//                        println("Progress transcoding ........ OV ........ $progress")
-//                    }
-//
-//                    override fun onTranscodeCanceled() {
-//
-//                    }
-//
-//                    override fun onTranscodeFailed(exception: Throwable) {
-//                        resetUploadStateForCurrentVideo(savedVideo)
-//                        println("Transcode failure... ${exception.message}")
-//                        println("Transcode failure... ${exception.cause}")
-//                        println("Transcode failure... ${exception.localizedMessage}")
-//                    }
-//                }).transcode()
+
+            override fun onTranscodeCompleted() {
+                loadFromDB()
+            }
         }
-
+        try {
+            MediaTranscoder.getInstance().transcodeVideo(
+                fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
+                MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
+            )
+        } catch (r: RuntimeException) {
+            Crashlytics.log("MediaTranscoder-Error ${r.message}")
+            r.printStackTrace()
+        } catch (io: IOException) {
+            Crashlytics.log("MediaTranscoder-Error ${io.message}")
+            io.printStackTrace()
+        } catch (ia: IllegalArgumentException) {
+            Crashlytics.log("MediaTranscoder-Error ${ia.message}")
+            ia.printStackTrace()
+        }
     }
 
     var lastVideoId: String = ""
     @SuppressLint("CheckResult")
+    @Synchronized
     override fun saveHighQualityVideoToDB(video: SavedVideo) {
         this.lastVideoMaxTime = video.max_video_length.toString()
         lastVideoId = video.clientId
@@ -459,10 +441,11 @@ class VideosManagerImpl(
     @Synchronized
     @SuppressLint("CheckResult")
     override fun loadFromDB() {
-        videosList?.clear()
+        videosList.clear()
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
+            println("size from DB: ${it.size}")
             videosList.addAll(it.asReversed())
             subject.onNext(videosList)
             val totalUploaded = mutableListOf<SavedVideo>()
@@ -474,34 +457,32 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                if (!videosList.isNullOrEmpty()) {
-                    val it = videosList.iterator()
-                    while (it.hasNext()) {
-                        val video = it.next()
-                        if (!File(video.mediumRes).exists()) {
-                            resetUploadStateForCurrentVideo(video)
-                        }
-                        if (video.mediumRes.isNullOrEmpty() || File(video.mediumRes).readBytes().isEmpty()) {
-                            when (video.trimmedVidPath.isNullOrEmpty()) {
-                                true -> transcodeVideo(video, File(video.highRes))
-                                else -> transcodeVideo(video, File(video.trimmedVidPath))
-                            }
-                        }
-                    }
-                    if (isFirstRun) {
-                        doWork()
-                        isFirstRun = false
-                    }
+                if (videosList.size > 0 && isFirstRun) {
+                    doWork()
+                    isFirstRun = false
                 }
+
+//                for (savedVideo in videosList) {
+//                    try {
+//                        if (File(savedVideo.mediumRes).readBytes().isEmpty()) {
+//                            println("EMPTY!")
+//                            when (savedVideo.trimmedVidPath.isNullOrEmpty()) {
+//                                true -> transcodeVideo(savedVideo, File(savedVideo.highRes))
+//                                else -> transcodeVideo(savedVideo, File(savedVideo.trimmedVidPath))
+//                            }
+//                        }
+//                    } catch (fnf: FileNotFoundException) {
+//                        resetUploadStateForCurrentVideo(savedVideo)
+//                    }
+//                }
             }, {
                 it.printStackTrace()
             })
     }
 
     override fun onNotifyWorkIsDone() {
-
+        println("WORK IS DONE NOTIFICATION! ")
         val vid = videosList.find { !it.mediumUploaded }
-        println("WORK IS DONE NOTIFICATION! $vid")
         if (vid != null) {
             doWork()
         }

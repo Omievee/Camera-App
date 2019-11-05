@@ -22,6 +22,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.io.File
+import java.lang.IllegalArgumentException
 import java.lang.NumberFormatException
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -58,7 +59,7 @@ class VideoUploadWorker(
             println("SStarted work.....")
             hdReady = inputData.getBoolean("HD", false)
 
-            getVideosFromDB().blockingGet()
+            getVideosFromDB()
             Result.success()
         } catch (throwable: Throwable) {
             println("Error from worker... ${throwable.cause}")
@@ -91,20 +92,20 @@ class VideoUploadWorker(
                 })
     }
 
+    var vidDisp: Disposable? = null
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
-    fun getVideosFromDB(): Single<List<SavedVideo>> {
+    fun getVideosFromDB() {
 
         queList.clear()
         faveList.clear()
         standardList.clear()
         faveListHQ.clear()
         standardListHQ.clear()
-        return db!!.videoDao()
-            .getVideosForUpload()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSuccess {
+
+        vidDisp = videosManager
+            .onGetVideosForUpload()
+            .map {
                 queList = it as MutableList<SavedVideo>
                 queList.removeIf {
                     it.highUploaded
@@ -126,8 +127,15 @@ class VideoUploadWorker(
                         it.remove()
                     }
                 }
+            }
+            .doOnSuccess {
                 beginProcess()
             }
+            .subscribe({
+
+            }, {
+
+            })
     }
 
     @Synchronized
@@ -178,19 +186,19 @@ class VideoUploadWorker(
                     standardListHQ.remove(standardListHQ[0])
                 }
             }
-            faveList.size == 0 && standardList.size == 0 && faveListHQ.size >0 && hdReady == false || standardListHQ.size > 0 && hdReady==false -> {
+            faveList.size == 0 && standardList.size == 0 && faveListHQ.size > 0 && hdReady == false || standardListHQ.size > 0 && hdReady == false -> {
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Pending_High
                 )
             }
-            standardList.size == 0 && faveList.size == 0 -> videosManager.onNotifyWorkIsDone()
+
+        }
+        if (standardList.size == 0 && faveList.size == 0) {
+            videosManager.onNotifyWorkIsDone()
         }
 
-
-
-
         if (faveList.size == 0 && standardList.size == 0 && standardListHQ.size == 0 && faveListHQ.size == 0) progressManager.onCurrentUploadProcess(
-            UploadsMessage.Pending_High
+            UploadsMessage.Finished
         )
     }
 
@@ -444,7 +452,6 @@ class VideoUploadWorker(
                         100,
                         hdReady ?: false
                     )
-                    println("STATE IS ::: ${currentVideo?.uploadState}")
                     if (currentVideo?.uploadState == UploadState.UPLOADING_MEDIUM) {
                         currentVideo?.uploadState = UploadState.UPLOADED_MEDIUM
                         videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
@@ -454,8 +461,7 @@ class VideoUploadWorker(
                         videosManager.updateHighuploaded(true, currentVideo?.clientId ?: "")
                     }
 
-
-                    beginProcess()
+                    getVideosFromDB()
                 }
                 .subscribe({
 
@@ -498,6 +504,9 @@ class VideoUploadWorker(
             videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             retriever.release()
 
+        } catch (ia: IllegalArgumentException) {
+            videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
+            retriever.release()
         }
         this.width = width
         this.height = height
