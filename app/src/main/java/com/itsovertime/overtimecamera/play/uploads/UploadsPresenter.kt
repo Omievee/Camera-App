@@ -1,7 +1,6 @@
 package com.itsovertime.overtimecamera.play.uploads
 
 import androidx.work.Data
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -39,7 +38,7 @@ class UploadsPresenter(
 
     fun onRefresh() {
         view.swipe2RefreshIsTrue()
-        subscribeToVideosFromGallery()
+        loadVideoGallery()
     }
 
     fun onResume() {
@@ -70,15 +69,15 @@ class UploadsPresenter(
     var list = mutableListOf<SavedVideo>()
     var debug: Boolean = false
     private var managerDisposable: Disposable? = null
-    private fun subscribeToVideosFromGallery() {
+    private fun loadVideoGallery() {
         managerDisposable = manager
-            .subscribeToVideoGallery()
+            .onGetVideosForUploadScreen()
             .map {
                 this.list.clear()
                 this.list.addAll(it)
             }
             .subscribe({
-                view.updateAdapter(list, debug, userEnabledHDUploads)
+                view.updateAdapter(list.asReversed(), debug, userEnabledHDUploads)
                 view.swipe2RefreshIsFalse()
             }, {
                 println("throwable: ${it.printStackTrace()}")
@@ -93,7 +92,6 @@ class UploadsPresenter(
         networkDisposable = wifiManager
             .subscribeToNetworkUpdates()
             .subscribe({
-                println("This is ... $it")
                 when (it) {
                     NETWORK_TYPE.WIFI -> view.updateMsg()
                     NETWORK_TYPE.MOBILE_LTE -> view.updateMsg()

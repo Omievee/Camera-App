@@ -24,7 +24,6 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         if (hd) {
             holder?.updateHighProgress(prog)
         } else holder?.updateMediumProgress(prog)
-
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {

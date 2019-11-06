@@ -37,15 +37,18 @@ class VideosManagerImpl(
     val context: OTApplication,
     val manager: UploadsManager
 ) : VideosManager {
+    override fun onGetVideosForUploadScreen(): Single<List<SavedVideo>> {
+        return db!!.videoDao()
+            .getVideosForUpload()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
     override fun onGetVideosForUpload(): Single<List<SavedVideo>> {
         return db!!.videoDao()
             .getVideosForUpload()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnSuccess {
-                println("success....")
-            }
-
     }
 
     @SuppressLint("CheckResult")
@@ -444,9 +447,7 @@ class VideosManagerImpl(
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
-            println("size from DB: ${it.size}")
             videosList.addAll(it.asReversed())
-            subject.onNext(videosList)
             val totalUploaded = mutableListOf<SavedVideo>()
             totalUploaded.addAll(it)
             totalUploaded.removeIf {
@@ -465,34 +466,17 @@ class VideosManagerImpl(
                     val vid = iter.next()
                     if (vid.mediumRes.isNullOrEmpty()) {
                         determineTrim(vid)
-                        iter.remove()
                     }
-
-                    if (!File(vid.mediumRes).exists()) {
+                    if (!File(vid.mediumRes).exists() || File(vid.mediumRes).readBytes().isEmpty()) {
                         resetUploadStateForCurrentVideo(vid)
                     }
                 }
-
-//                for (savedVideo in videosList) {
-//                    try {
-//                        if (File(savedVideo.mediumRes).readBytes().isEmpty()) {
-//                            println("EMPTY!")
-//                            when (savedVideo.trimmedVidPath.isNullOrEmpty()) {
-//                                true -> transcodeVideo(savedVideo, File(savedVideo.highRes))
-//                                else -> transcodeVideo(savedVideo, File(savedVideo.trimmedVidPath))
-//                            }
-//                        }
-//                    } catch (fnf: FileNotFoundException) {
-//                        resetUploadStateForCurrentVideo(savedVideo)
-//                    }
-//                }
             }, {
                 it.printStackTrace()
             })
     }
 
     override fun onNotifyWorkIsDone() {
-        println("WORK IS DONE NOTIFICATION! ")
         val vid = videosList.find { !it.mediumUploaded }
         if (vid != null) {
             println("video is.... .$vid")

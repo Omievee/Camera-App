@@ -160,11 +160,13 @@ class VideoUploadWorker(
                     "&& FaveHQ List:: ${faveListHQ.size} " +
                     "&& StandardHQ List:: ${standardListHQ.size}"
         )
+        val mainListsAreEmpty = standardList.size == 0 && faveList.size == 0
+        val HDListsAreEmpty = standardListHQ.isNotEmpty() && faveListHQ.isNotEmpty()
 
         when {
-            standardList.size == 0 && faveList.size == 0 && standardListHQ.isNotEmpty() && faveListHQ.isNotEmpty() -> {
-                videosManager.onNotifyWorkIsDone()
-            }
+//            mainListsAreEmpty && HDListsAreEmpty -> {
+//                videosManager.onNotifyWorkIsDone()
+//            }
 
             faveList.size > 0 -> {
                 progressManager.onCurrentUploadProcess(

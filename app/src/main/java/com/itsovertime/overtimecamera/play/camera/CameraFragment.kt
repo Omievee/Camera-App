@@ -350,7 +350,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             maximumZoomLevel = char?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) ?: 0F
             val currentFingerSpacing: Float;
             val point = event?.pointerCount ?: 0
-            if (point > 1) { //Multi touch.
+            if (point == 2) { //Multi touch.
                 currentFingerSpacing = getFingerSpacing(event ?: return false);
                 var delta = 0.1f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {

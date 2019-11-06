@@ -97,11 +97,22 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
             .into(thumbNail)
     }
 
+    var value: Int = 0
     fun updateMediumProgress(value: Int) {
-        medQProgressBar.setProgress(value, true)
+        this.value += value
+        if (value == 100) {
+            check1.visibility = View.VISIBLE
+        }
+        medQProgressBar.setProgress(
+            this.value, true
+        )
     }
 
     fun updateHighProgress(value: Int) {
-        highQProgressBar.setProgress(value, true)
+        this.value += value
+        if (value == 100) {
+            check2.visibility = View.VISIBLE
+        }
+        highQProgressBar.setProgress(this.value, true)
     }
 }

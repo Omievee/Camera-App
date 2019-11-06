@@ -30,4 +30,5 @@ interface VideosManager {
     fun determineTrim(savedVideo: SavedVideo)
     fun onNotifyWorkIsDone()
     fun onGetVideosForUpload(): Single<List<SavedVideo>>
+    fun onGetVideosForUploadScreen(): Single<List<SavedVideo>>
 }
