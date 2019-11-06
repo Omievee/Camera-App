@@ -32,6 +32,15 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     SwipeRefreshLayout.OnRefreshListener {
 
 
+    override fun updateMsg() {
+        uploadsMessage.text = ""
+    }
+
+    override fun noVideos() {
+        uploadsMessage.text = getString(R.string.uploads_finished)
+        uploadsIcon.visibility = View.INVISIBLE
+    }
+
     override fun setNoVideosMsg() {
         uploadedText.text = ""
     }
@@ -82,15 +91,18 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     override fun setUploadingHdVideo() {
         uploadsMessage.text = getString(R.string.upload_queue_uploading_hd)
         uploadsIcon.setImageResource(R.drawable.upload)
+        uploadsIcon.visibility = View.VISIBLE
     }
 
     override fun setUploadingMedVideo() {
         uploadsMessage.text = getString(R.string.upload_queue_uploading_med)
         uploadsIcon.setImageResource(R.drawable.upload)
+        uploadsIcon.visibility = View.VISIBLE
     }
 
     override fun onNotifyOfPendingHDUploads() {
         uploadsIcon.setImageResource(R.drawable.warning)
+        uploadsIcon.visibility = View.VISIBLE
         uploadsMessage.text =
             getString(R.string.hd_videos_ready)
 
@@ -99,10 +111,12 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
 
     var isHD: Boolean = false
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
-        println("button?? $buttonView")
-        println("button?? $isChecked")
-        if (UserPreference.isChecked != isChecked) {
-            if (this.list?.isNotEmpty() != false) {
+
+        if (!UserPreference.isChecked) {
+            val high = this.list?.find {
+                !it.highUploaded
+            }
+            if (high != null) {
                 AlertDialog.Builder(this, R.style.CUSTOM_ALERT).apply {
                     setTitle(getString(R.string.hd_uploads_title))
                     setMessage(getString(R.string.hd_uploads_msg))
@@ -115,7 +129,6 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
                     switchHD.isChecked = false
                     d.dismiss()
                 }.create().show()
-
             } else {
                 switchHD.isChecked = false
                 showToast(getString(R.string.no_hd_videos_msg))
@@ -124,7 +137,6 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
             switchHD.isChecked = false
             UserPreference.isChecked = false
         }
-
     }
 
     private fun showToast(msg: String) {
@@ -142,8 +154,8 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     }
 
     override fun displayNoNetworkConnection() {
-        uploadsIcon.visibility = View.INVISIBLE
-        // uploadsMessage.text = "No active connection..."
+        uploadsIcon.setImageResource(R.drawable.warning)
+        uploadsMessage.text = "Check network connection..."
     }
 
     override fun displayWifiReady() {

@@ -14,5 +14,8 @@ interface UploadsInt {
     fun setUploadingHdVideo()
     fun setUploadingMedVideo()
     fun setNoVideosMsg()
+    fun noVideos()
+    fun updateMsg()
+
 
 }

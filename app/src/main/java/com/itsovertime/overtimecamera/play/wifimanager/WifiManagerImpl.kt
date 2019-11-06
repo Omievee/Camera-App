@@ -27,6 +27,7 @@ class WifiManagerImpl(val context: OTApplication) : WifiManager {
 
     private var networkType: NETWORK_TYPE? = null
     private fun determineNetworkType(networkInfo: NetworkInfo) {
+        println("Network Info is.... ${networkInfo.isConnected}")
         networkType = if (networkInfo.isConnected && networkInfo.subtype == 0) {
             NETWORK_TYPE.WIFI
         } else if (networkInfo.isConnected && networkInfo.subtype == TelephonyManager.NETWORK_TYPE_LTE) {

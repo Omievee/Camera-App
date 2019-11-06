@@ -495,7 +495,8 @@ class VideosManagerImpl(
         println("WORK IS DONE NOTIFICATION! ")
         val vid = videosList.find { !it.mediumUploaded }
         if (vid != null) {
-            doWork()
+            println("video is.... .$vid")
+//            doWork()
         }
     }
 

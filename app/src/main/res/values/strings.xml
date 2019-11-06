@@ -53,5 +53,6 @@
     <string name="hd_uploads_msg">A Wifi connection is recommended for HD uploads. Please do not close the app until uploads are complete</string>
     <string name="hd_uploads_button">Upload</string>
     <string name="hd_uploads_cancel_button">Cancel</string>
+    <string name="uploads_finished">Finished Uploads</string>
 
 </resources>

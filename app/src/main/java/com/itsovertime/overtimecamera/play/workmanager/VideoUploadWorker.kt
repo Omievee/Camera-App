@@ -147,25 +147,37 @@ class VideoUploadWorker(
         instanceDisp?.dispose()
         tokenDisposable?.dispose()
 
-        println("List Sizes :::: ${faveList.size} && ${standardList.size} && ${faveListHQ.size} && ${standardListHQ.size}")
+
         val notifMsg = when (hdReady) {
             true -> "Uploading High Quality Videos.."
             else -> "Uploading Medium Quality Videos.."
         }
 
+        println(
+            "List Sizes :::: " +
+                    "Fave List:: ${faveList.size} " +
+                    "&& Standard List::${standardList.size} " +
+                    "&& FaveHQ List:: ${faveListHQ.size} " +
+                    "&& StandardHQ List:: ${standardListHQ.size}"
+        )
+
         when {
+            standardList.size == 0 && faveList.size == 0 && standardListHQ.isNotEmpty() && faveListHQ.isNotEmpty() -> {
+                videosManager.onNotifyWorkIsDone()
+            }
+
             faveList.size > 0 -> {
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
                     if (!File(faveList[0].mediumRes).exists()) {
+                        println("NONEXISTANT --- ${faveList[0]}")
                         videosManager.resetUploadStateForCurrentVideo(faveList[0])
                     } else {
                         getVideoInstance(faveList[0])
                         faveList.remove(faveList[0])
                     }
-
                 }
             }
             standardList.size > 0 -> {
@@ -174,6 +186,7 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     if (!File(standardList[0].mediumRes).exists()) {
+                        println("NONEXISTANT --- ${standardList[0]}")
                         videosManager.resetUploadStateForCurrentVideo(standardList[0])
                     } else {
                         getVideoInstance(standardList[0])
@@ -201,15 +214,14 @@ class VideoUploadWorker(
                     UploadsMessage.Pending_High
                 )
             }
-
+            faveList.size == 0 && standardList.size == 0 && standardListHQ.size == 0 && faveListHQ.size == 0 -> {
+                println("FINISHED WORK!!")
+                videosManager.onNotifyWorkIsDone()
+                progressManager.onCurrentUploadProcess(
+                    UploadsMessage.Finished
+                )
+            }
         }
-        if (standardList.size == 0 && faveList.size == 0) {
-            videosManager.onNotifyWorkIsDone()
-        }
-
-        if (faveList.size == 0 && standardList.size == 0 && standardListHQ.size == 0 && faveListHQ.size == 0) progressManager.onCurrentUploadProcess(
-            UploadsMessage.Finished
-        )
     }
 
     private var currentVideo: SavedVideo? = null

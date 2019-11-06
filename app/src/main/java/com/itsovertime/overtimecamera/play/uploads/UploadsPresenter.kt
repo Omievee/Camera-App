@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.uploads
 
 import androidx.work.Data
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -54,11 +55,11 @@ class UploadsPresenter(
             progressManager
                 .onUpdateUploadMessage()
                 .subscribe({
-                    println("THIS IS THE MSG $it")
                     when (it) {
                         UploadsMessage.Uploading_High -> view.setUploadingHdVideo()
                         UploadsMessage.Uploading_Medium -> view.setUploadingMedVideo()
                         UploadsMessage.Pending_High -> view.onNotifyOfPendingHDUploads()
+                        UploadsMessage.Finished -> view.noVideos()
                         else -> view.setNoVideosMsg()
                     }
                 }, {
@@ -85,7 +86,6 @@ class UploadsPresenter(
     }
 
     private var networkDisposable: Disposable? = null
-    var isWifiEnabled: Boolean = false
     var userEnabledHDUploads: Boolean = false
 
     private fun subscribeToNetworkUpdates() {
@@ -93,27 +93,18 @@ class UploadsPresenter(
         networkDisposable = wifiManager
             .subscribeToNetworkUpdates()
             .subscribe({
+                println("This is ... $it")
                 when (it) {
-                    NETWORK_TYPE.WIFI -> {
-                        //TODO: logic to prompt for HD uploads & toggle...
-                        isWifiEnabled = true
-                        view.displayWifiReady()
-                    }
-//                    NETWORK_TYPE.MOBILE_LTE -> view.display
-//                    NETWORK_TYPE.MOBILE_EDGE -> view.display
-                    else -> {
-                        isWifiEnabled = false
-                        view.displayNoNetworkConnection()
-                    }
+                    NETWORK_TYPE.WIFI -> view.updateMsg()
+                    NETWORK_TYPE.MOBILE_LTE -> view.updateMsg()
+                    else -> view.displayNoNetworkConnection()
                 }
             }, {
                 it.printStackTrace()
             })
     }
 
-
     fun hdSwitchWasChecked(isChecked: Boolean) {
-        println("checked.... $isChecked")
         if (isChecked) {
             val inputData = Data.Builder().apply {
                 putBoolean("HD", true)
