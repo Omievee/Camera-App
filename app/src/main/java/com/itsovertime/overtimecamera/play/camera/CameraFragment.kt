@@ -334,58 +334,64 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var zoom: Rect? = null;
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        return CAMERA == 0
+        return if (CAMERA == 0) {
+            pinchToZoom(event)
+        } else false
     }
 
     private fun pinchToZoom(event: MotionEvent?): Boolean {
-        return true
-//        try {
-//            val rect = manager?.getCameraCharacteristics("0")
-//                ?.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
-//                ?: return false;
-//            val currentFingerSpacing: Float;
-//            if (event?.pointerCount == 2) { //Multi touch.
-//                currentFingerSpacing = getFingerSpacing(event);
-//                var delta = 0.05f; //Control this value to control the zooming sensibility
-//                if (fingerSpacing != 0) {
-//                    if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
-//                        if ((maximumZoomLevel - zoomLevel) <= delta) {
-//                            delta = maximumZoomLevel - zoomLevel;
-//                        }
-//                        zoomLevel += delta;
-//                    } else if (currentFingerSpacing < fingerSpacing) { //Don't over zoom-out
-//                        if ((zoomLevel - delta) < 1f) {
-//                            delta = zoomLevel - 1f;
-//                        }
-//                        zoomLevel -= delta;
-//                    }
-//                    val ratio =
-//                        1 / zoomLevel; //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
-//                    //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
-//                    val croppedWidth = rect.width() - (rect.width() * ratio).roundToInt();
-//                    val croppedHeight =
-//                        rect.height() - (rect.height() * ratio).roundToInt();
-//                    //Finally, zoom represents the zoomed visible area
-//                    zoom = Rect(
-//                        croppedWidth / 2, croppedHeight / 2,
-//                        rect.width() - croppedWidth / 2, rect.height() - croppedHeight / 2
-//                    );
-//                  //  previewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
-//                }
-//                fingerSpacing = currentFingerSpacing.toInt()
-//            } else { //Single touch point, needs to return true in order to detect one more touch point
-//                return true;
-//            }
-////            captureSession?.setRepeatingRequest(
-////                previewRequestBuilder.build(),
-////                null,
-////                null
-////            );
-//            return true;
-//        } catch (e: Exception) {
-//            //Error handling up to you
-//            return true;
-//        }
+        println("Pinch to zoom method...")
+        try {
+            val rect = manager?.getCameraCharacteristics("0")
+                ?.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+                ?: return false;
+            val char = manager?.getCameraCharacteristics("0")
+
+            maximumZoomLevel = char?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) ?: 0F
+            val currentFingerSpacing: Float;
+            val point = event?.pointerCount ?: 0
+            if (point > 1) { //Multi touch.
+                currentFingerSpacing = getFingerSpacing(event ?: return false);
+                var delta = 0.1f; //Control this value to control the zooming sensibility
+                if (fingerSpacing != 0) {
+                    if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
+                        if ((maximumZoomLevel - zoomLevel) <= delta) {
+                            delta = maximumZoomLevel - zoomLevel;
+                        }
+                        zoomLevel += delta;
+                    } else if (currentFingerSpacing < fingerSpacing) { //Don't over zoom-out
+                        if ((zoomLevel - delta) < 1f) {
+                            delta = zoomLevel - 1f;
+                        }
+                        zoomLevel -= delta;
+                    }
+                    val ratio =
+                        1 / zoomLevel; //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
+                    //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
+                    val croppedWidth = rect.width() - (rect.width() * ratio).roundToInt();
+                    val croppedHeight =
+                        rect.height() - (rect.height() * ratio).roundToInt();
+                    //Finally, zoom represents the zoomed visible area
+                    zoom = Rect(
+                        croppedWidth / 2, croppedHeight / 2,
+                        rect.width() - croppedWidth / 2, rect.height() - croppedHeight / 2
+                    );
+                    previewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+                }
+                fingerSpacing = currentFingerSpacing.toInt()
+            } else { //Single touch point, needs to return true in order to detect one more touch point
+                return true;
+            }
+            captureSession?.setRepeatingRequest(
+                previewRequestBuilder.build(),
+                null,
+                null
+            );
+            return true;
+        } catch (e: Exception) {
+            //Error handling up to you
+            return true;
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -519,9 +525,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                         CaptureRequest.CONTROL_MODE,
                                         CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
                                     )
-//                                    if (zoom != null) {
-//                                        set(CaptureRequest.SCALER_CROP_REGION, zoom)
-//                                    }
                                     set(
                                         CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
                                         Range<Int>(60, 60)
