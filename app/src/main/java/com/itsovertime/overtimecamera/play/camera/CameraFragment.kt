@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Matrix
+import android.graphics.Rect
 import android.graphics.SurfaceTexture
 import android.graphics.drawable.Drawable
 import android.hardware.camera2.*
@@ -56,6 +57,8 @@ import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
@@ -249,7 +252,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             R.id.uploadButton -> {
                 paused = true
                 progress.visibility = View.VISIBLE
-                deleteUnsavedFile()
                 releaseCamera(tapToSave = false)
                 startActivity(Intent(context, UploadsActivity::class.java))
             }
@@ -322,12 +324,75 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         hahaIcon.setOnClickListener(this)
         eventTitle.setOnClickListener(this)
         uploadButton.setOnClickListener(this)
+        cameraView.setOnTouchListener(this)
 
     }
 
+    var fingerSpacing = 0;
+    var zoomLevel = 1f;
+    var maximumZoomLevel: Float = 0F;
+    var zoom: Rect? = null;
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        return gestureDetector.onTouchEvent(event)
+        return CAMERA == 0
+    }
+
+    private fun pinchToZoom(event: MotionEvent?): Boolean {
+        return true
+//        try {
+//            val rect = manager?.getCameraCharacteristics("0")
+//                ?.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+//                ?: return false;
+//            val currentFingerSpacing: Float;
+//            if (event?.pointerCount == 2) { //Multi touch.
+//                currentFingerSpacing = getFingerSpacing(event);
+//                var delta = 0.05f; //Control this value to control the zooming sensibility
+//                if (fingerSpacing != 0) {
+//                    if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
+//                        if ((maximumZoomLevel - zoomLevel) <= delta) {
+//                            delta = maximumZoomLevel - zoomLevel;
+//                        }
+//                        zoomLevel += delta;
+//                    } else if (currentFingerSpacing < fingerSpacing) { //Don't over zoom-out
+//                        if ((zoomLevel - delta) < 1f) {
+//                            delta = zoomLevel - 1f;
+//                        }
+//                        zoomLevel -= delta;
+//                    }
+//                    val ratio =
+//                        1 / zoomLevel; //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
+//                    //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
+//                    val croppedWidth = rect.width() - (rect.width() * ratio).roundToInt();
+//                    val croppedHeight =
+//                        rect.height() - (rect.height() * ratio).roundToInt();
+//                    //Finally, zoom represents the zoomed visible area
+//                    zoom = Rect(
+//                        croppedWidth / 2, croppedHeight / 2,
+//                        rect.width() - croppedWidth / 2, rect.height() - croppedHeight / 2
+//                    );
+//                  //  previewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+//                }
+//                fingerSpacing = currentFingerSpacing.toInt()
+//            } else { //Single touch point, needs to return true in order to detect one more touch point
+//                return true;
+//            }
+////            captureSession?.setRepeatingRequest(
+////                previewRequestBuilder.build(),
+////                null,
+////                null
+////            );
+//            return true;
+//        } catch (e: Exception) {
+//            //Error handling up to you
+//            return true;
+//        }
+    }
+
+    @SuppressWarnings("deprecation")
+    fun getFingerSpacing(event: MotionEvent): Float {
+        val x = event.getX(0) - event.getX(1);
+        val y = event.getY(0) - event.getY(1);
+        return sqrt(x * x + y * y)
     }
 
     private var gestureDetector =
@@ -335,7 +400,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             override fun onDoubleTap(e: MotionEvent?): Boolean {
                 return true
             }
-
         })
 
     private var CAMERA: Int = 0
@@ -455,6 +519,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                         CaptureRequest.CONTROL_MODE,
                                         CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
                                     )
+//                                    if (zoom != null) {
+//                                        set(CaptureRequest.SCALER_CROP_REGION, zoom)
+//                                    }
                                     set(
                                         CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
                                         Range<Int>(60, 60)
