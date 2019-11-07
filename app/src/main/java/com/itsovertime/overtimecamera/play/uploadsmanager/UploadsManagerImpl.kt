@@ -70,14 +70,9 @@ class UploadsManagerImpl(
     ): Observable<EncryptedResponse> {
         val md5: String = when (hdReady) {
             true -> {
-                when (currentVideo?.trimmedVidPath) {
-                    null -> md5(File(currentVideo?.highRes).readBytes()) ?: ""
-                    "" -> md5(File(currentVideo?.highRes).readBytes()) ?: ""
-                    else -> md5(File(currentVideo?.trimmedVidPath).readBytes()) ?: ""
-                }
+                md5(File(currentVideo?.trimmedVidPath).readBytes()) ?: ""
             }
             false -> {
-                println("MD5 logic started... ${File(currentVideo?.mediumRes).exists()}")
                 md5(File(currentVideo?.mediumRes).readBytes()) ?: ""
             }
         }

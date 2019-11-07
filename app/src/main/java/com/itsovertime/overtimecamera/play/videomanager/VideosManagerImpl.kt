@@ -5,6 +5,7 @@ import android.graphics.Movie
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
+import android.system.ErrnoException
 import androidx.lifecycle.LifecycleOwner
 import androidx.work.*
 import com.crashlytics.android.Crashlytics
@@ -193,8 +194,9 @@ class VideosManagerImpl(
         val retriever = MediaMetadataRetriever()
         try {
             retriever.setDataSource(context, Uri.fromFile(File(file.highRes)))
-            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: ""
+            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             val timeInMillisec = time.toLong() / 1000
+            println("Time from video length..... $timeInMillisec")
             retriever.release()
             return timeInMillisec > file.max_video_length
         } catch (e: IllegalArgumentException) {
@@ -204,9 +206,7 @@ class VideosManagerImpl(
     }
 
     override fun determineTrim(savedVideo: SavedVideo) {
-        if (isVideoDurationLongerThanMaxTime(savedVideo)) {
-            trimVideo(savedVideo)
-        } else transcodeVideo(savedVideo, File(savedVideo.highRes))
+        trimVideo(savedVideo)
     }
 
     private var seekToEndOf = "-sseof"
@@ -221,6 +221,7 @@ class VideosManagerImpl(
     private fun trimVideo(savedVideo: SavedVideo) {
         val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
         val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
+        val MB = "1024*1024"
         val complexCommand = arrayOf(
             //seek to end of video
             seekToEndOf,
@@ -235,6 +236,8 @@ class VideosManagerImpl(
             // video codec to write to
             videoCodec,
             // value of codec - H264
+            "-b:v",
+            "16*$MB",
             codecValue,
             // C command dictates what to do w/ file
             commandCCopy,
@@ -393,9 +396,11 @@ class VideosManagerImpl(
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
                 exception?.printStackTrace()
+                resetUploadStateForCurrentVideo(savedVideo)
             }
 
             override fun onTranscodeCompleted() {
+                println("SUCCESS FROM TRANSCODE")
                 loadFromDB()
             }
         }
@@ -461,16 +466,6 @@ class VideosManagerImpl(
                     doWork()
                     isFirstRun = false
                 }
-                val iter = videosList.iterator()
-                while (iter.hasNext()) {
-                    val vid = iter.next()
-                    if (vid.mediumRes.isNullOrEmpty()) {
-                        determineTrim(vid)
-                    }
-                    if (!File(vid.mediumRes).exists() || File(vid.mediumRes).readBytes().isEmpty()) {
-                        resetUploadStateForCurrentVideo(vid)
-                    }
-                }
             }, {
                 it.printStackTrace()
             })
@@ -497,13 +492,17 @@ class VideosManagerImpl(
 
     @SuppressLint("CheckResult")
     override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
-        val video = File(currentVideo.mediumRes ?: "")
-        val trim = File(currentVideo.trimmedVidPath ?: "")
-        if (video.exists()) {
-            video.delete()
+        if (!currentVideo.mediumRes.isNullOrEmpty()) {
+            val video = File(currentVideo.mediumRes)
+            if (video.exists()) {
+                video.delete()
+            }
         }
-        if (trim.exists()) {
-            trim.delete()
+        if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
+            val trim = File(currentVideo.trimmedVidPath)
+            if (trim.exists()) {
+                trim.delete()
+            }
         }
         Single.fromCallable {
             with(videoDao) {
@@ -516,10 +515,14 @@ class VideosManagerImpl(
                     mediumVidPath = ""
                 )
             }
+            with(videoDao) {
+                this?.getVideoForUpload(currentVideo.clientId)
+            }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                loadFromDB()
+                println("successful reset... starting transcode")
+                it?.let { it1 -> determineTrim(it1) }
             }, {
                 it.printStackTrace()
             })

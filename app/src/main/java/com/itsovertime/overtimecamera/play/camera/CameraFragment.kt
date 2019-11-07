@@ -331,7 +331,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var fingerSpacing = 0;
     var zoomLevel = 1f;
     var maximumZoomLevel: Float = 0F;
-    var zoom: Rect? = null;
+    var zoom: Rect? = null
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         return if (CAMERA == 0) {
@@ -340,14 +340,14 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     private fun pinchToZoom(event: MotionEvent?): Boolean {
-        println("Pinch to zoom method...")
         try {
             val rect = manager?.getCameraCharacteristics("0")
                 ?.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
-                ?: return false;
+                ?: return false
             val char = manager?.getCameraCharacteristics("0")
 
-            maximumZoomLevel = char?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) ?: 0F
+            maximumZoomLevel =
+                char?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) ?: 0F
             val currentFingerSpacing: Float;
             val point = event?.pointerCount ?: 0
             if (point == 2) { //Multi touch.
@@ -386,7 +386,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 previewRequestBuilder.build(),
                 null,
                 null
-            );
+            )
             return true;
         } catch (e: Exception) {
             //Error handling up to you
@@ -525,6 +525,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                         CaptureRequest.CONTROL_MODE,
                                         CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
                                     )
+//                                    if (zoom != null) {
+//                                        set(CaptureRequest.SCALER_CROP_REGION, zoom);
+//                                    }
                                     set(
                                         CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
                                         Range<Int>(60, 60)
@@ -849,15 +852,15 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw RuntimeException("Time out waiting to lock overtimecamera opening.")
             }
-            val cameraId = when (camera) {
-                0 -> {
-                    manager?.cameraIdList?.get(0)
-                }
-                else -> manager?.cameraIdList?.get(1)
-            } ?: "0"
 
-            println("WE ARE HERE.... $cameraId")
+            manager?.cameraIdList?.forEach {
+                println("This is an ID for camera .... $it")
+            }
+            val cameraId = manager?.cameraIdList?.get(camera) ?: "0"
+
             val characteristics = manager?.getCameraCharacteristics(cameraId)
+            val c = manager?.getCameraCharacteristics(cameraId)
+
             val map = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
                 ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
@@ -872,7 +875,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             mediaRecorder = MediaRecorder()
             txView?.setTransform(Matrix())
             manager?.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
-
         } catch (e: CameraAccessException) {
             activity?.finishAffinity()
         } catch (e: NullPointerException) {

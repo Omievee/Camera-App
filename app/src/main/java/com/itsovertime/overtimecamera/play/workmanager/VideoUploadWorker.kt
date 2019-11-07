@@ -316,11 +316,7 @@ class VideoUploadWorker(
         if (currentVideo?.id != "") {
             chunkToUpload = baseChunkSize
             if (currentVideo?.mediumUploaded == true && hdReady == true) {
-                fullBytes = when (currentVideo?.trimmedVidPath) {
-                    null -> File(currentVideo?.highRes).readBytes()
-                    "" -> File(currentVideo?.highRes).readBytes()
-                    else -> File(currentVideo?.trimmedVidPath).readBytes()
-                }
+                fullBytes = File(currentVideo?.trimmedVidPath).readBytes()
                 currentVideo?.uploadState = UploadState.UPLOADING_HIGH
                 upload()
             } else {
@@ -420,9 +416,12 @@ class VideoUploadWorker(
             complete = uploadsManager
                 .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
                 .doOnError {
+                    println("ERROR FROM COMPLETE!!! ${it.message}")
+                    println("ERROR FROM COMPLETE!!! ${it.cause}")
                     videosManager.resetUploadStateForCurrentVideo(
                         currentVideo = currentVideo ?: return@doOnError
                     )
+                    it.printStackTrace()
                 }
                 .subscribe({
                     if (it.code() == 502) {
@@ -431,9 +430,7 @@ class VideoUploadWorker(
                     when (it.body()?.status) {
                         CompleteResponse.COMPLETING.name -> pingServerForStatus()
                         CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
-                        else -> videosManager.resetUploadStateForCurrentVideo(
-                            currentVideo = currentVideo ?: return@subscribe
-                        )
+                        else -> pingServerForStatus()
                     }
                 }, {
                     it.printStackTrace()
@@ -446,13 +443,10 @@ class VideoUploadWorker(
     @Synchronized
     private fun finalizeUpload(upload: Upload?) {
         val path = when (hdReady) {
-            true -> when (currentVideo?.trimmedVidPath) {
-                null -> currentVideo?.highRes
-                "" -> currentVideo?.highRes
-                else -> currentVideo?.trimmedVidPath
-            }
+            true -> currentVideo?.trimmedVidPath
             else -> currentVideo?.mediumRes
         }
+
         synchronized(this) {
             try {
                 getVideoDimensions(path = path ?: "")
