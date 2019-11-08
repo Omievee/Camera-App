@@ -221,7 +221,6 @@ class VideosManagerImpl(
     private fun trimVideo(savedVideo: SavedVideo) {
         val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
         val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
-        val MB = "1024*1024"
         val complexCommand = arrayOf(
             //seek to end of video
             seekToEndOf,
@@ -236,9 +235,9 @@ class VideosManagerImpl(
             // video codec to write to
             videoCodec,
             // value of codec - H264
-            "-b:v",
-            "16*$MB",
             codecValue,
+            "-b:v",
+            "16 MB",
             // C command dictates what to do w/ file
             commandCCopy,
             // copy the file to given location
@@ -463,7 +462,7 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 if (videosList.size > 0 && isFirstRun) {
-                    doWork()
+                    // doWork()
                     isFirstRun = false
                 }
             }, {
@@ -474,7 +473,6 @@ class VideosManagerImpl(
     override fun onNotifyWorkIsDone() {
         val vid = videosList.find { !it.mediumUploaded }
         if (vid != null) {
-            println("video is.... .$vid")
 //            doWork()
         }
     }

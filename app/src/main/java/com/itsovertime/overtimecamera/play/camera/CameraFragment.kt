@@ -334,9 +334,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var zoom: Rect? = null
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        return if (CAMERA == 0) {
-            pinchToZoom(event)
-        } else false
+        return false
+//        return if (CAMERA == 0) {
+//          //  pinchToZoom(event)
+//        } else false
     }
 
     private fun pinchToZoom(event: MotionEvent?): Boolean {
@@ -400,13 +401,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         val y = event.getY(0) - event.getY(1);
         return sqrt(x * x + y * y)
     }
-
-    private var gestureDetector =
-        GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onDoubleTap(e: MotionEvent?): Boolean {
-                return true
-            }
-        })
 
     private var CAMERA: Int = 0
     @SuppressLint("CheckResult")
@@ -524,6 +518,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                                     set(
                                         CaptureRequest.CONTROL_MODE,
                                         CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON
+                                    )
+                                    set(
+                                        CaptureRequest.CONTROL_MODE,
+                                        CaptureRequest.CONTROL_SCENE_MODE_ACTION
                                     )
 //                                    if (zoom != null) {
 //                                        set(CaptureRequest.SCALER_CROP_REGION, zoom);
@@ -860,6 +858,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
             val characteristics = manager?.getCameraCharacteristics(cameraId)
             val c = manager?.getCameraCharacteristics(cameraId)
+            println("Characteristics.... $c.")
 
             val map = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
                 ?: throw RuntimeException("Cannot get available preview/video sizes")
