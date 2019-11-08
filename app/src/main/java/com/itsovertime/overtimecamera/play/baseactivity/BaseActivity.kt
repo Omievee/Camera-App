@@ -18,6 +18,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.MotionEvent
 import android.view.OrientationEventListener
 import android.view.View
 import android.view.WindowManager
@@ -42,11 +43,13 @@ import kotlinx.android.synthetic.main.events_item_view.*
 import kotlinx.android.synthetic.main.events_recycler_view.*
 import kotlinx.android.synthetic.main.permissions_view.*
 import kotlinx.android.synthetic.main.phone_verification.*
+import java.util.*
 import javax.inject.Inject
 
 
 class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButtonClick,
     View.OnClickListener {
+
     override fun disregardPermissions() {
         phoneVerificationView.visibility = View.GONE
     }
@@ -70,7 +73,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun logOut() {
         viewPager.visibility = View.GONE
-      //  showToast(getString(R.string.auth_logout_not_authorized))
+        //  showToast(getString(R.string.auth_logout_not_authorized))
         phoneVerificationView.visibility = View.VISIBLE
 //        finishAffinity()
     }
@@ -207,12 +210,10 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
 
         window.apply {
-            setFlags(
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-            )
             addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
+
+
 
         println("INTENT::: ${intent?.extras?.get("logIn")}")
         when (intent?.extras?.get("logIn")) {
@@ -229,6 +230,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         }
         scheduleJob()
     }
+
 
 
     private fun scheduleJob() {
@@ -268,7 +270,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     override fun onResume() {
         super.onResume()
         presenter.retrieveFullUser()
-
     }
 
 

@@ -52,7 +52,6 @@ android {
 }
 
 val WORKER_VERSION = "2.2.0"
-
 dependencies {
 
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
@@ -112,16 +111,14 @@ dependencies {
     //NEW Transcoder:
     implementation("com.otaliastudios:transcoder:0.7.3")
     //Old Transcoder:
-    implementation ("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
+    implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
     //FFMPJEG - trimming
     implementation("com.writingminds:FFmpegAndroid:0.3.2")
     //MP4 Parser - trimming
     implementation("org.mp4parser:isoparser:1.9.27")
 
     //Fabric
-    implementation("com.crashlytics.sdk.android:crashlytics:2.10.1@aar") {
-        isTransitive = true
-    }
+    implementation("com.crashlytics.sdk.android:crashlytics:2.10.1@aar") { isTransitive = true }
     //FireBase
     implementation("com.google.firebase:firebase-core:16.0.0")
     //MixPanel
@@ -133,9 +130,11 @@ dependencies {
     implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
     implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
     implementation("androidx.work:work-runtime-ktx:$WORKER_VERSION")
-
+    //swipe
+    implementation("com.github.colorgreen:swipe-touch-listener:v1.3")
     //Testing
     testImplementation("junit:junit:4.12")
     androidTestImplementation("com.android.support.test:runner:1.0.2")
     androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
+
 }

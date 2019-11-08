@@ -4,13 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.SurfaceTexture
-import android.graphics.drawable.Drawable
 import android.hardware.camera2.*
-import android.icu.text.SimpleDateFormat
 import android.media.CamcorderProfile
 import android.media.MediaRecorder
 import android.os.Bundle
@@ -22,24 +19,24 @@ import android.util.Range
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.*
+import android.view.View.OnTouchListener
 import android.widget.Chronometer
 import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.colorgreen.swiper.OnSwipeTouchListener
+import com.colorgreen.swiper.SwipeAction
+import com.colorgreen.swiper.SwipeActionListener
 import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.events.EventsAdapter
 import com.itsovertime.overtimecamera.play.events.EventsClickListener
 import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.model.Event
-import com.itsovertime.overtimecamera.play.model.Tagged_Teams
-import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
 import com.itsovertime.overtimecamera.play.uploads.UploadsActivity
-import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.support.AndroidSupportInjection
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -52,7 +49,6 @@ import kotlinx.android.synthetic.main.upload_button_view.*
 import java.io.File
 import java.io.IOException
 import java.lang.Long
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -61,8 +57,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 
-class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouchListener {
-
+class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListener {
 
     override fun setUpDefaultEvent(event: Event?) {
         eventTitle.text = event?.name ?: "Unknown Event"
@@ -71,12 +66,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     override fun hideEventsRV() {
-        hiddenEvents.visibility = View.GONE
+
     }
 
     override fun openEvents() {
-        hiddenEvents.visibility = View.VISIBLE
+
     }
+
 
     var taggedAthletesArray = arrayListOf<String>()
     private val taggedListener: TaggedAthleteClickListener = object : TaggedAthleteClickListener {
@@ -105,7 +101,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             presenter.hideEvents()
             eventSpace.visibility = View.VISIBLE
             selectedEvent = event
-
 
             setUpTaggedUsersView(event)
         }
@@ -332,14 +327,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     var zoomLevel = 1f;
     var maximumZoomLevel: Float = 0F;
     var zoom: Rect? = null
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-        return false
-//        return if (CAMERA == 0) {
-//          //  pinchToZoom(event)
-//        } else false
-    }
-
     private fun pinchToZoom(event: MotionEvent?): Boolean {
         try {
             val rect = manager?.getCameraCharacteristics("0")
@@ -353,7 +340,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             val point = event?.pointerCount ?: 0
             if (point == 2) { //Multi touch.
                 currentFingerSpacing = getFingerSpacing(event ?: return false);
-                var delta = 0.1f; //Control this value to control the zooming sensibility
+                var delta = 0.2f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {
                     if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
                         if ((maximumZoomLevel - zoomLevel) <= delta) {
@@ -381,6 +368,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 }
                 fingerSpacing = currentFingerSpacing.toInt()
             } else { //Single touch point, needs to return true in order to detect one more touch point
+                hideNavigation()
                 return true;
             }
             captureSession?.setRepeatingRequest(
@@ -388,11 +376,38 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 null,
                 null
             )
-            return true;
+            return true
         } catch (e: Exception) {
             //Error handling up to you
             return true;
         }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        when (v?.id) {
+            R.id.cameraView -> {
+                return if (CAMERA == 0) {
+                    pinchToZoom(event)
+                } else false
+            }
+            R.id.eventSpace -> {
+                println("Action is.... ${event?.action}")
+                when (event?.action) {
+                    MotionEvent.ACTION_MOVE -> {
+                        //presenter.expand(hiddenEvents)
+                        //hiddenEvents.visibility = View.VISIBLE
+                        return true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        //  presenter.collapse(hiddenEvents)
+                        //hiddenEvents.visibility = View.GONE
+                        return true
+                    }
+                }
+            }
+        }
+        return true
     }
 
     @SuppressWarnings("deprecation")
@@ -406,11 +421,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     @SuppressLint("CheckResult")
     @Synchronized
     override fun switchCameras() {
-        println("pre sync..")
+
         CAMERA = if (CAMERA == 0) 1 else 0
         selfieCameraEngaged = CAMERA != 0
 
-        println("Camera is... $CAMERA")
+
         synchronized(lock = this) {
             deleteUnsavedFile()
             Single.fromCallable {
@@ -436,7 +451,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
             mediaRecorder?.release()
             mediaRecorder = null
         } catch (e: InterruptedException) {
-            throw RuntimeException("Interrupted while trying to lock overtimecamera closing.", e)
+            throw RuntimeException(
+                "Interrupted while trying to lock overtimecamera closing.",
+                e
+            )
         } finally {
             cameraOpenCloseLock.release()
         }
@@ -450,18 +468,27 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         val recorder = MediaRecorder()
 
 
+
+        when (sensorOrientation) {
+            SENSOR_ORIENTATION_DEFAULT_DEGREES -> recorder.setOrientationHint(
+                DEFAULT_ORIENTATIONS.get(
+                    rotation ?: 0
+                )
+            )
+            SENSOR_ORIENTATION_INVERSE_DEGREES -> recorder.setOrientationHint(
+                INVERSE_ORIENTATIONS.get(
+                    rotation ?: 0
+                )
+            )
+        }
+
+
         val profile =
             when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
                 true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
                 else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
             }
 
-        when (sensorOrientation) {
-            SENSOR_ORIENTATION_DEFAULT_DEGREES ->
-                recorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation ?: 0))
-            SENSOR_ORIENTATION_INVERSE_DEGREES ->
-                recorder.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation ?: 0))
-        }
         recorder.apply {
             setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -640,9 +667,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     }
 
-    companion object {
-        private const val TIMEOUT = 5000L
-    }
 
     override fun onAttach(context: Context?) {
         AndroidSupportInjection.inject(this)
@@ -662,8 +686,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
     }
 
     var selectedEvent: Event? = null
-
-
     private var evAdapter: EventsAdapter? = null
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -671,30 +693,39 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
         presenter.setUpClicks()
         presenter.onCreate()
         getEventData()
-        eventsRecycler.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-        athleteRecycler.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+        eventsRecycler.layoutManager =
+            LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+        athleteRecycler.layoutManager =
+            LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         detectOrientation()
 
-        val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
-        val params = navSpace.layoutParams as ConstraintLayout.LayoutParams
-        if (resourceId > 0) {
-            params.height = resources.getDimensionPixelSize(resourceId)
-        } else {
-            params.height = 0
-        }
-
-        navSpace.layoutParams = params
+        eventSpace.setOnTouchListener(this)
     }
+
+    private fun hideNavigation() {
+        val timerTask = object : TimerTask() {
+            override fun run() {
+                activity?.runOnUiThread {
+                    activity?.window?.decorView.apply {
+                        this?.systemUiVisibility =
+                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    }
+                }
+            }
+        }
+        Timer().schedule(timerTask, 3000)
+    }
+
 
     var orientation: OrientationEventListener? = null
     private fun detectOrientation() {
         orientation = object : OrientationEventListener(context) {
             override fun onOrientationChanged(orientation: Int) {
                 when (orientation) {
-                    in 0..65 -> {
+                    in 0..75 -> {
                         showWarnings()
                     }
-                    in 360 downTo 290 -> {
+                    in 360 downTo 280 -> {
                         showWarnings()
                     }
                     in 65..165 -> {
@@ -767,7 +798,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
 
     override fun onResume() {
         super.onResume()
-        println("ON RESUME FROM FRAGMENT")
+        activity?.window?.decorView?.setOnSystemUiVisibilityChangeListener { vis ->
+            if (vis and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
+                hideNavigation()
+            }
+        }
         if (pausedView.visibility == View.GONE && this.fragmentIsVisibleToUser != false) {
             paused = false
             progress.visibility = View.VISIBLE
@@ -851,20 +886,38 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, View.OnTouch
                 throw RuntimeException("Time out waiting to lock overtimecamera opening.")
             }
 
-            manager?.cameraIdList?.forEach {
-                println("This is an ID for camera .... $it")
-            }
+
             val cameraId = manager?.cameraIdList?.get(camera) ?: "0"
 
-            val characteristics = manager?.getCameraCharacteristics(cameraId)
-            val c = manager?.getCameraCharacteristics(cameraId)
-            println("Characteristics.... $c.")
 
-            val map = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                ?: throw RuntimeException("Cannot get available preview/video sizes")
-            sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+            val characteristics = manager?.getCameraCharacteristics(cameraId)
+            characteristics?.availableCaptureRequestKeys?.forEach {
+                println("KEY! $it")
+            }
+            val map =
+                characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                    ?: throw RuntimeException("Cannot get available preview/video sizes")
+            sensorOrientation =
+                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
 
+            when (camera) {
+                0 -> {
+                    if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        txView?.setAspectRatio(videoSize?.width ?: 0, videoSize?.height ?: 0)
+                    } else {
+                        txView?.setAspectRatio(videoSize?.height ?: 0, videoSize?.width ?: 0)
+                    }
+                }
+                else -> {
+                    if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        txView?.setAspectRatio(videoSize?.width ?: 0, videoSize?.height ?: 0)
+                    } else {
+                        txView?.setAspectRatio(videoSize?.height ?: 0, videoSize?.width ?: 0)
+
+                    }
+                }
+            }
             if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 txView?.setAspectRatio(videoSize?.width ?: 0, videoSize?.height ?: 0)
             } else {

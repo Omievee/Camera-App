@@ -13,7 +13,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:clickable="true"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -41,10 +40,20 @@
             android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:background="@drawable/gradient"
-            app:layout_constraintBottom_toTopOf="@id/bottomGuide"
+            app:layout_constraintBottom_toBottomOf="@id/bottomGuide"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/verticalGuide"
+            app:layout_constraintTop_toTopOf="@id/topGuide" />
+
+    <com.itsovertime.overtimecamera.play.events.EventsRecyclerView
+            android:id="@+id/hiddenEvents"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/bottomGuide"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/topGuide" />
+
 
     <TextView
             android:id="@+id/selfieMsg"
@@ -75,16 +84,6 @@
             app:layout_constraintStart_toStartOf="@id/verticalGuide"
             app:layout_constraintTop_toBottomOf="@id/topGuide" />
 
-
-    <com.itsovertime.overtimecamera.play.camera.EventsRecyclerView
-            android:id="@+id/hiddenEvents"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/bottomGuide"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/vert"
-            app:layout_constraintTop_toBottomOf="@id/topGuide" />
 
     <androidx.constraintlayout.widget.Guideline
             android:id="@+id/verticalGuide"
@@ -131,20 +130,10 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:background="@android:drawable/screen_background_dark_transparent"
-            app:layout_constraintBottom_toTopOf="@id/navSpace"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/bottomGuide" />
-
-    <View
-            android:id="@+id/navSpace"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:background="@android:drawable/screen_background_dark_transparent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/bottomView" />
+            app:layout_constraintTop_toTopOf="@id/bottomGuide" />
 
 
     <androidx.constraintlayout.widget.Guideline
@@ -170,7 +159,7 @@
             android:background="@drawable/circular_shape"
             android:progress="0"
             android:progressDrawable="@drawable/circular_progress"
-            app:layout_constraintBottom_toTopOf="@id/navSpace"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottomView" />
@@ -184,7 +173,7 @@
             android:rotation="90"
             android:src="@drawable/favebutton"
             android:visibility="invisible"
-            app:layout_constraintBottom_toTopOf="@id/navSpace"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/tapToSave"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottomView" />
@@ -197,7 +186,7 @@
             android:rotation="90"
             android:src="@drawable/haha"
             android:visibility="invisible"
-            app:layout_constraintBottom_toTopOf="@id/navSpace"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/tapToSave"
             app:layout_constraintTop_toTopOf="@id/bottomView" />
@@ -262,7 +251,7 @@
             android:rotation="90"
             android:textAllCaps="false"
             android:textColor="@color/OT_White"
-            app:layout_constraintBottom_toTopOf="@id/navSpace"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottomView" />

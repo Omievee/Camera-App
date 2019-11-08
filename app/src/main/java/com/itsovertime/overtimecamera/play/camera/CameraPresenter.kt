@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.CountDownTimer
 import android.os.Environment
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.ProgressBar
@@ -216,19 +217,22 @@ class CameraPresenter(
     }
 
     fun expand(v: View) {
-        v.measure(
-            ConstraintLayout.LayoutParams.WRAP_CONTENT,
-            ConstraintLayout.LayoutParams.WRAP_CONTENT
-        )
+        val matchParentMeasureSpec =
+            View.MeasureSpec.makeMeasureSpec((v.parent as View).width, View.MeasureSpec.EXACTLY)
+        val wrapContentMeasureSpec =
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        v.measure(matchParentMeasureSpec, wrapContentMeasureSpec)
         val targetHeight = v.measuredHeight
 
-        v.layoutParams.height = 1
+        // Older versions of android (pre API 21) cancel animations for views with a height of 0.
+        v.layoutParams.width = 1
         v.visibility = View.VISIBLE
-
-        val animate = object : Animation() {
+        val a = object : Animation() {
             override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                v.layoutParams.height =
-                    if (interpolatedTime == 1f) ConstraintLayout.LayoutParams.WRAP_CONTENT else (targetHeight * interpolatedTime).toInt()
+                v.layoutParams.width = if (interpolatedTime == 1f)
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                else
+                    (targetHeight * interpolatedTime).toInt()
                 v.requestLayout()
             }
 
@@ -237,18 +241,19 @@ class CameraPresenter(
             }
         }
 
-        animate.duration = 2000
-        v.startAnimation(animate)
+        // Expansion speed of 1dp/ms
+        a.duration = (targetHeight / v.context.resources.displayMetrics.density).toInt().toLong()
+        v.startAnimation(a)
     }
 
     fun collapse(v: View) {
-        val initialHeight = v.measuredHeight
+        val initialHeight = v.measuredWidth
         val a = object : Animation() {
             override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
                 if (interpolatedTime == 1f) {
                     v.visibility = View.GONE
                 } else {
-                    v.layoutParams.height =
+                    v.layoutParams.width =
                         initialHeight - (initialHeight * interpolatedTime).toInt()
                     v.requestLayout()
                 }
@@ -258,7 +263,9 @@ class CameraPresenter(
                 return true
             }
         }
-        a.duration = 2000
+
+        // Collapse speed of 1dp/ms
+        a.duration = (initialHeight / v.context.resources.displayMetrics.density).toInt().toLong()
         v.startAnimation(a)
     }
 
