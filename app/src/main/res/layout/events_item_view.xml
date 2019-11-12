@@ -1,51 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/view"
-    android:layout_width="wrap_content"
-    android:layout_height="180dp"
-    android:layout_gravity="fill_vertical"
-    android:clickable="true"
-    android:focusable="true"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:rotation="90">
-
-
-    <TextView
-        android:id="@+id/name"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/view"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:lines="1"
-        android:maxLines="1"
-        android:text="Miami Pro Leauge"
-        android:textAlignment="center"
-        android:textColor="@color/OT_White"
-        android:textSize="16sp" />
+        android:layout_height="match_parent"
+        android:layout_gravity="fill_vertical"
+        android:layout_margin="@dimen/margin_standard"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="@dimen/margin_standard"
+        android:screenOrientation="landscape">
 
 
-    <TextView
-        android:id="@+id/date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:autoSizeMaxTextSize="15sp"
-        android:autoSizeMinTextSize="13sp"
-        android:gravity="center"
-        android:lines="1"
-        android:maxLines="1"
-        android:text="8/20/1998"
-        android:textColor="@color/OT_White" />
+    <com.itsovertime.overtimecamera.play.events.VerticalTextView
+            android:id="@+id/name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:lines="1"
+            android:maxLines="1"
+            android:padding="@dimen/margin_half"
+            android:text="Miami Pro Leauge"
+            android:textColor="@color/OT_White"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-   <TextView
-       android:id="@+id/location"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:autoSizeMaxTextSize="15sp"
-       android:autoSizeMinTextSize="13sp"
-       android:gravity="center"
-       android:lines="2"
-       android:maxLines="2"
-       android:text="Talos, Greece"
-       android:textColor="@color/OT_White" />
-</LinearLayout>
+
+    <com.itsovertime.overtimecamera.play.events.VerticalTextView
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:autoSizeMaxTextSize="15sp"
+            android:autoSizeMinTextSize="13sp"
+            android:gravity="center"
+            android:lines="1"
+            android:maxLines="1"
+            android:padding="@dimen/margin_half"
+            android:text="8/20/1998"
+            android:textColor="@color/OT_White"
+            android:textSize="14sp"
+            android:visibility="visible"
+            app:layout_constraintEnd_toStartOf="@id/name"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    <com.itsovertime.overtimecamera.play.events.VerticalTextView
+            android:id="@+id/location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:autoSizeMaxTextSize="15sp"
+            android:autoSizeMinTextSize="13sp"
+            android:gravity="center"
+            android:padding="@dimen/margin_half"
+            android:text="Talos, Greece"
+            android:textColor="@color/OT_White"
+            android:textSize="16sp"
+            android:visibility="visible"
+            app:layout_constraintEnd_toStartOf="@id/date"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

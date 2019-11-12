@@ -3,34 +3,33 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/mainView"
         android:layout_width="wrap_content"
+
         android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:background="@android:color/transparent"
-        android:rotation="90">
+        android:layout_gravity="center_vertical">
 
     <ImageView
             android:id="@+id/dot"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/margin_standard"
             android:src="@drawable/orange_dot"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/eventTitle"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintBottom_toTopOf="@id/eventTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/eventTitle" />
 
 
-    <TextView
+    <com.itsovertime.overtimecamera.play.events.VerticalTextView
             android:id="@+id/eventTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
             android:lines="1"
             android:maxLines="1"
-            android:padding="@dimen/margin_standard"
+            android:padding="@dimen/margin_double"
+            android:text="helloooo"
             android:textColor="@color/OT_White"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/drop"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
 
@@ -38,10 +37,11 @@
             android:id="@+id/drop"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:rotation="90"
             android:src="@drawable/menu_triangle"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/eventTitle"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/eventTitle"
+            app:layout_constraintTop_toBottomOf="@id/eventTitle" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

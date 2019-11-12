@@ -11,7 +11,12 @@ class EventsAdapter(
 ) : RecyclerView.Adapter<BaseViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-        return BaseViewHolder(EventsView(parent.context))
+        return BaseViewHolder(EventsView(parent.context).apply {
+            layoutParams = ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        })
     }
 
     override fun getItemCount(): Int {

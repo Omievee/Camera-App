@@ -42,13 +42,20 @@ class EventsView(context: Context, attributeSet: AttributeSet? = null) :
         location.text = "${event.address}"
 
         val eventDate = event.starts_at
+        val sdf = SimpleDateFormat("MM-dd")
         val d = (SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")).parse(
             eventDate?.replace(
                 "Z$",
                 "+0000"
             )
         )
-
+        sdf.format(d)
         date.text = d.toString()
+        date.apply {
+            alpha = .6F
+        }
+        location.apply {
+            alpha = .6F
+        }
     }
 }

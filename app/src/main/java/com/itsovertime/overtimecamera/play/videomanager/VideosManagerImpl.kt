@@ -462,7 +462,7 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 if (videosList.size > 0 && isFirstRun) {
-                    // doWork()
+                    doWork()
                     isFirstRun = false
                 }
             }, {
@@ -473,7 +473,7 @@ class VideosManagerImpl(
     override fun onNotifyWorkIsDone() {
         val vid = videosList.find { !it.mediumUploaded }
         if (vid != null) {
-//            doWork()
+            doWork()
         }
     }
 

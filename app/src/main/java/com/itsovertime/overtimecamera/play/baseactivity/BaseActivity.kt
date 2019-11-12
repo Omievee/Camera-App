@@ -11,6 +11,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
@@ -52,6 +53,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun disregardPermissions() {
         phoneVerificationView.visibility = View.GONE
+//        setUpAdapter()
     }
 
     override fun onRefreshFragmentFromDisconnect() {
@@ -64,7 +66,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun hideKeyboard() {
         val imm = this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-        var view = currentFocus;
+        var view = currentFocus
         if (view == null) {
             view = View(this);
         }
@@ -73,6 +75,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun logOut() {
         viewPager.visibility = View.GONE
+        viewPager.adapter = null
         //  showToast(getString(R.string.auth_logout_not_authorized))
         phoneVerificationView.visibility = View.VISIBLE
 //        finishAffinity()
@@ -80,6 +83,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
 
     override fun beginPermissionsFlow() {
         permissions.visibility = View.VISIBLE
+        viewPager.visibility = View.VISIBLE
     }
 
 
@@ -88,9 +92,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         Manifest.permission.CAMERA,
         Manifest.permission.RECORD_AUDIO,
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.ACCESS_COARSE_LOCATION,
-        Manifest.permission.ACCESS_FINE_LOCATION
+        Manifest.permission.READ_EXTERNAL_STORAGE
+//        Manifest.permission.ACCESS_COARSE_LOCATION,
+//        Manifest.permission.ACCESS_FINE_LOCATION
     )
     var accessCodeSent: Boolean = false
     override fun displaySignUpPage() {
@@ -117,6 +121,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         accessCodeSent = true
         enterNumber.text.clear()
         changeNum.visibility = View.VISIBLE
+        changeNum.apply {
+            alpha = .6F
+        }
         enter.text = getString(R.string.auth_enter_access_code)
         descrip.text = "We sent an access code to $number"
         resend.visibility = View.VISIBLE
@@ -162,9 +169,11 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     private fun submitAccessCode() {
         if (enterNumber.text.toString() == "" || enterNumber.text.toString().length < 3) {
             showToast(getString(R.string.auth_invalid_access_code))
+        } else {
+            presenter.submitAccessCode(code = enterNumber.text.toString())
+            enterNumber.text.clear()
         }
-        presenter.submitAccessCode(code = enterNumber.text.toString())
-        enterNumber.text.clear()
+
     }
 
     private fun submitNumberForCode() {
@@ -181,11 +190,11 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     }
 
     override fun setUpAdapter() {
+        println("setting up adapter..")
         permissions.visibility = View.GONE
         phoneVerificationView.visibility = View.GONE
         viewPager.visibility = View.VISIBLE
         viewPager.adapter = CustomViewPageAdapter(supportFragmentManager, true)
-
     }
 
     override fun displayAlert() {
@@ -213,9 +222,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
 
-
-
-        println("INTENT::: ${intent?.extras?.get("logIn")}")
         when (intent?.extras?.get("logIn")) {
             true -> {
                 if (UserPreference.accessAllowed) {
@@ -230,7 +236,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         }
         scheduleJob()
     }
-
 
 
     private fun scheduleJob() {

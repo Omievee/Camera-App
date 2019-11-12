@@ -22,14 +22,13 @@ import android.view.*
 import android.view.View.OnTouchListener
 import android.widget.Chronometer
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.colorgreen.swiper.OnSwipeTouchListener
-import com.colorgreen.swiper.SwipeAction
-import com.colorgreen.swiper.SwipeActionListener
 import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.events.EventsAdapter
@@ -58,7 +57,6 @@ import kotlin.math.sqrt
 
 
 class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListener {
-
     override fun setUpDefaultEvent(event: Event?) {
         eventTitle.text = event?.name ?: "Unknown Event"
         selectedEvent = event
@@ -90,6 +88,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         }
         evAdapter = EventsAdapter(eventList, listener)
         eventsRecycler.adapter = evAdapter
+        eventsRecycler.smoothScrollToPosition(eventList?.size ?: 0)
         eventList?.forEach {
             setUpTaggedUsersView(it)
         }
@@ -97,11 +96,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     val listener: EventsClickListener = object : EventsClickListener {
         override fun onEventSelected(event: Event) {
+            eventTitle.text = ""
             presenter.changeEvent(event)
             presenter.hideEvents()
             eventSpace.visibility = View.VISIBLE
             selectedEvent = event
-
+            hiddenEvents.visibility = View.GONE
             setUpTaggedUsersView(event)
         }
     }
@@ -199,8 +199,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     override fun onClick(v: View?) {
         when (v?.id) {
+            R.id.eventSpace ->{
+                hiddenEvents.visibility = View.VISIBLE
+            }
+            R.id.eventTitle -> {
+                hiddenEvents.visibility = View.VISIBLE
+            }
             R.id.cancel -> hideEventsRV()
-            R.id.eventTitle -> presenter.displayHiddenView()
             R.id.tapToSave -> {
                 progress.visibility = View.VISIBLE
                 when (CAMERA) {
@@ -308,19 +313,18 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     @SuppressLint("ClickableViewAccessibility")
     override fun setUpClicks() {
-
         progressBar.setOnClickListener(this)
         tapToSave.setOnClickListener(this)
         favoriteIcon.setOnClickListener(this)
         selfieButton.setOnClickListener(this)
         pauseButton.setOnClickListener(this)
         pausedView.setOnClickListener(this)
+        eventSpace.setOnClickListener(this)
         cancel.setOnClickListener(this)
         hahaIcon.setOnClickListener(this)
         eventTitle.setOnClickListener(this)
         uploadButton.setOnClickListener(this)
         cameraView.setOnTouchListener(this)
-
     }
 
     var fingerSpacing = 0;
@@ -329,22 +333,22 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     var zoom: Rect? = null
     private fun pinchToZoom(event: MotionEvent?): Boolean {
         try {
-            val rect = manager?.getCameraCharacteristics("0")
-                ?.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
-                ?: return false
+            val rect =
+                manager?.getCameraCharacteristics("0")?.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+                    ?: return false
             val char = manager?.getCameraCharacteristics("0")
 
             maximumZoomLevel =
                 char?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) ?: 0F
-            val currentFingerSpacing: Float;
+            val currentFingerSpacing: Float
             val point = event?.pointerCount ?: 0
             if (point == 2) { //Multi touch.
                 currentFingerSpacing = getFingerSpacing(event ?: return false);
-                var delta = 0.2f; //Control this value to control the zooming sensibility
+                var delta = 0.3f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {
                     if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
                         if ((maximumZoomLevel - zoomLevel) <= delta) {
-                            delta = maximumZoomLevel - zoomLevel;
+                            delta = maximumZoomLevel - zoomLevel
                         }
                         zoomLevel += delta;
                     } else if (currentFingerSpacing < fingerSpacing) { //Don't over zoom-out
@@ -378,30 +382,35 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             )
             return true
         } catch (e: Exception) {
-            //Error handling up to you
-            return true;
+            e.printStackTrace()
+            return true
         }
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         when (v?.id) {
+            R.id.eventSpace -> {
+                println("wtf")
+                hiddenEvents.visibility = View.VISIBLE
+            }
             R.id.cameraView -> {
                 return if (CAMERA == 0) {
                     pinchToZoom(event)
                 } else false
             }
             R.id.eventSpace -> {
-                println("Action is.... ${event?.action}")
+                println("Action is.... ${event}")
                 when (event?.action) {
+
                     MotionEvent.ACTION_MOVE -> {
-                        //presenter.expand(hiddenEvents)
-                        //hiddenEvents.visibility = View.VISIBLE
+//                        presenter.expand(hiddenEvents)
+                        hiddenEvents.visibility = View.VISIBLE
                         return true
                     }
                     MotionEvent.ACTION_UP -> {
-                        //  presenter.collapse(hiddenEvents)
-                        //hiddenEvents.visibility = View.GONE
+//                        presenter.collapse(hiddenEvents)
+                        hiddenEvents.visibility = View.GONE
                         return true
                     }
                 }
@@ -694,12 +703,14 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         presenter.onCreate()
         getEventData()
         eventsRecycler.layoutManager =
-            LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+            LinearLayoutManager(context, RecyclerView.HORIZONTAL, true)
+
         athleteRecycler.layoutManager =
             LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-        detectOrientation()
+        // detectOrientation()
 
-        eventSpace.setOnTouchListener(this)
+        val swipe = context?.let { SimpleTouchListener(it) }
+        cameraView.setOnTouchListener(swipe)
     }
 
     private fun hideNavigation() {
@@ -713,7 +724,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 }
             }
         }
-        Timer().schedule(timerTask, 3000)
+        Timer().schedule(timerTask, 1000)
     }
 
 
@@ -1018,10 +1029,83 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         fun onUploadsButtonClicked()
         fun onRefreshFragmentFromDisconnect()
     }
+
+    inner class SimpleTouchListener(ctx: Context) : OnTouchListener {
+
+        private val gestureDetector: GestureDetector
+
+        init {
+            gestureDetector = GestureDetector(ctx, GestureListener())
+        }
+
+        override fun onTouch(v: View, event: MotionEvent): Boolean {
+            return gestureDetector.onTouchEvent(event)
+        }
+
+        private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+
+            override fun onDown(e: MotionEvent): Boolean {
+                return true
+            }
+
+            override fun onFling(
+                e1: MotionEvent,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+
+                var result = false
+                try {
+                    val diffY = e2.y - e1.y
+                    val diffX = e2.x - e1.x
+                    if (Math.abs(diffX) > Math.abs(diffY)) {
+                        if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                            if (diffX > 0) {
+                                onSwipeRight()
+                            } else {
+                                onSwipeLeft()
+                            }
+                            result = true
+                        }
+                    } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffY > 0) {
+                            onSwipeBottom()
+                        } else {
+                            onSwipeTop()
+                        }
+                        result = true
+                    }
+                } catch (exception: Exception) {
+                    exception.printStackTrace()
+                }
+
+                return result
+            }
+
+            private val SWIPE_THRESHOLD = 100
+            private val SWIPE_VELOCITY_THRESHOLD = 100
+
+        }
+
+        fun onSwipeRight() {
+            hiddenEvents.visibility = View.GONE
+        }
+
+        fun onSwipeLeft() {
+            hiddenEvents.visibility = View.VISIBLE
+        }
+
+        fun onSwipeTop() {}
+
+        fun onSwipeBottom() {}
+    }
 }
 
 class Compare : Comparator<Size> {
     override fun compare(lhs: Size, rhs: Size) =
         Long.signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
 }
+
+
 
