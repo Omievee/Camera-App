@@ -22,6 +22,7 @@ import android.view.*
 import android.view.View.OnTouchListener
 import android.widget.Chronometer
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
@@ -77,8 +78,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         override fun onAtheleteSelected(id: String) {
             taggedAthletesArray.add(id)
         }
-
     }
+
     var taggedAdapter = TaggedPlayersAdapter(listener = taggedListener)
     var newData = mutableListOf<TaggedPlayersPresentation>()
     var old = taggedAdapter.data?.data ?: emptyList()
@@ -199,8 +200,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.eventSpace ->{
-                hiddenEvents.visibility = View.VISIBLE
+            R.id.eventSpace -> {
+                determineVisibility()
             }
             R.id.eventTitle -> {
                 hiddenEvents.visibility = View.VISIBLE
@@ -252,10 +253,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             R.id.uploadButton -> {
                 paused = true
                 progress.visibility = View.VISIBLE
+                deleteUnsavedFile()
                 releaseCamera(tapToSave = false)
                 startActivity(Intent(context, UploadsActivity::class.java))
             }
         }
+    }
+
+    private fun determineVisibility() {
+        if (hiddenEvents.visibility == View.VISIBLE) {
+            hiddenEvents.visibility = View.GONE
+        } else hiddenEvents.visibility = View.VISIBLE
     }
 
     private fun tapToSaveRegularRecording() {
@@ -342,7 +350,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 char?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) ?: 0F
             val currentFingerSpacing: Float
             val point = event?.pointerCount ?: 0
-            if (point == 2) { //Multi touch.
+            if (point == 2 && event?.action == MotionEvent.ACTION_MOVE) { //Multi touch.
                 currentFingerSpacing = getFingerSpacing(event ?: return false);
                 var delta = 0.3f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {
@@ -371,8 +379,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                     previewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
                 }
                 fingerSpacing = currentFingerSpacing.toInt()
-            } else { //Single touch point, needs to return true in order to detect one more touch point
-                hideNavigation()
+            } else if (point == 1) { //Single touch point, needs to return true in order to detect one more touch point
+                println("??? ${event}")
+                if (event?.action == MotionEvent.ACTION_UP) {
+                    determineVisibility()
+                }
                 return true;
             }
             captureSession?.setRepeatingRequest(
@@ -390,31 +401,26 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         when (v?.id) {
-            R.id.eventSpace -> {
-                println("wtf")
-                hiddenEvents.visibility = View.VISIBLE
-            }
             R.id.cameraView -> {
                 return if (CAMERA == 0) {
                     pinchToZoom(event)
                 } else false
             }
-            R.id.eventSpace -> {
-                println("Action is.... ${event}")
-                when (event?.action) {
-
-                    MotionEvent.ACTION_MOVE -> {
-//                        presenter.expand(hiddenEvents)
-                        hiddenEvents.visibility = View.VISIBLE
-                        return true
-                    }
-                    MotionEvent.ACTION_UP -> {
-//                        presenter.collapse(hiddenEvents)
-                        hiddenEvents.visibility = View.GONE
-                        return true
-                    }
-                }
-            }
+//            R.id.eventSpace -> {
+//                println("Action is.... ${event}")
+//                when (event?.action) {
+//                    MotionEvent.ACTION_MOVE -> {
+////                        presenter.expand(hiddenEvents)
+//                        hiddenEvents.visibility = View.VISIBLE
+//                        return true
+//                    }
+//                    MotionEvent.ACTION_UP -> {
+////                        presenter.collapse(hiddenEvents)
+//                        hiddenEvents.visibility = View.GONE
+//                        return true
+//                    }
+//                }
+//            }
         }
         return true
     }
@@ -476,8 +482,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
         val recorder = MediaRecorder()
 
-
-
         when (sensorOrientation) {
             SENSOR_ORIENTATION_DEFAULT_DEGREES -> recorder.setOrientationHint(
                 DEFAULT_ORIENTATIONS.get(
@@ -506,10 +510,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
             setOutputFile(videoFile?.absolutePath)
             setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight)
-            setVideoEncodingBitRate(profile.videoBitRate)
-            setAudioEncodingBitRate(profile.audioBitRate)
+            setVideoEncodingBitRate(32 * 1024 * 1024)
+            setAudioEncodingBitRate(128 * 1000)
             setVideoFrameRate(profile.videoFrameRate)
         }
+
+        println("RECORDER::::: ${profile.videoBitRate}")
         mediaRecorder = recorder
     }
 
@@ -519,6 +525,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         if (cameraDevice == null || txView?.isAvailable == false) {
             return
         }
+
+
         try {
             setUpMediaRecorder()
             mediaRecorder?.prepare()
@@ -604,30 +612,41 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     private fun startMediaRecorder() {
         when (CAMERA) {
             0 -> {
-                println("======================== ${taggedAthletesArray.size}")
-                favoriteIcon?.let {
-                    if (it.visibility == View.VISIBLE) {
-                        runnable = Runnable {
-                            activity?.runOnUiThread {
-                                favoriteIcon?.let {
-                                    it.visibility = View.INVISIBLE
-                                }
-                                hahaIcon?.let {
-                                    it.visibility = View.INVISIBLE
-                                }
-                                taggedView?.let {
-                                    it.visibility = View.INVISIBLE
-                                }
-                                if (taggedAthletesArray.isNotEmpty()) {
-                                    presenter.updateTaggedAthletesField(taggedAthletesArray)
-                                    taggedAthletesArray.clear()
+                val hideViews = object : TimerTask() {
+                    override fun run() {
+                        favoriteIcon?.let {
+                            if (it.visibility == View.VISIBLE) {
+                                activity?.runOnUiThread {
+                                    favoriteIcon?.let {
+                                        it.visibility = View.INVISIBLE
+                                    }
+                                    hahaIcon?.let {
+                                        it.visibility = View.INVISIBLE
+                                    }
+                                    taggedView?.let {
+                                        it.visibility = View.INVISIBLE
+                                    }
+                                    if (taggedAthletesArray.isNotEmpty()) {
+                                        presenter.updateTaggedAthletesField(taggedAthletesArray)
+                                        taggedAthletesArray.clear()
+                                    }
+
                                 }
                             }
                         }
                     }
                 }
+                val register = object : TimerTask() {
+                    override fun run() {
+                        presenter.register()
+                    }
+                }
+
+                println("======================== ${taggedAthletesArray.size}")
+
                 mediaRecorder?.start()
-                Handler().postDelayed(runnable, 5000)
+                Timer().schedule(hideViews, 4000)
+                Timer().schedule(register, 5000)
             }
             1 -> {
                 recording = false
@@ -707,24 +726,18 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
         athleteRecycler.layoutManager =
             LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-        // detectOrientation()
+        detectOrientation()
 
-        val swipe = context?.let { SimpleTouchListener(it) }
-        cameraView.setOnTouchListener(swipe)
-    }
+        cameraView.setOnTouchListener(this)
 
-    private fun hideNavigation() {
-        val timerTask = object : TimerTask() {
-            override fun run() {
-                activity?.runOnUiThread {
-                    activity?.window?.decorView.apply {
-                        this?.systemUiVisibility =
-                            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN
-                    }
-                }
-            }
+        val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        val params = navSpace.layoutParams as ConstraintLayout.LayoutParams
+        if (resourceId > 0) {
+            params.height = resources.getDimensionPixelSize(resourceId)
+        } else {
+            params.height = 0
         }
-        Timer().schedule(timerTask, 1000)
+        navSpace.layoutParams = params
     }
 
 
@@ -736,13 +749,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                     in 0..75 -> {
                         showWarnings()
                     }
-                    in 360 downTo 280 -> {
+                    in 380 downTo 320 -> {
                         showWarnings()
                     }
                     in 65..165 -> {
                         hideWarnings()
                     }
-                    in 290 downTo 235 -> {
+                    in 310 downTo 235 -> {
                         hideWarnings()
                     }
                     else -> {
@@ -750,7 +763,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                     }
                 }
             }
-
         }
         if (!BuildConfig.DEBUG) {
             orientation?.enable()
@@ -803,17 +815,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
     override fun onPause() {
+        deleteUnsavedFile()
         releaseCamera(tapToSave = false)
         super.onPause()
     }
 
     override fun onResume() {
         super.onResume()
-        activity?.window?.decorView?.setOnSystemUiVisibilityChangeListener { vis ->
-            if (vis and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
-                hideNavigation()
-            }
-        }
         if (pausedView.visibility == View.GONE && this.fragmentIsVisibleToUser != false) {
             paused = false
             progress.visibility = View.VISIBLE
@@ -925,7 +933,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                         txView?.setAspectRatio(videoSize?.width ?: 0, videoSize?.height ?: 0)
                     } else {
                         txView?.setAspectRatio(videoSize?.height ?: 0, videoSize?.width ?: 0)
-
                     }
                 }
             }
@@ -1028,77 +1035,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     interface UploadsButtonClick {
         fun onUploadsButtonClicked()
         fun onRefreshFragmentFromDisconnect()
-    }
-
-    inner class SimpleTouchListener(ctx: Context) : OnTouchListener {
-
-        private val gestureDetector: GestureDetector
-
-        init {
-            gestureDetector = GestureDetector(ctx, GestureListener())
-        }
-
-        override fun onTouch(v: View, event: MotionEvent): Boolean {
-            return gestureDetector.onTouchEvent(event)
-        }
-
-        private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
-
-            override fun onDown(e: MotionEvent): Boolean {
-                return true
-            }
-
-            override fun onFling(
-                e1: MotionEvent,
-                e2: MotionEvent,
-                velocityX: Float,
-                velocityY: Float
-            ): Boolean {
-
-                var result = false
-                try {
-                    val diffY = e2.y - e1.y
-                    val diffX = e2.x - e1.x
-                    if (Math.abs(diffX) > Math.abs(diffY)) {
-                        if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                            if (diffX > 0) {
-                                onSwipeRight()
-                            } else {
-                                onSwipeLeft()
-                            }
-                            result = true
-                        }
-                    } else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffY > 0) {
-                            onSwipeBottom()
-                        } else {
-                            onSwipeTop()
-                        }
-                        result = true
-                    }
-                } catch (exception: Exception) {
-                    exception.printStackTrace()
-                }
-
-                return result
-            }
-
-            private val SWIPE_THRESHOLD = 100
-            private val SWIPE_VELOCITY_THRESHOLD = 100
-
-        }
-
-        fun onSwipeRight() {
-            hiddenEvents.visibility = View.GONE
-        }
-
-        fun onSwipeLeft() {
-            hiddenEvents.visibility = View.VISIBLE
-        }
-
-        fun onSwipeTop() {}
-
-        fun onSwipeBottom() {}
     }
 }
 

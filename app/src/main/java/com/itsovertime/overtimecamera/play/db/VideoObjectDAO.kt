@@ -29,6 +29,9 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET trimmedVidPath = :trimmedVidPath WHERE clientId = :lastID")
     fun updateTrimVideoPath(trimmedVidPath: String, lastID: String)
 
+    @Query("UPDATE SavedVideo SET encodedPath = :encodedPath WHERE clientId = :lastID")
+    fun updateEncodedPath(encodedPath: String, lastID: String)
+
     @Query("UPDATE SavedVideo SET md5 = :md5 WHERE clientId = :selectedVideoId")
     fun updateVideoMd5(md5: String, selectedVideoId: String)
 

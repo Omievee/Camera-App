@@ -15,11 +15,12 @@ interface VideosManager {
     fun subscribeToVideoGallerySize(): Observable<Int>
     fun loadFromDB()
     fun saveHighQualityVideoToDB(video: SavedVideo)
+    fun registerVideo(saved: SavedVideo)
     fun transcodeVideo(savedVideo: SavedVideo, videoFile: File)
     fun updateVideoFavorite(isFavorite: Boolean, clientId: String)
-    fun updateVideoFunny(isFunny: Boolean)
+    fun updateVideoFunny(isFunny: Boolean, clientId: String)
     fun updateVideoMd5(md5: String, clientId: String)
-    fun updateUploadId(uplaodId: String, clientId: String)
+    fun updateUploadId(uplaodId: String, savedVideo: SavedVideo)
     fun updateVideoInstanceId(videoId: String, clientId: String)
     fun updateVideoStatus(video: SavedVideo, state: UploadState)
     fun updateTaggedAthleteField(taggedAthletesArray: ArrayList<String>, clientId: String)
@@ -31,4 +32,6 @@ interface VideosManager {
     fun onNotifyWorkIsDone()
     fun onGetVideosForUpload(): Single<List<SavedVideo>>
     fun onGetVideosForUploadScreen(): Single<List<SavedVideo>>
+    fun encodeHighQualityTrim(savedVideo: SavedVideo)
+
 }

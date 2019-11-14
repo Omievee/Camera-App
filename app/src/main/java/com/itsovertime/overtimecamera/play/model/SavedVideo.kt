@@ -28,12 +28,14 @@ data class SavedVideo(
     var mediumRes: String? = null,
     @ColumnInfo(name = "trimmedVidPath")
     val trimmedVidPath: String? = null,
+    @ColumnInfo(name = "encodedPath")
+    val encodedPath: String? = null,
     @ColumnInfo(name = "md5")
     val md5: String? = null,
     @ColumnInfo(name = "is_favorite")
     var is_favorite: Boolean = false,
     @ColumnInfo(name = "is_funny")
-    val is_funny: Boolean = false,
+    var is_funny: Boolean = false,
     @ColumnInfo(name = "is_selfie")
     val is_selfie: Boolean = false,
     @ColumnInfo(name = "event_id")
