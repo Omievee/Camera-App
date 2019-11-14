@@ -30,11 +30,8 @@ class UploadsManagerImpl(
 ) : UploadsManager {
 
 
-    private var currentVideo: SavedVideo? = null
-
     @Synchronized
     override fun getVideoInstance(video: SavedVideo?): Observable<VideoInstanceResponse> {
-        currentVideo = video
         return api
             .getVideoInstance(
                 VideoInstanceRequest(
@@ -66,16 +63,20 @@ class UploadsManagerImpl(
     @Synchronized
     override fun registerWithMD5(
         data: TokenResponse,
-        hdReady: Boolean
+        hdReady: Boolean,
+        video:SavedVideo
     ): Observable<EncryptedResponse> {
         val md5: String = when (hdReady) {
             true -> {
-                md5(File(currentVideo?.trimmedVidPath).readBytes()) ?: ""
+                md5(File(video?.trimmedVidPath).readBytes()) ?: ""
             }
             false -> {
-                md5(File(currentVideo?.mediumRes).readBytes()) ?: ""
+                println("in the false....")
+                md5(File(video?.mediumRes).readBytes()).toString()
             }
         }
+
+        println("md5t ==== $md5")
         return api
             .uploadDataForMd5(
                 UploadRequest(

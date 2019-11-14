@@ -60,8 +60,8 @@ data class SavedVideo(
     val duration_in_hours: Int = 3,
     @ColumnInfo(name = "max_length")
     val max_video_length: Int = 12,
-    @ColumnInfo(name = "created")
-    val created_at: String? = null,
+    @ColumnInfo(name = "filmed_at")
+    val filmed_at: String? = null,
     @ColumnInfo(name = "updated")
     val updated_at: String? = null,
     @ColumnInfo(name = "isVideographer")

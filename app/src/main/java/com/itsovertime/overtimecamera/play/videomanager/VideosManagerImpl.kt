@@ -109,6 +109,10 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
+                if (isFirstRun) {
+                    doWork()
+                    isFirstRun = false
+                }
                 loadFromDB()
             }, {
                 it.printStackTrace()
@@ -176,7 +180,6 @@ class VideosManagerImpl(
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
                 override fun onFailure() {
                     super.onFailure()
-                    loadFFMPEG()
                     Crashlytics.log("FFMPEG -- LOAD FAILURE")
                 }
             })
@@ -186,21 +189,6 @@ class VideosManagerImpl(
         }
     }
 
-
-    private fun isVideoDurationLongerThanMaxTime(file: SavedVideo): Boolean {
-        val retriever = MediaMetadataRetriever()
-        try {
-            retriever.setDataSource(context, Uri.fromFile(File(file.highRes)))
-            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-            val timeInMillisec = time.toLong() / 1000
-            println("Time from video length..... $timeInMillisec")
-            retriever.release()
-            return timeInMillisec > file.max_video_length
-        } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
-        }
-        return false
-    }
 
     override fun determineTrim(savedVideo: SavedVideo) {
 
@@ -216,7 +204,8 @@ class VideosManagerImpl(
 
 
     override fun encodeHighQualityTrim(savedVideo: SavedVideo) {
-        val newFile = fileForHDEncodedVideo(File(savedVideo.trimmedVidPath).name, savedVideo.clientId)
+        val newFile =
+            fileForHDEncodedVideo(File(savedVideo.trimmedVidPath).name, savedVideo.clientId)
         val encodeCommand = arrayOf(
             // I command reads from designated input file
             readInput,
@@ -271,6 +260,7 @@ class VideosManagerImpl(
 
     @Synchronized
     private fun trimVideo(savedVideo: SavedVideo) {
+        println("STARTING TRIM!! $savedVideo")
         val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
         val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
         val complexCommand = arrayOf(
@@ -336,13 +326,13 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorReturn {
+                loadFromDB()
                 it.printStackTrace()
             }
             .subscribe({
             }, {
                 it.printStackTrace()
             })
-
     }
 
     private fun fileForHDEncodedVideo(fileName: String, clientId: String): File {
@@ -561,9 +551,12 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                if (videosList.size > 0 && isFirstRun) {
-                    doWork()
-                    isFirstRun = false
+                println("----------------------------------------LOADED!!!!")
+                val uploadVid = videosList.find {
+                    it.id.isNullOrEmpty()
+                }
+                if (uploadVid != null) {
+                  //  registerVideo(uploadVid)
                 }
             }, {
                 it.printStackTrace()
@@ -588,8 +581,6 @@ class VideosManagerImpl(
                 {
                     it.printStackTrace()
                 })
-
-
     }
 
     override fun onNotifyWorkIsDone() {

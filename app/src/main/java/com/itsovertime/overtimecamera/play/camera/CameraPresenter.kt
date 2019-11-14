@@ -68,7 +68,7 @@ class CameraPresenter(
                 longitude = e?.longitude ?: 0.0,
                 uploadState = UploadState.QUEUED,
                 max_video_length = e?.max_video_length ?: 12,
-                created_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                filmed_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             )
         }
         manager.saveHighQualityVideoToDB(video ?: return)
@@ -275,7 +275,7 @@ class CameraPresenter(
     }
 
     fun register() {
-        manager.registerVideo(video ?: return)
+      //  manager.registerVideo(video ?: return)
     }
 
 }

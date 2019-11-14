@@ -268,6 +268,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     private fun tapToSaveRegularRecording() {
         println("TAP TO SAVE....")
+        register?.cancel()
+        hideViews?.cancel()
         favoriteIcon.visibility = View.VISIBLE
         hahaIcon.visibility = View.VISIBLE
 
@@ -608,11 +610,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         }
     }
 
-    var runnable: Runnable? = null
+    var hideViews: TimerTask? = null
+    var register: TimerTask? = null
     private fun startMediaRecorder() {
         when (CAMERA) {
             0 -> {
-                val hideViews = object : TimerTask() {
+                hideViews = object : TimerTask() {
                     override fun run() {
                         favoriteIcon?.let {
                             if (it.visibility == View.VISIBLE) {
@@ -636,7 +639,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                         }
                     }
                 }
-                val register = object : TimerTask() {
+                register = object : TimerTask() {
                     override fun run() {
                         presenter.register()
                     }
@@ -647,6 +650,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 mediaRecorder?.start()
                 Timer().schedule(hideViews, 4000)
                 Timer().schedule(register, 5000)
+
             }
             1 -> {
                 recording = false

@@ -165,6 +165,7 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     if (!File(faveList[0].mediumRes).exists()) {
+                        println("RESET FROM FILE CHECK -- FAVE")
                         videosManager.resetUploadStateForCurrentVideo(faveList[0])
                     } else {
                         requestTokenForUpload(faveList[0])
@@ -178,6 +179,7 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     if (!File(standardList[0].mediumRes).exists()) {
+                        println("RESET FROM FILE CHECK -- MEDIUM")
                         videosManager.resetUploadStateForCurrentVideo(standardList[0])
                     } else {
                         requestTokenForUpload(standardList[0])
@@ -220,15 +222,18 @@ class VideoUploadWorker(
     private var awsDataDisposable: Disposable? = null
     private fun requestTokenForUpload(savedVideo: SavedVideo) {
         currentVideo = savedVideo
+        println("Current video being uploaded ---------> $currentVideo")
         awsDataDisposable =
             uploadsManager
                 .getAWSDataForUpload()
                 .doOnError {
                     it.printStackTrace()
+                    println("RESET FROM TOKEN")
                     videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return@doOnError)
                 }
                 .map {
                     tokenResponse = it
+                    println("Token? $tokenResponse")
                 }
                 .doAfterNext {
                     beginUpload(token = tokenResponse)
@@ -240,9 +245,10 @@ class VideoUploadWorker(
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?) {
+        println(" begin upload ------------> $token")
         tokenDisposable =
             uploadsManager
-                .registerWithMD5(token ?: return, hdReady ?: false)
+                .registerWithMD5(token ?: return, hdReady ?: false, currentVideo ?: return)
                 .map {
                     encryptionResponse = it
                 }
@@ -251,6 +257,7 @@ class VideoUploadWorker(
 
                 }
                 .doOnError {
+                    println("RESET FROM BEGIN UPLOAD")
                     videosManager.resetUploadStateForCurrentVideo(
                         currentVideo = currentVideo ?: return@doOnError
                     )
@@ -268,6 +275,7 @@ class VideoUploadWorker(
     var remainder: Int = 0
     var count = 0
     private fun continueUploadProcess() {
+        println("current video in process -- $currentVideo")
         if (!currentVideo?.id.isNullOrEmpty()) {
             chunkToUpload = baseChunkSize
             if (currentVideo?.mediumUploaded == true && hdReady == true) {
@@ -275,11 +283,13 @@ class VideoUploadWorker(
                 currentVideo?.uploadState = UploadState.UPLOADING_HIGH
                 upload()
             } else {
+                println("this is else ....")
                 fullBytes = File(currentVideo?.mediumRes).readBytes()
                 currentVideo?.uploadState = UploadState.UPLOADING_MEDIUM
                 upload()
             }
         } else {
+            println("RESET FROM NO UPLOAD ID")
             videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
         }
     }
@@ -288,6 +298,7 @@ class VideoUploadWorker(
     private var chunkToUpload: Int = 0
     @SuppressLint("CheckResult")
     var up: Disposable? = null
+
     private fun upload() {
         val fullFileSize = fullBytes.size
         println("Filesize -------- $fullFileSize")
@@ -338,6 +349,7 @@ class VideoUploadWorker(
                 .doOnError {
                     startRange = 0
                     uploadChunkIndex = 0
+                    println("RESET FROM UPLOAD ERROR")
                     videosManager.resetUploadStateForCurrentVideo(
                         currentVideo = currentVideo ?: return@doOnError
                     )
@@ -365,6 +377,7 @@ class VideoUploadWorker(
                 .doOnError {
                     println("ERROR FROM COMPLETE!!! ${it.message}")
                     println("ERROR FROM COMPLETE!!! ${it.cause}")
+                    println("RESET FROM COMPLETE CHECK")
                     videosManager.resetUploadStateForCurrentVideo(
                         currentVideo = currentVideo ?: return@doOnError
                     )
@@ -399,6 +412,7 @@ class VideoUploadWorker(
                 getVideoDimensions(path = path ?: "")
             } catch (arg: IllegalAccessException) {
                 arg.printStackTrace()
+                println("RESET FROM DIMENSIONS EXCEPTION")
                 videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             }
 
@@ -425,7 +439,6 @@ class VideoUploadWorker(
                         currentVideo?.uploadState = UploadState.UPLOADED_HIGH
                         videosManager.updateHighuploaded(true, currentVideo?.clientId ?: "")
                     }
-
                     getVideosFromDB()
                 }
                 .subscribe({
