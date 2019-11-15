@@ -48,12 +48,14 @@ class VideoUploadWorker(
 
     @SuppressLint("CheckResult")
 
+    var interruptUpload: Boolean = false
 
     override fun doWork(): Result {
         return try {
             println("SStarted work.....")
             hdReady = inputData.getBoolean("HD", false)
             subscribeToUpdates()
+            subscribeToNewFaves()
             getVideosFromDB()
             Result.success()
         } catch (throwable: Throwable) {
@@ -76,11 +78,22 @@ class VideoUploadWorker(
             videosManager
                 .subscribeToVideoGallerySize()
                 .subscribe({
-
                     if (it > 0 && faveList.size == 0 && standardList.size == 0) {
                         println("This worked.... $it")
 //                        getVideosFromDB()
                     }
+                }, {
+
+                })
+    }
+
+    var faves: Disposable? = null
+    private fun subscribeToNewFaves() {
+        faves =
+            videosManager
+                .subscribeToNewFavoriteVideoEvent()
+                .subscribe({
+                    if (it) interruptUpload = true
                 }, {
 
                 })
@@ -221,48 +234,56 @@ class VideoUploadWorker(
     private fun requestTokenForUpload(savedVideo: SavedVideo) {
         currentVideo = savedVideo
         println("Current video being uploaded ---------> $currentVideo")
-        awsDataDisposable =
-            uploadsManager
-                .getAWSDataForUpload()
-                .doOnError {
-                    it.printStackTrace()
-                    println("RESET FROM TOKEN")
-                    videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return@doOnError)
-                }
-                .map {
-                    tokenResponse = it
-                    println("Token? $tokenResponse")
-                }
-                .doAfterNext {
-                    beginUpload(token = tokenResponse)
-                }
-                .subscribe({
-                }, {
-                })
+        if (!interruptUpload) {
+            awsDataDisposable =
+                uploadsManager
+                    .getAWSDataForUpload()
+                    .doOnError {
+                        it.printStackTrace()
+                        println("RESET FROM TOKEN")
+                        videosManager.resetUploadStateForCurrentVideo(
+                            currentVideo ?: return@doOnError
+                        )
+                    }
+                    .map {
+                        tokenResponse = it
+                        println("Token? $tokenResponse")
+                    }
+                    .doAfterNext {
+                        beginUpload(token = tokenResponse)
+                    }
+                    .subscribe({
+                    }, {
+                    })
+        }
+
     }
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?) {
         println(" begin upload ------------> $token")
-        tokenDisposable =
-            uploadsManager
-                .registerWithMD5(token ?: return, hdReady ?: false, currentVideo ?: return)
-                .map {
-                    encryptionResponse = it
-                }
-                .doAfterNext {
-                    determineProperFileQualityForUpload()
+        if (!interruptUpload) {
+            tokenDisposable =
+                uploadsManager
+                    .registerWithMD5(token ?: return, hdReady ?: false, currentVideo ?: return)
+                    .map {
+                        encryptionResponse = it
+                    }
+                    .doAfterNext {
+                        determineProperFileQualityForUpload()
 
-                }
-                .doOnError {
-                    println("RESET FROM BEGIN UPLOAD")
-                    videosManager.resetUploadStateForCurrentVideo(
-                        currentVideo = currentVideo ?: return@doOnError
-                    )
-                }
-                .subscribe({
-                }, {
-                })
+                    }
+                    .doOnError {
+                        println("RESET FROM BEGIN UPLOAD")
+                        videosManager.resetUploadStateForCurrentVideo(
+                            currentVideo = currentVideo ?: return@doOnError
+                        )
+                    }
+                    .subscribe({
+                    }, {
+                    })
+        }
+
     }
 
     private var minChunkSize = (0.5 * 1024).toInt()
@@ -331,17 +352,19 @@ class VideoUploadWorker(
                             in 3..4 -> baseChunkSize
                             else -> minChunkSize
                         }
-
-                        if (startRange >= end) {
-                            checkForComplete()
-                            startRange = 0
-                            chunkToUpload = 0
-                            uploadChunkIndex = 0
-                        } else {
-                            startRange = end
-                            uploadChunkIndex++
-                            upload()
+                        if (!interruptUpload) {
+                            if (startRange >= end) {
+                                checkForComplete()
+                                startRange = 0
+                                chunkToUpload = 0
+                                uploadChunkIndex = 0
+                            } else {
+                                startRange = end
+                                uploadChunkIndex++
+                                upload()
+                            }
                         }
+
                     }
                 }
                 .doOnError {
@@ -370,29 +393,31 @@ class VideoUploadWorker(
     @Synchronized
     private fun checkForComplete() {
         synchronized(this) {
-            complete = uploadsManager
-                .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
-                .doOnError {
-                    println("ERROR FROM COMPLETE!!! ${it.message}")
-                    println("ERROR FROM COMPLETE!!! ${it.cause}")
-                    println("RESET FROM COMPLETE CHECK")
-                    videosManager.resetUploadStateForCurrentVideo(
-                        currentVideo = currentVideo ?: return@doOnError
-                    )
-                    it.printStackTrace()
-                }
-                .subscribe({
-                    if (it.code() == 502) {
-                        checkForComplete()
+            if (!interruptUpload) {
+                complete = uploadsManager
+                    .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
+                    .doOnError {
+                        println("ERROR FROM COMPLETE!!! ${it.message}")
+                        println("RESET FROM COMPLETE CHECK")
+                        videosManager.resetUploadStateForCurrentVideo(
+                            currentVideo = currentVideo ?: return@doOnError
+                        )
+                        it.printStackTrace()
                     }
-                    when (it.body()?.status) {
-                        CompleteResponse.COMPLETING.name -> pingServerForStatus()
-                        CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
-                        else -> pingServerForStatus()
-                    }
-                }, {
-                    it.printStackTrace()
-                })
+                    .subscribe({
+                        if (it.code() == 502) {
+                            checkForComplete()
+                        }
+                        when (it.body()?.status) {
+                            CompleteResponse.COMPLETING.name -> pingServerForStatus()
+                            CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
+                            else -> pingServerForStatus()
+                        }
+                    }, {
+                        it.printStackTrace()
+                    })
+            }
+
         }
     }
 
@@ -479,7 +504,6 @@ class VideoUploadWorker(
         } catch (nf: NumberFormatException) {
             videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             retriever.release()
-
         } catch (ia: IllegalArgumentException) {
             videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             retriever.release()

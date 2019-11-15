@@ -420,7 +420,7 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .doOnSuccess {
-
+                newFave.onNext(true)
             }
             .subscribe({
             }, {
@@ -633,6 +633,14 @@ class VideosManagerImpl(
     override fun subscribeToVideoGallerySize(): Observable<Int> {
         return total
             .subscribeOn(Schedulers.single())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
+    var newFave: BehaviorSubject<Boolean> = BehaviorSubject.create()
+
+    override fun subscribeToNewFavoriteVideoEvent(): Observable<Boolean> {
+        return newFave
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 

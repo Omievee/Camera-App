@@ -13,6 +13,7 @@ interface VideosManager {
 
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
     fun subscribeToVideoGallerySize(): Observable<Int>
+    fun subscribeToNewFavoriteVideoEvent(): Observable<Boolean>
     fun loadFromDB()
     fun saveHighQualityVideoToDB(video: SavedVideo)
     fun registerVideo(saved: SavedVideo)
