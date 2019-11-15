@@ -61,12 +61,12 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
         numberProvided = number
         verifyDisposable?.dispose()
         verifyDisposable = auth
-            .onRequestAccessCodeForNumber(numberProvided ?: "")
+            .onRequestAccessCodeForNumber(number)
             .doFinally {
                 view.hideDisplayProgress()
             }
             .doOnSuccess {
-                view.displayEnterResponseView(numberProvided ?: "")
+                view.displayEnterResponseView(number)
             }
             .doOnError {
                 view.displayErrorFromResponse()
@@ -98,6 +98,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     var codeDisposable: Disposable? = null
     fun submitAccessCode(code: String) {
         view.displayProgress()
+        println("access code.... $code")
         codeDisposable?.dispose()
         codeDisposable = auth
             .onVerifyAccessCodeRecieved(code)
@@ -106,6 +107,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
                 refreshAuth()
             }
             .doOnError {
+                println("error... ? ${it.message}")
                 view.hideDisplayProgress()
                 view.showToast(view.applicationContext.getString(R.string.auth_invalid_access_code))
             }
@@ -122,7 +124,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
         authDis = auth
             .onRefreshAuth()
             .doOnNext {
-                val res = it.body() ?:return@doOnNext
+                val res = it.body() ?: return@doOnNext
                 UserPreference.userId = res.data.user.id
                 retrieveFullUser()
             }
@@ -161,7 +163,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
                 } else if (!checkPermissions()) {
                     println("PERMISSIONS DENIED")
                     view.beginPermissionsFlow()
-                }else if (checkPermissions()){
+                } else if (checkPermissions()) {
                     println("PERMISSIONS ALLOWED")
                     view.disregardPermissions()
                 }

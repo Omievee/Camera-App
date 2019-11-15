@@ -99,10 +99,11 @@ class CameraPresenter(
                         ("Save the last ${(maxTime) - millisUntilFinished / 1000}s").toString()
                 }
             }
+
             override fun onFinish() {
                 view.activity?.runOnUiThread {
                     text.apply {
-                        setText( "                        ${maxTime}s")
+                        setText("                        ${maxTime}s")
                     }
                 }
             }
@@ -111,7 +112,7 @@ class CameraPresenter(
 
     fun updateFavoriteField() {
         video?.is_favorite = true
-        manager.updateVideoFavorite(true, video?.clientId ?: "")
+        manager.updateVideoFavorite(true, video ?: return)
     }
 
     fun cameraSwitch() {
@@ -275,7 +276,7 @@ class CameraPresenter(
     }
 
     fun register() {
-      //  manager.registerVideo(video ?: return)
+
     }
 
 }

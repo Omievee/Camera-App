@@ -1,7 +1,6 @@
 package com.itsovertime.overtimecamera.play.videomanager
 
 import android.annotation.SuppressLint
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
 import androidx.work.*
@@ -27,6 +26,8 @@ import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class VideosManagerImpl(
@@ -109,10 +110,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                if (isFirstRun) {
-                    doWork()
-                    isFirstRun = false
-                }
+                println("LOG:: UPDATED UPLOAD ID -----------------")
                 loadFromDB()
             }, {
                 it.printStackTrace()
@@ -136,23 +134,6 @@ class VideosManagerImpl(
 
             }, {
                 it.printStackTrace()
-            }
-            )
-    }
-
-    @SuppressLint("CheckResult")
-    override fun updateVideoInstanceId(videoId: String, clientId: String) {
-        Single.fromCallable {
-            with(videoDao) {
-                this?.updateVideoInstanceId(videoId, clientId)
-            }
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .onErrorReturn {
-                it.printStackTrace()
-            }
-            .subscribe({}, {
-                it.printStackTrace()
             })
     }
 
@@ -175,7 +156,6 @@ class VideosManagerImpl(
 
     var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
     override fun loadFFMPEG() {
-        println("loading FFMPEG")
         try {
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
                 override fun onFailure() {
@@ -187,11 +167,6 @@ class VideosManagerImpl(
             e.printStackTrace()
             Crashlytics.log("FFMPEG not supported -- ${e.message}")
         }
-    }
-
-
-    override fun determineTrim(savedVideo: SavedVideo) {
-
     }
 
     private var seekToEndOf = "-sseof"
@@ -231,7 +206,7 @@ class VideosManagerImpl(
                 ffmpeg.execute(encodeCommand, object : ExecuteBinaryResponseHandler() {
                     override fun onSuccess(message: String?) {
                         super.onSuccess(message)
-
+                        println("Successful... $message")
                     }
 
                     override fun onProgress(message: String?) {
@@ -291,7 +266,7 @@ class VideosManagerImpl(
                 ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                     override fun onSuccess(message: String?) {
                         super.onSuccess(message)
-                        println("SUCCESSFUL TRIM :$message")
+                        println("LOG:: UPDATED TRIM $message -----------------")
                     }
 
                     override fun onProgress(message: String?) {
@@ -415,6 +390,7 @@ class VideosManagerImpl(
 
     @SuppressLint("CheckResult")
     override fun updateVideoFunny(isFunny: Boolean, clientId: String) {
+        pendingVidRegistration?.is_funny = true
         Single.fromCallable {
             with(videoDao) {
                 this?.setVideoAsFunny(is_funny = isFunny, lastID = clientId)
@@ -430,11 +406,13 @@ class VideosManagerImpl(
             })
     }
 
+    var pendingVidRegistration: SavedVideo? = null
     @SuppressLint("CheckResult")
-    override fun updateVideoFavorite(isFavorite: Boolean, clientId: String) {
+    override fun updateVideoFavorite(isFavorite: Boolean, video: SavedVideo) {
+        pendingVidRegistration?.is_favorite = true
         Single.fromCallable {
             with(videoDao) {
-                this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = clientId)
+                this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = video.clientId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -442,9 +420,9 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .doOnSuccess {
+
             }
             .subscribe({
-                loadFromDB()
             }, {
                 it.printStackTrace()
             })
@@ -490,6 +468,7 @@ class VideosManagerImpl(
             }
 
             override fun onTranscodeCompleted() {
+                println("LOG:: UPDATED TRANSCODE -----------------")
                 loadFromDB()
             }
         }
@@ -510,12 +489,12 @@ class VideosManagerImpl(
         }
     }
 
-    var lastVideoId: String = ""
+
     @SuppressLint("CheckResult")
     @Synchronized
     override fun saveHighQualityVideoToDB(video: SavedVideo) {
+        pendingVidRegistration = video
         this.lastVideoMaxTime = video.max_video_length.toString()
-        lastVideoId = video.clientId
         Single.fromCallable {
             with(videoDao) {
                 this?.saveVideoData(video)
@@ -526,7 +505,15 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
+                println("LOG:: SAVED VIDEO -----------------")
                 trimVideo(video)
+                val timerTask = object : TimerTask() {
+                    override fun run() {
+                        println("DONE FROM REGISTER TIMER!!")
+                        pendingVidRegistration?.let { it1 -> registerVideo(it1) }
+                    }
+                }
+                Timer().schedule(timerTask, 4000)
             }, {
                 it.printStackTrace()
             })
@@ -551,12 +538,9 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                println("----------------------------------------LOADED!!!!")
-                val uploadVid = videosList.find {
-                    it.id.isNullOrEmpty()
-                }
-                if (uploadVid != null) {
-                  //  registerVideo(uploadVid)
+                if (isFirstRun && videosList.size > 0) {
+                    doWork()
+                    isFirstRun = false
                 }
             }, {
                 it.printStackTrace()
@@ -565,10 +549,12 @@ class VideosManagerImpl(
 
     var disp: Disposable? = null
     override fun registerVideo(saved: SavedVideo) {
+
         var uploadId = ""
         disp?.dispose()
         disp = manager
             .getVideoInstance(saved)
+            .retry(3)
             .doOnError {
                 it.printStackTrace()
             }
@@ -577,10 +563,9 @@ class VideosManagerImpl(
             }
             .subscribe({
                 updateUploadId(uploadId, saved)
-            },
-                {
-                    it.printStackTrace()
-                })
+            }, {
+                it.printStackTrace()
+            })
     }
 
     override fun onNotifyWorkIsDone() {
@@ -619,7 +604,6 @@ class VideosManagerImpl(
                 this?.resetUploadDataForVideo(
                     uploadState = UploadState.QUEUED,
                     uploadId = "",
-                    id = "",
                     lastID = currentVideo.clientId,
                     trimmedVidPath = "",
                     mediumVidPath = ""
@@ -631,8 +615,9 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                println("successful reset... starting transcode")
-                it?.let { it1 -> determineTrim(it1) }
+
+                registerVideo(currentVideo)
+                it?.let { it1 -> trimVideo(it1) }
             }, {
                 it.printStackTrace()
             })

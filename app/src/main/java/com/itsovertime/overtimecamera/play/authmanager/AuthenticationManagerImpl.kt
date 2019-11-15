@@ -40,7 +40,6 @@ class AuthenticationManagerImpl(
     }
 
     override fun onUserAgreedToTOS(): Single<TOSResponse> {
-
         return api
             .acceptToTOS(UserPreference.userId, BuildConfig.APPLICATION_ID)
             .subscribeOn(Schedulers.io())
@@ -118,6 +117,9 @@ class AuthenticationManagerImpl(
         val request = VerifyAccessCodeRequest(phone = num, code = code)
         return api
             .verifyAccessCode(request)
+            .doOnError {
+                it.message
+            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }

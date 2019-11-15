@@ -267,7 +267,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
     private fun tapToSaveRegularRecording() {
-        println("TAP TO SAVE....")
+
         register?.cancel()
         hideViews?.cancel()
         favoriteIcon.visibility = View.VISIBLE
@@ -408,21 +408,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                     pinchToZoom(event)
                 } else false
             }
-//            R.id.eventSpace -> {
-//                println("Action is.... ${event}")
-//                when (event?.action) {
-//                    MotionEvent.ACTION_MOVE -> {
-////                        presenter.expand(hiddenEvents)
-//                        hiddenEvents.visibility = View.VISIBLE
-//                        return true
-//                    }
-//                    MotionEvent.ACTION_UP -> {
-////                        presenter.collapse(hiddenEvents)
-//                        hiddenEvents.visibility = View.GONE
-//                        return true
-//                    }
-//                }
-//            }
         }
         return true
     }
@@ -621,6 +606,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                             if (it.visibility == View.VISIBLE) {
                                 activity?.runOnUiThread {
                                     favoriteIcon?.let {
+                                        println("DONE FROM VIEW TIMER!!")
                                         it.visibility = View.INVISIBLE
                                     }
                                     hahaIcon?.let {
@@ -633,23 +619,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                         presenter.updateTaggedAthletesField(taggedAthletesArray)
                                         taggedAthletesArray.clear()
                                     }
-
                                 }
                             }
                         }
-                    }
-                }
-                register = object : TimerTask() {
-                    override fun run() {
-                        presenter.register()
                     }
                 }
 
                 println("======================== ${taggedAthletesArray.size}")
 
                 mediaRecorder?.start()
-                Timer().schedule(hideViews, 4000)
-                Timer().schedule(register, 5000)
+                Timer().schedule(hideViews, 3000)
 
             }
             1 -> {
@@ -914,9 +893,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
 
             val characteristics = manager?.getCameraCharacteristics(cameraId)
-            characteristics?.availableCaptureRequestKeys?.forEach {
-                println("KEY! $it")
-            }
+//            characteristics?.availableCaptureRequestKeys?.forEach {
+//            }
             val map =
                 characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
                     ?: throw RuntimeException("Cannot get available preview/video sizes")

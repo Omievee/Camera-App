@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.itsovertime.overtimecamera.play.model.*
 
-@Database(entities = [SavedVideo::class, User::class], version = 2)
+@Database(entities = [SavedVideo::class, User::class], version = 3)
 @TypeConverters(value = [customConverter::class, stringArrayConvertor::class, taggedUserConvertor::class])
 abstract class AppDatabase : RoomDatabase() {
 

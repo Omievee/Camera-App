@@ -10,7 +10,6 @@ import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
 import com.itsovertime.overtimecamera.play.network.Upload
-import com.itsovertime.overtimecamera.play.network.VideoInstanceResponse
 import com.itsovertime.overtimecamera.play.notifications.NotificationManager
 import com.itsovertime.overtimecamera.play.progress.ProgressManager
 import com.itsovertime.overtimecamera.play.progress.UploadsMessage
@@ -54,7 +53,7 @@ class VideoUploadWorker(
         return try {
             println("SStarted work.....")
             hdReady = inputData.getBoolean("HD", false)
-
+            subscribeToUpdates()
             getVideosFromDB()
             Result.success()
         } catch (throwable: Throwable) {
@@ -77,11 +76,10 @@ class VideoUploadWorker(
             videosManager
                 .subscribeToVideoGallerySize()
                 .subscribe({
-                    println("size from gallery... $it")
-                    println("size from gallery... ${faveList.size}")
-                    println("size from gallery... ${standardList.size}")
-                    if (it > 0 && faveList.size == 0 && standardList.size == 0) {
 
+                    if (it > 0 && faveList.size == 0 && standardList.size == 0) {
+                        println("This worked.... $it")
+//                        getVideosFromDB()
                     }
                 }, {
 
@@ -253,7 +251,7 @@ class VideoUploadWorker(
                     encryptionResponse = it
                 }
                 .doAfterNext {
-                    continueUploadProcess()
+                    determineProperFileQualityForUpload()
 
                 }
                 .doOnError {
@@ -274,9 +272,9 @@ class VideoUploadWorker(
     private var fullBytes = byteArrayOf()
     var remainder: Int = 0
     var count = 0
-    private fun continueUploadProcess() {
+    private fun determineProperFileQualityForUpload() {
         println("current video in process -- $currentVideo")
-        if (!currentVideo?.id.isNullOrEmpty()) {
+        if (!currentVideo?.uploadId.isNullOrEmpty()) {
             chunkToUpload = baseChunkSize
             if (currentVideo?.mediumUploaded == true && hdReady == true) {
                 fullBytes = File(currentVideo?.encodedPath).readBytes()
@@ -418,7 +416,7 @@ class VideoUploadWorker(
 
             serverDis = uploadsManager
                 .writerToServerAfterComplete(
-                    uploadId = currentVideo?.id ?: "",
+                    uploadId = currentVideo?.uploadId ?: "",
                     S3Key = upload?.S3Key ?: "",
                     vidWidth = width,
                     vidHeight = height,

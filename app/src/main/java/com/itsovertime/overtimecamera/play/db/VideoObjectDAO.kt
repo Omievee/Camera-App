@@ -38,9 +38,6 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET uploadId = :uploadId WHERE clientId = :selectedVideoId")
     fun updateUploadId(uploadId: String, selectedVideoId: String)
 
-    @Query("UPDATE SavedVideo SET id = :videoInstanceId WHERE clientId = :selectedVideoId")
-    fun updateVideoInstanceId(videoInstanceId: String, selectedVideoId: String)
-
     @Query("SELECT * FROM SavedVideo")
     fun getVideos(): List<SavedVideo>
 
@@ -63,11 +60,10 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET isProcessed = :isProcessed WHERE clientId = :lastID")
     fun updateVideoIsProcessed(isProcessed: Boolean, lastID: String)
 
-    @Query("UPDATE SavedVideo SET  uploadState = :uploadState, uploadId = :uploadId,id = :id, mediumRes = :mediumVidPath, trimmedVidPath = :trimmedVidPath WHERE clientId = :lastID")
+    @Query("UPDATE SavedVideo SET  uploadState = :uploadState, uploadId = :uploadId, mediumRes = :mediumVidPath, trimmedVidPath = :trimmedVidPath WHERE clientId = :lastID")
     fun resetUploadDataForVideo(
         uploadState: UploadState,
         uploadId: String,
-        id: String,
         mediumVidPath: String,
         trimmedVidPath: String,
         lastID: String
