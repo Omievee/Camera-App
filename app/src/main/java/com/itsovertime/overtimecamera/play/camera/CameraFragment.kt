@@ -64,15 +64,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         setUpTaggedUsersView(event)
     }
 
-    override fun hideEventsRV() {
-
-    }
-
-    override fun openEvents() {
-
-    }
-
-
     var taggedAthletesArray = arrayListOf<String>()
     private val taggedListener: TaggedAthleteClickListener = object : TaggedAthleteClickListener {
         override fun onAtheleteSelected(id: String) {
@@ -87,6 +78,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         if (eventList.isNullOrEmpty()) {
             eventSpace.visibility = View.GONE
         }
+
         evAdapter = EventsAdapter(eventList, listener)
         eventsRecycler.adapter = evAdapter
         eventsRecycler.smoothScrollToPosition(eventList?.size ?: 0)
@@ -116,7 +108,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         if (newData.isEmpty()) {
             taggedView.visibility = View.GONE
         }
-
         taggedAdapter.data =
             TaggedPlayersData(newData, DiffUtil.calculateDiff(BasicDiffCallback(old, newData)))
         athleteRecycler.adapter = taggedAdapter
@@ -206,7 +197,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             R.id.eventTitle -> {
                 hiddenEvents.visibility = View.VISIBLE
             }
-            R.id.cancel -> hideEventsRV()
             R.id.tapToSave -> {
                 progress.visibility = View.VISIBLE
                 when (CAMERA) {
@@ -382,7 +372,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 }
                 fingerSpacing = currentFingerSpacing.toInt()
             } else if (point == 1) { //Single touch point, needs to return true in order to detect one more touch point
-                println("??? ${event}")
                 if (event?.action == MotionEvent.ACTION_UP) {
                     determineVisibility()
                 }
@@ -579,6 +568,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                 } catch (ise: IllegalStateException) {
                                 }
                             }
+
+
 
                             override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
                                 showToast("Failed $cameraCaptureSession")
@@ -821,24 +812,23 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     private var paused: Boolean = false
     @SuppressLint("CheckResult")
     private fun releaseCamera(tapToSave: Boolean) {
-        synchronized(this) {
-            Single.fromCallable {
-                closeCamera()
-                stopBackgroundThread()
-            }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally {
-                    if (recording) {
-                        saveText.visibility = View.GONE
-                        presenter.clearProgressAnimation()
-                        paused = !tapToSave
-                        stopRecording(paused)
-                    }
+        Single.fromCallable {
+            closeCamera()
+            stopBackgroundThread()
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doFinally {
+                if (recording) {
+                    saveText.visibility = View.GONE
+                    presenter.clearProgressAnimation()
+                    paused = !tapToSave
+                    stopRecording(paused)
                 }
-                .subscribe({
-                }, {
-                })
-        }
+            }
+            .subscribe({
+            }, {
+            })
+
 
     }
 

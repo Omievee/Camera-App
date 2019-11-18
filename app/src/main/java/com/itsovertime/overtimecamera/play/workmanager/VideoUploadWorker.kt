@@ -78,9 +78,14 @@ class VideoUploadWorker(
             videosManager
                 .subscribeToVideoGallerySize()
                 .subscribe({
-                    if (it > 0 && faveList.size == 0 && standardList.size == 0) {
-                        println("This worked.... $it")
-//                        getVideosFromDB()
+                    println("Subscribed to... $it")
+                    println("Subscribed to... ${faveList.size}")
+                    println("Subscribed to... ${standardList.size}")
+                    println("Subscribed to... ${hdReady}")
+
+                    if (it > 0 && faveList.size == 0 && standardList.size == 0 && hdReady == false) {
+                        println("getting videos ..... $it")
+                        getVideosFromDB()
                     }
                 }, {
 
@@ -93,8 +98,9 @@ class VideoUploadWorker(
             videosManager
                 .subscribeToNewFavoriteVideoEvent()
                 .subscribe({
-                    if (it && (currentVideo?.is_favorite == false) && hdReady == true) interruptUpload =
-                        true
+                    if (it && (currentVideo?.is_favorite == false)) {
+                        interruptUpload = true
+                    }
                 }, {
                 })
     }
@@ -228,6 +234,8 @@ class VideoUploadWorker(
     }
 
     private fun stopUploadForNewFavorite() {
+        println("STOPPING UPLOAD!!!!!")
+        interruptUpload = false
         currentVideo = null
         getVideosFromDB()
     }
@@ -275,7 +283,6 @@ class VideoUploadWorker(
                     }
                     .doAfterNext {
                         determineProperFileQualityForUpload()
-
                     }
                     .doOnError {
                         println("RESET FROM BEGIN UPLOAD")
@@ -418,7 +425,9 @@ class VideoUploadWorker(
                         when (it.body()?.status) {
                             CompleteResponse.COMPLETING.name -> pingServerForStatus()
                             CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
-                            else -> pingServerForStatus()
+                            else -> videosManager.resetUploadStateForCurrentVideo(
+                                currentVideo ?: return@subscribe
+                            )
                         }
                     }, {
                         it.printStackTrace()
@@ -469,6 +478,8 @@ class VideoUploadWorker(
                         currentVideo?.uploadState = UploadState.UPLOADED_HIGH
                         videosManager.updateHighuploaded(true, currentVideo?.clientId ?: "")
                     }
+
+                    println("DONE... getting videos...")
                     getVideosFromDB()
                 }
                 .subscribe({

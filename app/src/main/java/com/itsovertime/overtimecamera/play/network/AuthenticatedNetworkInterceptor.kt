@@ -20,5 +20,3 @@ class AuthenticatedNetworkInterceptor : Interceptor {
         return chain.proceed(requestBuilder.build())
     }
 }
-
-//Todo: User pref for tokens..

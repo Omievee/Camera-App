@@ -265,7 +265,7 @@ class CameraPresenter(
     }
 
     fun hideEvents() {
-        view.hideEventsRV()
+
     }
 
     fun updateTaggedAthletesField(taggedAthletesArray: ArrayList<String>) {

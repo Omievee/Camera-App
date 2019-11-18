@@ -64,7 +64,7 @@ interface VideoObjectDAO {
     fun resetUploadDataForVideo(
         uploadState: UploadState,
         uploadId: String,
-        mediumVidPath: String,
+        mediumVidPath: String?,
         trimmedVidPath: String,
         lastID: String
     )

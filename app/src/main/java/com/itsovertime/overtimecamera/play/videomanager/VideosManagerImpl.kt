@@ -542,6 +542,9 @@ class VideosManagerImpl(
                     doWork()
                     isFirstRun = false
                 }
+                for (savedVideo in videosList) {
+                    println("saved.... ${savedVideo.uploadId} && ${File(savedVideo.mediumRes).name}")
+                }
             }, {
                 it.printStackTrace()
             })
@@ -549,7 +552,6 @@ class VideosManagerImpl(
 
     var disp: Disposable? = null
     override fun registerVideo(saved: SavedVideo) {
-
         var uploadId = ""
         disp?.dispose()
         disp = manager
@@ -587,10 +589,22 @@ class VideosManagerImpl(
 
     @SuppressLint("CheckResult")
     override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
-        if (!currentVideo.mediumRes.isNullOrEmpty()) {
-            val video = File(currentVideo.mediumRes)
-            if (video.exists()) {
-                video.delete()
+        val med: String
+        val uploadId: String
+        when (currentVideo.mediumUploaded) {
+            true -> {
+                med = currentVideo.mediumRes.toString()
+                uploadId = currentVideo.uploadId.toString()
+            }
+            else -> {
+                med = ""
+                uploadId = ""
+                if (!currentVideo.mediumRes.isNullOrEmpty()) {
+                    val video = File(currentVideo.mediumRes)
+                    if (video.exists()) {
+                        video.delete()
+                    }
+                }
             }
         }
         if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
@@ -603,10 +617,10 @@ class VideosManagerImpl(
             with(videoDao) {
                 this?.resetUploadDataForVideo(
                     uploadState = UploadState.QUEUED,
-                    uploadId = "",
+                    uploadId = uploadId,
                     lastID = currentVideo.clientId,
                     trimmedVidPath = "",
-                    mediumVidPath = ""
+                    mediumVidPath = med
                 )
             }
             with(videoDao) {
@@ -615,8 +629,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-
-                registerVideo(currentVideo)
+                if (!currentVideo.mediumUploaded) registerVideo(currentVideo)
                 it?.let { it1 -> trimVideo(it1) }
             }, {
                 it.printStackTrace()
@@ -637,7 +650,6 @@ class VideosManagerImpl(
     }
 
     var newFave: BehaviorSubject<Boolean> = BehaviorSubject.create()
-
     override fun subscribeToNewFavoriteVideoEvent(): Observable<Boolean> {
         return newFave
             .subscribeOn(Schedulers.io())

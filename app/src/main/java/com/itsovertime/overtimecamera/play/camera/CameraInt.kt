@@ -14,8 +14,6 @@ interface CameraInt {
     fun showOrHideViewsForCamera()
     fun setUpEventViewData(eventList: MutableList<Event>?)
     fun setUpDefaultEvent(event: Event?)
-    fun openEvents()
-    fun hideEventsRV()
 
 
 
