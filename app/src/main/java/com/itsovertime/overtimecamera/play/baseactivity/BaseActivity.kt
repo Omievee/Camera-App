@@ -9,10 +9,17 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Resources
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import android.provider.Settings
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.SuperscriptSpan
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
@@ -104,7 +111,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         descrip.text = getString(R.string.auth_message)
     }
 
+    var num: String? = ""
     override fun displayEnterResponseView(number: String) {
+
         accessCodeSent = true
         enterNumber.text.clear()
         changeNum.visibility = View.VISIBLE
@@ -112,9 +121,27 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             alpha = .6F
         }
         enter.text = getString(R.string.auth_enter_access_code)
-        descrip.text = "We sent an access code to $number"
+
+        val span = SpannableStringBuilder()
+        span.append("We sent an access code to:  ")
+        span.append(number.color)
+
+        descrip.text = span
+
         resend.visibility = View.VISIBLE
     }
+
+    private val String.color: SpannableString
+        get() {
+            val spanstr = SpannableString(this)
+            spanstr.setSpan(
+                ForegroundColorSpan(resources.getColor(R.color.OT_Orange)),
+                0,
+                length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            return spanstr
+        }
 
     override fun displayErrorFromResponse() {
         showToast(getString(R.string.error))

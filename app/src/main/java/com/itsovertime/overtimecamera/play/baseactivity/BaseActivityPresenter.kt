@@ -69,6 +69,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
                 view.displayEnterResponseView(number)
             }
             .doOnError {
+                it.printStackTrace()
                 view.displayErrorFromResponse()
             }
             .subscribe({

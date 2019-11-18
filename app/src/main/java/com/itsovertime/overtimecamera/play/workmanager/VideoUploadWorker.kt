@@ -93,9 +93,9 @@ class VideoUploadWorker(
             videosManager
                 .subscribeToNewFavoriteVideoEvent()
                 .subscribe({
-                    if (it) interruptUpload = true
+                    if (it && (currentVideo?.is_favorite == false) && hdReady == true) interruptUpload =
+                        true
                 }, {
-
                 })
     }
 
@@ -227,6 +227,11 @@ class VideoUploadWorker(
         }
     }
 
+    private fun stopUploadForNewFavorite() {
+        currentVideo = null
+        getVideosFromDB()
+    }
+
     private var currentVideo: SavedVideo? = null
     private var tokenResponse: TokenResponse? = null
     private var tokenDisposable: Disposable? = null
@@ -247,7 +252,6 @@ class VideoUploadWorker(
                     }
                     .map {
                         tokenResponse = it
-                        println("Token? $tokenResponse")
                     }
                     .doAfterNext {
                         beginUpload(token = tokenResponse)
@@ -255,7 +259,7 @@ class VideoUploadWorker(
                     .subscribe({
                     }, {
                     })
-        }
+        } else stopUploadForNewFavorite()
 
     }
 
@@ -282,7 +286,7 @@ class VideoUploadWorker(
                     .subscribe({
                     }, {
                     })
-        }
+        } else stopUploadForNewFavorite()
 
     }
 
@@ -295,22 +299,25 @@ class VideoUploadWorker(
     var count = 0
     private fun determineProperFileQualityForUpload() {
         println("current video in process -- $currentVideo")
-        if (!currentVideo?.uploadId.isNullOrEmpty()) {
-            chunkToUpload = baseChunkSize
-            if (currentVideo?.mediumUploaded == true && hdReady == true) {
-                fullBytes = File(currentVideo?.encodedPath).readBytes()
-                currentVideo?.uploadState = UploadState.UPLOADING_HIGH
-                upload()
+        if (!interruptUpload) {
+            if (!currentVideo?.uploadId.isNullOrEmpty()) {
+                chunkToUpload = baseChunkSize
+                if (currentVideo?.mediumUploaded == true && hdReady == true) {
+                    fullBytes = File(currentVideo?.encodedPath).readBytes()
+                    currentVideo?.uploadState = UploadState.UPLOADING_HIGH
+                    upload()
+                } else {
+                    println("this is else ....")
+                    fullBytes = File(currentVideo?.mediumRes).readBytes()
+                    currentVideo?.uploadState = UploadState.UPLOADING_MEDIUM
+                    upload()
+                }
             } else {
-                println("this is else ....")
-                fullBytes = File(currentVideo?.mediumRes).readBytes()
-                currentVideo?.uploadState = UploadState.UPLOADING_MEDIUM
-                upload()
+                println("RESET FROM NO UPLOAD ID")
+                videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             }
-        } else {
-            println("RESET FROM NO UPLOAD ID")
-            videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
-        }
+        } else stopUploadForNewFavorite()
+
     }
 
     private var startRange = 0
@@ -363,7 +370,7 @@ class VideoUploadWorker(
                                 uploadChunkIndex++
                                 upload()
                             }
-                        }
+                        } else stopUploadForNewFavorite()
 
                     }
                 }

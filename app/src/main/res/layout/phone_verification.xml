@@ -100,7 +100,7 @@
             android:textAlignment="center"
             android:textAllCaps="false"
             android:textColor="@color/OT_Orange"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/bottomGuide"
             app:layout_constraintStart_toStartOf="@id/start" />
