@@ -90,7 +90,6 @@ class AppModule {
         )
     }
 
-
     @Provides
     @Singleton
     fun provideProgressManager(context: OTApplication): ProgressManager {
@@ -103,5 +102,4 @@ class AppModule {
     fun provideNotificationManager(context: OTApplication): NotificationManager {
         return NotificationManagerImpl(context)
     }
-
 }

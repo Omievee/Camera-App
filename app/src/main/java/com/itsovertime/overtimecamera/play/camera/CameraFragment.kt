@@ -342,7 +342,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 char?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) ?: 0F
             val currentFingerSpacing: Float
             val point = event?.pointerCount ?: 0
-            if (point == 2 && event?.action == MotionEvent.ACTION_MOVE) { //Multi touch.
+            if (point == 2) { //Multi touch.
                 currentFingerSpacing = getFingerSpacing(event ?: return false);
                 var delta = 0.3f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {
@@ -372,8 +372,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 }
                 fingerSpacing = currentFingerSpacing.toInt()
             } else if (point == 1) { //Single touch point, needs to return true in order to detect one more touch point
-                if (event?.action == MotionEvent.ACTION_UP) {
-                    determineVisibility()
+                if (event?.action == MotionEvent.ACTION_MOVE) {
+                    println("orientation?? >>>>> ${event}")
+                   // determineVisibility()
                 }
                 return true;
             }
@@ -491,7 +492,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             setVideoFrameRate(profile.videoFrameRate)
         }
 
-        println("RECORDER::::: ${profile.videoBitRate}")
         mediaRecorder = recorder
     }
 
@@ -543,9 +543,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                         CaptureRequest.CONTROL_MODE,
                                         CaptureRequest.CONTROL_SCENE_MODE_ACTION
                                     )
-//                                    if (zoom != null) {
-//                                        set(CaptureRequest.SCALER_CROP_REGION, zoom);
-//                                    }
+                                    if (zoom != null) {
+                                        set(CaptureRequest.SCALER_CROP_REGION, zoom);
+                                    }
                                     set(
                                         CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
                                         Range<Int>(60, 60)
@@ -566,10 +566,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                 } catch (e: CameraAccessException) {
                                     Log.e("CameraMain", e.toString())
                                 } catch (ise: IllegalStateException) {
+                                    ise.printStackTrace()
                                 }
                             }
-
-
 
                             override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
                                 showToast("Failed $cameraCaptureSession")

@@ -3,6 +3,7 @@ package com.itsovertime.overtimecamera.play.videomanager
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import androidx.work.*
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
@@ -110,7 +111,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                println("LOG:: UPDATED UPLOAD ID -----------------")
+                Log.d(TAG, "upload ID was saved to db...")
                 loadFromDB()
             }, {
                 it.printStackTrace()
@@ -266,7 +267,7 @@ class VideosManagerImpl(
                 ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
                     override fun onSuccess(message: String?) {
                         super.onSuccess(message)
-                        println("LOG:: UPDATED TRIM $message -----------------")
+                        Log.d(TAG, "successful trim...")
                     }
 
                     override fun onProgress(message: String?) {
@@ -276,6 +277,7 @@ class VideosManagerImpl(
 
                     override fun onFinish() {
                         super.onFinish()
+                        Log.d(TAG, "finished trim.......")
                         transcodeVideo(savedVideo, newFile)
                     }
 
@@ -463,13 +465,13 @@ class VideosManagerImpl(
             override fun onTranscodeProgress(progress: Double) {}
             override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
+                Log.d(TAG, "transcode failed.. ${exception?.message}...")
                 exception?.printStackTrace()
                 resetUploadStateForCurrentVideo(savedVideo)
             }
 
             override fun onTranscodeCompleted() {
-                println("LOG:: UPDATED TRANSCODE -----------------")
-                loadFromDB()
+                Log.d(TAG, "transcode complete......")
             }
         }
         try {
@@ -489,7 +491,7 @@ class VideosManagerImpl(
         }
     }
 
-
+    var TAG = "VIDEO PROCESS"
     @SuppressLint("CheckResult")
     @Synchronized
     override fun saveHighQualityVideoToDB(video: SavedVideo) {
@@ -505,11 +507,11 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
-                println("LOG:: SAVED VIDEO -----------------")
+                Log.d(TAG, "saved video complete...")
                 trimVideo(video)
                 val timerTask = object : TimerTask() {
                     override fun run() {
-                        println("DONE FROM REGISTER TIMER!!")
+                        Log.d(TAG, "starting registration...")
                         pendingVidRegistration?.let { it1 -> registerVideo(it1) }
                     }
                 }
@@ -539,12 +541,20 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 if (isFirstRun && videosList.size > 0) {
+                    Log.d(TAG, "First Run & work manager...")
                     doWork()
                     isFirstRun = false
                 }
-                for (savedVideo in videosList) {
-                    println("saved.... ${savedVideo.uploadId} && ${File(savedVideo.mediumRes).name}")
-                }
+//                for (savedVideo in videosList) {
+//                    Log.d(
+//                        TAG,
+//                        "logging upload ID & file name... ${savedVideo.uploadId} && ${File(
+//                            savedVideo.mediumRes
+//                        ).name}"
+//                    )
+//                }
+
+
             }, {
                 it.printStackTrace()
             })
@@ -562,6 +572,7 @@ class VideosManagerImpl(
             }
             .map {
                 uploadId = it.video.id ?: return@map
+                Log.d(TAG, "upload id received...")
             }
             .subscribe({
                 updateUploadId(uploadId, saved)
@@ -589,6 +600,7 @@ class VideosManagerImpl(
 
     @SuppressLint("CheckResult")
     override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
+        Log.d(TAG, "Reset happened......")
         val med: String
         val uploadId: String
         when (currentVideo.mediumUploaded) {
