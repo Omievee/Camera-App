@@ -71,8 +71,8 @@ class UploadsManagerImpl(
                 md5(File(video?.trimmedVidPath).readBytes()) ?: ""
             }
             false -> {
-                println("in the false....")
-                md5(File(video?.mediumRes).readBytes()).toString()
+                println("in the false.... ${md5(File(video.mediumRes).readBytes()).toString()}")
+                md5(File(video.mediumRes).readBytes()).toString()
             }
         }
 

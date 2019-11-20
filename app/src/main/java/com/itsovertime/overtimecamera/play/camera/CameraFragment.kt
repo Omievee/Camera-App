@@ -618,7 +618,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 println("======================== ${taggedAthletesArray.size}")
 
                 mediaRecorder?.start()
-                Timer().schedule(hideViews, 3000)
+                Timer().schedule(hideViews, 2500)
 
             }
             1 -> {

@@ -23,8 +23,6 @@ data class VideoInstanceRequest(
     val address: String?,
     val duration_in_hours: Int? = 0,
     val max_video_length: Int? = 12
-
-
 ) : Parcelable
 
 @Parcelize

@@ -25,7 +25,6 @@
             android:lines="1"
             android:maxLines="1"
             android:padding="@dimen/margin_double"
-            android:text="helloooo"
             android:textColor="@color/OT_White"
             android:textSize="15sp"
             app:layout_constraintBottom_toBottomOf="parent"

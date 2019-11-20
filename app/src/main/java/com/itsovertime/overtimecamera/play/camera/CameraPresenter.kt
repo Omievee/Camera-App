@@ -9,7 +9,9 @@ import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.model.Event
@@ -18,6 +20,7 @@ import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
+import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
 import io.reactivex.disposables.Disposable
 import java.io.File
 import java.time.Instant
@@ -81,6 +84,16 @@ class CameraPresenter(
         manager.loadFFMPEG()
         manager.loadFromDB()
         user()
+        startUploadWorkManager()
+
+    }
+
+    private fun startUploadWorkManager() {
+        val workRequest =
+            OneTimeWorkRequestBuilder<VideoUploadWorker>().addTag("UploadWork").build()
+        WorkManager.getInstance(view.context ?: return)
+            .enqueueUniqueWork("UploadWork", ExistingWorkPolicy.KEEP, workRequest)
+
     }
 
 

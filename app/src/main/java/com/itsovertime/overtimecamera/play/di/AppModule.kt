@@ -32,9 +32,12 @@ class AppModule {
     @Singleton
     fun provideVideosManager(
         context: OTApplication,
-        manager: UploadsManager
+        manager: UploadsManager,
+        wifi: WifiManager
     ): VideosManager {
-        return VideosManagerImpl(context, manager)
+        return VideosManagerImpl(
+            context, manager, wifi
+        )
     }
 
 

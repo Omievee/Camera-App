@@ -4,7 +4,10 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
-import androidx.work.*
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.Operation
+import androidx.work.WorkManager
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
@@ -16,6 +19,7 @@ import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
+import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
 import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -27,13 +31,12 @@ import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
-import java.util.*
-import kotlin.collections.ArrayList
 
 
 class VideosManagerImpl(
     val context: OTApplication,
-    val manager: UploadsManager
+    val manager: UploadsManager,
+    val wifi: com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 ) : VideosManager {
 
 
@@ -112,6 +115,9 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 Log.d(TAG, "upload ID was saved to db...")
+//                if (isFirstRun) {
+//                    startUploadWorkManager()
+//                }
                 loadFromDB()
             }, {
                 it.printStackTrace()
@@ -119,9 +125,9 @@ class VideosManagerImpl(
     }
 
 
+
     @SuppressLint("CheckResult")
     override fun updateVideoStatus(video: SavedVideo, state: UploadState) {
-
         Single.fromCallable {
             with(videoDao) {
                 this?.updateVideoState(state, video.clientId)
@@ -408,10 +414,13 @@ class VideosManagerImpl(
             })
     }
 
+    var faveClicked: Boolean = false
     var pendingVidRegistration: SavedVideo? = null
     @SuppressLint("CheckResult")
     override fun updateVideoFavorite(isFavorite: Boolean, video: SavedVideo) {
+        faveClicked = true
         pendingVidRegistration?.is_favorite = true
+        registerVideo(pendingVidRegistration ?: return)
         Single.fromCallable {
             with(videoDao) {
                 this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = video.clientId)
@@ -437,7 +446,7 @@ class VideosManagerImpl(
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
-//
+
 //        Transcoder.into(compressedFile(videoFile, savedVideo).absolutePath)
 //            .addDataSource(videoFile.path)
 //
@@ -472,6 +481,7 @@ class VideosManagerImpl(
 
             override fun onTranscodeCompleted() {
                 Log.d(TAG, "transcode complete......")
+                registerVideo(savedVideo)
             }
         }
         try {
@@ -509,13 +519,15 @@ class VideosManagerImpl(
             .subscribe({
                 Log.d(TAG, "saved video complete...")
                 trimVideo(video)
-                val timerTask = object : TimerTask() {
-                    override fun run() {
-                        Log.d(TAG, "starting registration...")
-                        pendingVidRegistration?.let { it1 -> registerVideo(it1) }
-                    }
-                }
-                Timer().schedule(timerTask, 4000)
+//                val timerTask = object : TimerTask() {
+//                    override fun run() {
+//                        if (!faveClicked) {
+//                            Log.d(TAG, "starting registration...")
+//                            pendingVidRegistration?.let { it1 -> registerVideo(it1) }
+//                        }
+//                    }
+//                }
+//                Timer().schedule(timerTask, 2000)
             }, {
                 it.printStackTrace()
             })
@@ -540,12 +552,18 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                if (isFirstRun && videosList.size > 0) {
-                    Log.d(TAG, "First Run & work manager...")
-                    doWork()
+                if (isFirstRun) {
+                    checkConnection()
                     isFirstRun = false
                 }
-//                for (savedVideo in videosList) {
+                val register = videosList.find {
+                    it.uploadId.isNullOrEmpty()
+                }
+                if (register != null && !disconnected) {
+                    registerVideo(register)
+                }
+
+                //                for (savedVideo in videosList) {
 //                    Log.d(
 //                        TAG,
 //                        "logging upload ID & file name... ${savedVideo.uploadId} && ${File(
@@ -553,8 +571,22 @@ class VideosManagerImpl(
 //                        ).name}"
 //                    )
 //                }
+            }, {
+                it.printStackTrace()
+            })
+    }
 
-
+    var wifiDisp: Disposable? = null
+    var disconnected: Boolean = false
+    private fun checkConnection() {
+        wifiDisp?.dispose()
+        wifiDisp = wifi
+            .subscribeToNetworkUpdates()
+            .subscribe({
+                disconnected = when (it) {
+                    NETWORK_TYPE.UNKNOWN -> true
+                    else -> false
+                }
             }, {
                 it.printStackTrace()
             })
@@ -568,6 +600,7 @@ class VideosManagerImpl(
             .getVideoInstance(saved)
             .retry(3)
             .doOnError {
+                loadFromDB()
                 it.printStackTrace()
             }
             .map {
@@ -582,21 +615,15 @@ class VideosManagerImpl(
     }
 
     override fun onNotifyWorkIsDone() {
-        val vid = videosList.find { !it.mediumUploaded }
-        if (vid != null) {
-            doWork()
-        }
+//        val vid = videosList.find { !it.mediumUploaded }
+//        if (vid != null) {
+//            doWork()
+//        }
     }
 
     private var isFirstRun: Boolean = true
-    private var workRequest: OneTimeWorkRequest? = null
     var work: Operation? = null
-    private fun doWork() {
-        workRequest = OneTimeWorkRequestBuilder<VideoUploadWorker>().addTag("UploadWork").build()
-        work = WorkManager.getInstance(context)
-            .enqueueUniqueWork("UploadWork", ExistingWorkPolicy.KEEP, workRequest ?: return)
-        println("Work run........ ${work!!.state}")
-    }
+
 
     @SuppressLint("CheckResult")
     override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {

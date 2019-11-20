@@ -86,6 +86,7 @@ class VideoUploadWorker(
                     Log.d(TAG, "Subscribed to db updates.. $it... $uploading")
                     if (it > 0 && !uploading && hdReady == false) {
                         Log.d(TAG, "Getting videos $it && $uploading ")
+
                         getVideosFromDB()
                     }
                 }, {
@@ -178,8 +179,11 @@ class VideoUploadWorker(
         )
         val mainListsAreEmpty = standardList.size == 0 && faveList.size == 0
         val HDListsAreEmpty = standardListHQ.isNotEmpty() && faveListHQ.isNotEmpty()
-        if (mainListsAreEmpty) uploading = false
-        Log.d(TAG, "Starting upload process....")
+
+        if (mainListsAreEmpty) {
+            uploading = false
+        }
+        Log.d(TAG, "Starting upload process... mainlist? $mainListsAreEmpty")
         when {
             faveList.size > 0 -> {
                 progressManager.onCurrentUploadProcess(
@@ -471,7 +475,7 @@ class VideoUploadWorker(
             true -> currentVideo?.trimmedVidPath
             else -> currentVideo?.mediumRes
         }
-        if(!interruptUpload){
+        if (!interruptUpload) {
             synchronized(this) {
                 try {
                     getVideoDimensions(path = path ?: "")
@@ -522,7 +526,7 @@ class VideoUploadWorker(
                             )
                         })
             }
-        }else stopUploadForNewFavorite()
+        } else stopUploadForNewFavorite()
 
 
     }
