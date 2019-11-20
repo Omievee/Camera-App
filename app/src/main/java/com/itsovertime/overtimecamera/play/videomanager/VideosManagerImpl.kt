@@ -180,7 +180,7 @@ class VideosManagerImpl(
     private var copyVideo = "copy"
 
 
-    override fun encodeHighQualityTrim(savedVideo: SavedVideo) {
+    override fun encodeHighQualityTrim(savedVideo: SavedVideo): Observable<SavedVideo> {
         val newFile =
             fileForHDEncodedVideo(File(savedVideo.trimmedVidPath).name, savedVideo.clientId)
         val encodeCommand = arrayOf(
@@ -217,12 +217,11 @@ class VideosManagerImpl(
 
                     override fun onFinish() {
                         super.onFinish()
-
+                        Log.d(TAG, "COMPLETE FROM ENCODING!")
                     }
 
                     override fun onFailure(message: String?) {
                         super.onFailure(message)
-
                         Crashlytics.log("Failed to execute ffmpeg -- $message")
                     }
                 })
@@ -232,7 +231,12 @@ class VideosManagerImpl(
             Crashlytics.log("FFMPEG -- ${e.message}")
         }
 
+        return encodedVid
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
     }
+
+    var encodedVid: BehaviorSubject<SavedVideo> = BehaviorSubject.create()
 
     var hdSubject: BehaviorSubject<Boolean> = BehaviorSubject.create()
 
@@ -332,27 +336,37 @@ class VideosManagerImpl(
             println("Failed....")
         }
         updateEncodedPath(
-            File(mediaStorageDir.path + File.separator + "1080.trim.$fileName").absolutePath,
+            File(mediaStorageDir.path + File.separator + "1080.$fileName").absolutePath,
             clientId
         )
-        return File(mediaStorageDir.path + File.separator + "1080.trim.$fileName")
+        return File(mediaStorageDir.path + File.separator + "1080.$fileName")
     }
 
     @SuppressLint("CheckResult")
-    private fun updateEncodedPath(path: String, clientId: String) {
+    override fun updateEncodedPath(path: String, clientId: String) {
         Single.fromCallable {
             with(videoDao) {
                 this?.updateEncodedPath(path, clientId)
             }
+            with(videoDao) {
+                this?.getVideoForUpload(clientId)
+            }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .onErrorReturn {
-                it.printStackTrace()
-            }
             .subscribe({
+                Log.d(TAG, "COMPLETE FROM ENCODING DB")
+                encodedVid.onNext(it ?: return@subscribe)
             }, {
                 it.printStackTrace()
             })
+    }
+
+    override fun onGetEncodedVideo(clientId: String): Single<SavedVideo> {
+        return db!!
+            .videoDao().getEncodedVideo(clientId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+
     }
 
 
@@ -488,7 +502,10 @@ class VideosManagerImpl(
 
             override fun onTranscodeCompleted() {
                 Log.d(TAG, "transcode complete......")
-                registerVideo(savedVideo)
+                if (!savedVideo?.mediumUploaded) {
+                    registerVideo(savedVideo)
+                } else loadFromDB()
+
             }
         }
         try {

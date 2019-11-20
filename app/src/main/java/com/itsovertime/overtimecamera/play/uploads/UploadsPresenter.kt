@@ -105,14 +105,6 @@ class UploadsPresenter(
     fun hdSwitchWasChecked(isChecked: Boolean) {
         if (isChecked) {
             manager.onNotifyHDUploadsTriggered(isChecked)
-//            val inputData = Data.Builder().apply {
-//                putBoolean("HD", true)
-//            }
-//            WorkManager.getInstance(view).enqueue(
-//                OneTimeWorkRequestBuilder<VideoUploadWorker>()
-//                    .setInputData(inputData.build())
-//                    .build()
-//            )
             userEnabledHDUploads = isChecked
             view.updateAdapter(list, debug, userEnabledHDUploads)
         }

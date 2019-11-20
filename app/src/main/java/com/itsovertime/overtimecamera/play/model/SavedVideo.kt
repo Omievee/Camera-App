@@ -27,7 +27,7 @@ data class SavedVideo(
     @ColumnInfo(name = "trimmedVidPath")
     val trimmedVidPath: String? = null,
     @ColumnInfo(name = "encodedPath")
-    val encodedPath: String? = null,
+    var encodedPath: String? = null,
     @ColumnInfo(name = "md5")
     val md5: String? = null,
     @ColumnInfo(name = "is_favorite")

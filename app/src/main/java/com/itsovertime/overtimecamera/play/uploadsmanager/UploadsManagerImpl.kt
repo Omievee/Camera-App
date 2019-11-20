@@ -64,14 +64,13 @@ class UploadsManagerImpl(
     override fun registerWithMD5(
         data: TokenResponse,
         hdReady: Boolean,
-        video:SavedVideo
+        video: SavedVideo
     ): Observable<EncryptedResponse> {
         val md5: String = when (hdReady) {
             true -> {
-                md5(File(video?.trimmedVidPath).readBytes()) ?: ""
+                md5(File(video?.encodedPath).readBytes()) ?: ""
             }
             false -> {
-                println("in the false.... ${md5(File(video.mediumRes).readBytes()).toString()}")
                 md5(File(video.mediumRes).readBytes()).toString()
             }
         }

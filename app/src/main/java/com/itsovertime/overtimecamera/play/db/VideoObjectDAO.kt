@@ -32,6 +32,7 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET encodedPath = :encodedPath WHERE clientId = :lastID")
     fun updateEncodedPath(encodedPath: String, lastID: String)
 
+
     @Query("UPDATE SavedVideo SET md5 = :md5 WHERE clientId = :selectedVideoId")
     fun updateVideoMd5(md5: String, selectedVideoId: String)
 
@@ -43,6 +44,9 @@ interface VideoObjectDAO {
 
     @Query("SELECT * FROM SavedVideo WHERE clientId= :clientId")
     fun getVideoForUpload(clientId: String): SavedVideo
+
+    @Query("SELECT * FROM SavedVideo WHERE clientId= :clientId")
+    fun getEncodedVideo(clientId: String): Single<SavedVideo>
 
     @Query("UPDATE SavedVideo SET uploadState = :uploadState WHERE clientId = :lastID")
     fun updateVideoState(uploadState: UploadState, lastID: String)
