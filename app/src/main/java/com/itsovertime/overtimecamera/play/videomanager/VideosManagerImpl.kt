@@ -111,6 +111,7 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 Log.d(TAG, "upload ID was saved to db...")
+                loadFromDB()
 //                if (isFirstRun) {
 //                    startUploadWorkManager()
 //                }
@@ -254,61 +255,64 @@ class VideosManagerImpl(
     @Synchronized
     private fun trimVideo(savedVideo: SavedVideo) {
         println("STARTING TRIM!! $savedVideo")
-        val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
-        val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
-        val complexCommand = arrayOf(
-            //seek to end of video
-            seekToEndOf,
-            //given amount of time from Event -
-            maxVideoLengthFromEvent,
-            // Y command overwrites files w/ out permission
-            commandYOverwrite,
-            // I command reads from designated input file
-            readInput,
-            // file input
-            File(savedVideo.highRes).absolutePath,
-            // video codec to write to
-            videoCodec,
-            // value of codec - H264
-            codecValue,
-            // C command dictates what to do w/ file
-            commandCCopy,
-            // copy the file to given location
-            copyVideo,
-            // new file that was copied from old
-            newFile.absolutePath
-        )
+        synchronized(this) {
+            val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
+            val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
+            val complexCommand = arrayOf(
+                //seek to end of video
+                seekToEndOf,
+                //given amount of time from Event -
+                maxVideoLengthFromEvent,
+                // Y command overwrites files w/ out permission
+                commandYOverwrite,
+                // I command reads from designated input file
+                readInput,
+                // file input
+                File(savedVideo.highRes).absolutePath,
+                // video codec to write to
+                videoCodec,
+                // value of codec - H264
+                codecValue,
+                // C command dictates what to do w/ file
+                commandCCopy,
+                // copy the file to given location
+                copyVideo,
+                // new file that was copied from old
+                newFile.absolutePath
+            )
 
-        try {
-            synchronized(this) {
-                ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
-                    override fun onSuccess(message: String?) {
-                        super.onSuccess(message)
-                        Log.d(TAG, "successful trim...")
-                    }
+            try {
+                synchronized(this) {
+                    ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
+                        override fun onSuccess(message: String?) {
+                            super.onSuccess(message)
+                            Log.d(TAG, "successful trim...")
+                        }
 
-                    override fun onProgress(message: String?) {
-                        super.onProgress(message)
-                        println("Trim progress -- $message")
-                    }
+                        override fun onProgress(message: String?) {
+                            super.onProgress(message)
+                            println("Trim progress -- $message")
+                        }
 
-                    override fun onFinish() {
-                        super.onFinish()
-                        Log.d(TAG, "finished trim.......")
-                        transcodeVideo(savedVideo, newFile)
-                    }
+                        override fun onFinish() {
+                            super.onFinish()
+                            Log.d(TAG, "finished trim.......")
+                            transcodeVideo(savedVideo, newFile)
+                        }
 
-                    override fun onFailure(message: String?) {
-                        super.onFailure(message)
-                        println("TRIM FAILURE $message")
-                        Crashlytics.log("Failed to execute ffmpeg -- $message")
-                    }
-                })
+                        override fun onFailure(message: String?) {
+                            super.onFailure(message)
+                            println("TRIM FAILURE $message")
+                            Crashlytics.log("Failed to execute ffmpeg -- $message")
+                        }
+                    })
+                }
+            } catch (e: FFmpegCommandAlreadyRunningException) {
+                println("FFMPEG :: ${e.message}")
+                Crashlytics.log("FFMPEG -- ${e.message}")
             }
-        } catch (e: FFmpegCommandAlreadyRunningException) {
-            println("FFMPEG :: ${e.message}")
-            Crashlytics.log("FFMPEG -- ${e.message}")
         }
+
     }
 
     @SuppressLint("CheckResult")
@@ -464,9 +468,10 @@ class VideosManagerImpl(
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
     @Synchronized
     override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
-        val file = Uri.fromFile(videoFile)
-        val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
-        val fileDescriptor = parcelFileDescriptor?.fileDescriptor
+        synchronized(this) {
+            val file = Uri.fromFile(videoFile)
+            val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
+            val fileDescriptor = parcelFileDescriptor?.fileDescriptor
 
 //        Transcoder.into(compressedFile(videoFile, savedVideo).absolutePath)
 //            .addDataSource(videoFile.path)
@@ -491,38 +496,40 @@ class VideosManagerImpl(
 //            }).transcode()
 
 
-        val listener = object : MediaTranscoder.Listener {
-            override fun onTranscodeProgress(progress: Double) {}
-            override fun onTranscodeCanceled() {}
-            override fun onTranscodeFailed(exception: Exception?) {
-                Log.d(TAG, "transcode failed.. ${exception?.message}...")
-                exception?.printStackTrace()
-                resetUploadStateForCurrentVideo(savedVideo)
+            val listener = object : MediaTranscoder.Listener {
+                override fun onTranscodeProgress(progress: Double) {}
+                override fun onTranscodeCanceled() {}
+                override fun onTranscodeFailed(exception: Exception?) {
+                    Log.d(TAG, "transcode failed.. ${exception?.message}...")
+                    exception?.printStackTrace()
+                    resetUploadStateForCurrentVideo(savedVideo)
+                }
+
+                override fun onTranscodeCompleted() {
+                    Log.d(TAG, "transcode complete......")
+                    if (!savedVideo.mediumUploaded) {
+                        registerVideo(savedVideo)
+                    } else loadFromDB()
+
+                }
             }
-
-            override fun onTranscodeCompleted() {
-                Log.d(TAG, "transcode complete......")
-                if (!savedVideo?.mediumUploaded) {
-                    registerVideo(savedVideo)
-                } else loadFromDB()
-
+            try {
+                MediaTranscoder.getInstance().transcodeVideo(
+                    fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
+                    MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
+                )
+            } catch (r: RuntimeException) {
+                Crashlytics.log("MediaTranscoder-Error ${r.message}")
+                r.printStackTrace()
+            } catch (io: IOException) {
+                Crashlytics.log("MediaTranscoder-Error ${io.message}")
+                io.printStackTrace()
+            } catch (ia: IllegalArgumentException) {
+                Crashlytics.log("MediaTranscoder-Error ${ia.message}")
+                ia.printStackTrace()
             }
         }
-        try {
-            MediaTranscoder.getInstance().transcodeVideo(
-                fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
-                MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
-            )
-        } catch (r: RuntimeException) {
-            Crashlytics.log("MediaTranscoder-Error ${r.message}")
-            r.printStackTrace()
-        } catch (io: IOException) {
-            Crashlytics.log("MediaTranscoder-Error ${io.message}")
-            io.printStackTrace()
-        } catch (ia: IllegalArgumentException) {
-            Crashlytics.log("MediaTranscoder-Error ${ia.message}")
-            ia.printStackTrace()
-        }
+
     }
 
     var TAG = "VIDEO PROCESS"
@@ -584,17 +591,17 @@ class VideosManagerImpl(
                     it.uploadId.isNullOrEmpty()
                 }
                 if (register != null && !disconnected) {
+                    println("NULL ID!~!!  $register")
                     registerVideo(register)
                 }
-
-                //                for (savedVideo in videosList) {
-//                    Log.d(
-//                        TAG,
-//                        "logging upload ID & file name... ${savedVideo.uploadId} && ${File(
-//                            savedVideo.mediumRes
-//                        ).name}"
-//                    )
-//                }
+                for (savedVideo in videosList) {
+                    Log.d(
+                        TAG,
+                        "logging upload ID & file name... ${savedVideo.uploadId} && ${File(
+                            savedVideo.mediumRes
+                        ).name}"
+                    )
+                }
             }, {
                 it.printStackTrace()
             })

@@ -314,6 +314,8 @@ class VideoUploadWorker(
 
                     override fun onFailure(message: String?) {
                         super.onFailure(message)
+                        uploading = false
+
                         videosManager.resetUploadStateForCurrentVideo(savedVideo)
                         Crashlytics.log("Failed to execute ffmpeg -- $message")
                     }
@@ -334,6 +336,7 @@ class VideoUploadWorker(
                 currentVideo = it
             }
             .doOnError {
+                uploading = false
                 videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return@doOnError)
             }
             .subscribe({
@@ -361,6 +364,7 @@ class VideoUploadWorker(
     private fun stopUploadForNewFavorite() {
         Log.d(TAG, "Stopping upload for new favorite....")
         interruptUpload = false
+        hdReady = false
         currentVideo = null
         getVideosFromDB()
     }
@@ -399,7 +403,7 @@ class VideoUploadWorker(
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?) {
-        Log.d(TAG, "being upload function......")
+        Log.d(TAG, "being upload function......${File(currentVideo?.mediumRes).exists()}")
         if (!interruptUpload) {
             tokenDisposable =
                 uploadsManager
@@ -551,6 +555,7 @@ class VideoUploadWorker(
                         videosManager.resetUploadStateForCurrentVideo(
                             currentVideo = currentVideo ?: return@doOnError
                         )
+                        uploading = false
                         it.printStackTrace()
                     }
                     .subscribe({
@@ -667,9 +672,11 @@ class VideoUploadWorker(
                 Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT))
             retriever.release()
         } catch (nf: NumberFormatException) {
+            uploading = false
             videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             retriever.release()
         } catch (ia: IllegalArgumentException) {
+            uploading = false
             videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
             retriever.release()
         }

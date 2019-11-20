@@ -40,19 +40,25 @@ class CameraPresenter(
     private var totalDisposable: Disposable? = null
     private var eventDisposable: Disposable? = null
 
+    @Synchronized
     fun getVideoFilePath(photoFileName: String): File {
-        val mediaStorageDir =
-            File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Capture")
-        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+        synchronized(this) {
+            val mediaStorageDir =
+                File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Capture")
+            if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+            }
+
+            filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
+            return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
         }
 
-        filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
-        return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
     }
 
     var e: Event? = null
     var video: SavedVideo? = null
     var clientId: String = ""
+
+    @Synchronized
     fun saveVideo(videoEvent: Event?) {
         e = videoEvent
         clientId = UUID.randomUUID().toString()
@@ -74,8 +80,11 @@ class CameraPresenter(
                 filmed_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             )
         }
-        manager.saveHighQualityVideoToDB(video ?: return)
-        view.engageCamera()
+        synchronized(this) {
+            manager.saveHighQualityVideoToDB(video ?: return)
+            view.engageCamera()
+        }
+
     }
 
 

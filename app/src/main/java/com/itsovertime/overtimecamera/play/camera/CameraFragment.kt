@@ -199,10 +199,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             }
             R.id.tapToSave -> {
                 progress.visibility = View.VISIBLE
-                when (CAMERA) {
-                    1 -> tapToSaveSelfie()
-                    else -> tapToSaveRegularRecording()
+                synchronized(this) {
+                    when (CAMERA) {
+                        1 -> tapToSaveSelfie()
+                        else -> tapToSaveRegularRecording()
+                    }
                 }
+
             }
             R.id.favoriteIcon -> {
                 presenter.updateFavoriteField()
@@ -256,16 +259,24 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         } else hiddenEvents.visibility = View.VISIBLE
     }
 
+
+    @Synchronized
     private fun tapToSaveRegularRecording() {
 
         register?.cancel()
         hideViews?.cancel()
-        favoriteIcon.visibility = View.VISIBLE
-        hahaIcon.visibility = View.VISIBLE
+        activity?.runOnUiThread {
+            favoriteIcon.visibility = View.VISIBLE
+            hahaIcon.visibility = View.VISIBLE
+        }
+
 
         if (!newData.isNullOrEmpty()) {
             taggedAdapter.notifyDataSetChanged()
-            taggedView.visibility = View.VISIBLE
+            activity?.runOnUiThread {
+                taggedView.visibility = View.VISIBLE
+            }
+
         }
         if (recording) {
             releaseCamera(tapToSave = true)
@@ -374,7 +385,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             } else if (point == 1) { //Single touch point, needs to return true in order to detect one more touch point
                 if (event?.action == MotionEvent.ACTION_MOVE) {
                     println("orientation?? >>>>> ${event}")
-                   // determineVisibility()
+                    // determineVisibility()
                 }
                 return true;
             }
@@ -618,8 +629,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 println("======================== ${taggedAthletesArray.size}")
 
                 mediaRecorder?.start()
+//                testing()
                 Timer().schedule(hideViews, 2500)
-
             }
             1 -> {
                 recording = false
@@ -631,6 +642,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         }
     }
 
+    @Synchronized
     @SuppressLint("CheckResult")
     override fun stopRecording(isPaused: Boolean) {
         stopRecordingThread()
@@ -711,6 +723,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             params.height = 0
         }
         navSpace.layoutParams = params
+        //testing()
+
     }
 
 
@@ -773,6 +787,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
 
+    @Synchronized
     fun engageCamera() {
         startBackgroundThread()
         println("TXVIEW :$txView")
@@ -805,11 +820,26 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 it.enable()
             }
         }
+
+
+    }
+
+    fun testing() {
+        val task = object : TimerTask() {
+            override fun run() {
+                when (CAMERA) {
+                    1 -> tapToSaveSelfie()
+                    else -> tapToSaveRegularRecording()
+                }
+            }
+        }
+        Timer().schedule(task, 1000)
     }
 
     var selfieCameraEngaged: Boolean? = false
     private var paused: Boolean = false
     @SuppressLint("CheckResult")
+    @Synchronized
     private fun releaseCamera(tapToSave: Boolean) {
         Single.fromCallable {
             closeCamera()

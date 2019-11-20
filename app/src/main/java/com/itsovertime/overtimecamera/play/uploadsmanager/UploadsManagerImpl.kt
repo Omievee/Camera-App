@@ -68,13 +68,14 @@ class UploadsManagerImpl(
     ): Observable<EncryptedResponse> {
         val md5: String = when (hdReady) {
             true -> {
-                md5(File(video?.encodedPath).readBytes()) ?: ""
+                md5(File(video.encodedPath).readBytes()) ?: ""
             }
             false -> {
-                md5(File(video.mediumRes).readBytes()).toString()
+                println("MD5 DATA.......")
+                println("MD5 DATA.......${File(video.mediumRes)}")
+                md5(File(video.mediumRes).readBytes()) ?: ""
             }
         }
-
         println("md5t ==== $md5")
         return api
             .uploadDataForMd5(
@@ -117,6 +118,7 @@ class UploadsManagerImpl(
     }
 
     fun md5(array: ByteArray): String? {
+        println("Array... $array")
         println("MD5 HASH STARTED")
         val m = MessageDigest.getInstance("MD5")
         m.reset()
