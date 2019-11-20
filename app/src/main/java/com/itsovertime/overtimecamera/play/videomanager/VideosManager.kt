@@ -32,5 +32,7 @@ interface VideosManager {
     fun onGetVideosForUpload(): Single<List<SavedVideo>>
     fun onGetVideosForUploadScreen(): Single<List<SavedVideo>>
     fun encodeHighQualityTrim(savedVideo: SavedVideo)
+    fun onNotifyHDUploadsTriggered(hd:Boolean)
+    fun subscribeToHDSwitch() : Observable<Boolean>
 
 }

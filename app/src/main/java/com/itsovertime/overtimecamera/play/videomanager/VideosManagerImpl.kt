@@ -4,10 +4,7 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.Operation
-import androidx.work.WorkManager
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
@@ -20,7 +17,6 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
-import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -123,7 +119,6 @@ class VideosManagerImpl(
                 it.printStackTrace()
             })
     }
-
 
 
     @SuppressLint("CheckResult")
@@ -237,6 +232,18 @@ class VideosManagerImpl(
             Crashlytics.log("FFMPEG -- ${e.message}")
         }
 
+    }
+
+    var hdSubject: BehaviorSubject<Boolean> = BehaviorSubject.create()
+
+    override fun onNotifyHDUploadsTriggered(hd: Boolean) {
+        hdSubject.onNext(hd)
+    }
+
+    override fun subscribeToHDSwitch(): Observable<Boolean> {
+        return hdSubject
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
     }
 
 

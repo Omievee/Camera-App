@@ -47,7 +47,6 @@ class VideoUploadWorker(
 
     var hdReady: Boolean? = false
     var videos = mutableListOf<SavedVideo>()
-    var instanceDisp: Disposable? = null
 
     @SuppressLint("CheckResult")
 
@@ -56,9 +55,9 @@ class VideoUploadWorker(
 
     override fun doWork(): Result {
         return try {
-            hdReady = inputData.getBoolean("HD", false)
             subscribeToUpdates()
             subscribeToNewFaves()
+            subscribeToHDSwitch()
             getVideosFromDB()
             Result.success()
         } catch (throwable: Throwable) {
@@ -107,6 +106,19 @@ class VideoUploadWorker(
                     }
                 }, {
                 })
+    }
+
+    var hdSwitch: Disposable? = null
+    fun subscribeToHDSwitch() {
+        hdSwitch =
+            videosManager
+                .subscribeToHDSwitch()
+                .subscribe({
+                    hdReady = it
+                }, {
+
+                })
+
     }
 
     var vidDisp: Disposable? = null
