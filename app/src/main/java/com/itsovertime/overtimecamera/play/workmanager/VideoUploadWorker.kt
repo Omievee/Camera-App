@@ -23,9 +23,9 @@ import com.itsovertime.overtimecamera.play.progress.UploadsMessage
 import com.itsovertime.overtimecamera.play.uploads.CompleteResponse
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
-import io.reactivex.Single
 import io.reactivex.disposables.Disposable
 import java.io.File
+import java.lang.Exception
 import java.lang.IllegalArgumentException
 import java.lang.NumberFormatException
 import java.lang.RuntimeException
@@ -63,6 +63,7 @@ class VideoUploadWorker(
             subscribeToUpdates()
             subscribeToNewFaves()
             subscribeToHDSwitch()
+            subscribeToEncodeComplete()
             getVideosFromDB()
             Result.success()
         } catch (throwable: Throwable) {
@@ -95,6 +96,19 @@ class VideoUploadWorker(
                 }, {
                     it.printStackTrace()
                 })
+    }
+
+    var en: Disposable? = null
+    private fun subscribeToEncodeComplete() {
+        en = videosManager
+            .subscribeToEncodeComplete()
+            .subscribe({
+                currentVideo = it
+            }, {
+
+            })
+
+
     }
 
     var faves: Disposable? = null
@@ -198,7 +212,7 @@ class VideoUploadWorker(
                     "&& StandardHQ List:: ${standardListHQ.size}"
         )
         val mainListsAreEmpty = standardList.size == 0 && faveList.size == 0
-        val HDListsAreEmpty = standardListHQ.isNotEmpty() && faveListHQ.isNotEmpty()
+        val HDListsAreEmpty = standardListHQ.isEmpty() && faveListHQ.isEmpty()
 
         if (mainListsAreEmpty) {
             uploading = false
@@ -214,8 +228,14 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     Log.d(TAG, "uploading favorite video.... ${faveList[0]}.")
-                    requestTokenForUpload(faveList[0])
-                    faveList.remove(faveList[0])
+                    if (File(faveList[0]?.mediumRes).exists()) {
+                        uploading = true
+                        requestTokenForUpload(faveList[0])
+                        faveList.remove(faveList[0])
+                    } else {
+                        uploading = false
+                        videosManager.resetUploadStateForCurrentVideo(faveList[0])
+                    }
                 }
             }
             standardList.size > 0 -> {
@@ -224,13 +244,22 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     Log.d(TAG, "uploading standard video.... ${standardList[0]}.")
-                    requestTokenForUpload(standardList[0])
-                    standardList.remove(standardList[0])
+                    if (File(standardList[0]?.mediumRes).exists()) {
+                        println("This file exists... ${File(standardList[0].mediumRes).exists()}")
+                        uploading = true
+                        requestTokenForUpload(standardList[0])
+                        standardList.remove(standardList[0])
+                    } else {
+                        uploading = false
+                        videosManager.resetUploadStateForCurrentVideo(standardList[0])
+                    }
+
                 }
             }
             faveListHQ.size > 0 && hdReady ?: false -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
                 synchronized(this) {
+                    uploading = true
                     encodeVideoForUpload(faveListHQ[0])
                     faveListHQ.remove(faveListHQ[0])
                 }
@@ -238,6 +267,7 @@ class VideoUploadWorker(
             standardListHQ.size > 0 && hdReady ?: false -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
                 synchronized(this) {
+                    uploading = true
                     encodeVideoForUpload(standardListHQ[0])
                     standardListHQ.remove(standardListHQ[0])
                 }
@@ -259,11 +289,15 @@ class VideoUploadWorker(
 
 
     private fun fileForHDEncodedVideo(fileName: String, clientId: String): File {
+        println("starting this func..")
         val mediaStorageDir =
             File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "UploadHD")
+        println("media storage started..")
+        println("media storage started.. $mediaStorageDir")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             println("Failed....")
         }
+        println("pre save...")
         videosManager.updateEncodedPath(
             File(mediaStorageDir.path + File.separator + "1080.$fileName").absolutePath,
             clientId
@@ -271,15 +305,21 @@ class VideoUploadWorker(
         return File(mediaStorageDir.path + File.separator + "1080.$fileName")
     }
 
+    var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
     private fun encodeVideoForUpload(savedVideo: SavedVideo) {
-        val ffmpeg: FFmpeg = FFmpeg.getInstance(context)
+        println("ENCODING STARTED...")
+
+        val encodeFile = when (savedVideo.trimmedVidPath.isNullOrEmpty()) {
+            true -> File(savedVideo.highRes)
+            else -> File(savedVideo.trimmedVidPath)
+        }
         val newFile =
-            fileForHDEncodedVideo(File(savedVideo.trimmedVidPath).name, savedVideo.clientId)
+            fileForHDEncodedVideo(encodeFile.name, savedVideo.clientId)
         val encodeCommand = arrayOf(
             // I command reads from designated input file
             "-i",
             // file input
-            File(savedVideo.trimmedVidPath).absolutePath,
+            encodeFile.absolutePath,
             // video codec to write to
             "-vcodec",
             // value of codec - H264
@@ -287,7 +327,7 @@ class VideoUploadWorker(
             "-preset",
             "ultrafast",
             "-crf",
-            "28",
+            "17",
             "-maxrate",
             "16000k",
             "-bufsize",
@@ -297,41 +337,51 @@ class VideoUploadWorker(
         )
         try {
             synchronized(this) {
+                println("pre ---- executing ffmpeg")
                 ffmpeg.execute(encodeCommand, object : ExecuteBinaryResponseHandler() {
+                    override fun onStart() {
+                        super.onStart()
+                        println("STARTING ENCODE!!")
+                    }
+
                     override fun onSuccess(message: String?) {
                         super.onSuccess(message)
-                        println("Successful... $message")
+                        println("ENCODE Successful... $message")
                     }
 
                     override fun onProgress(message: String?) {
                         super.onProgress(message)
+                        println("encode progress $message")
                     }
 
                     override fun onFinish() {
                         super.onFinish()
-                        getVideo()
+                        println("ENCODING FINISHED...")
+                        getNewHDVideoForUpload(currentVideo ?: return)
+
                     }
 
                     override fun onFailure(message: String?) {
                         super.onFailure(message)
+                        println("ENCODING FAILED")
                         uploading = false
-
                         videosManager.resetUploadStateForCurrentVideo(savedVideo)
                         Crashlytics.log("Failed to execute ffmpeg -- $message")
                     }
                 })
             }
         } catch (e: FFmpegCommandAlreadyRunningException) {
-            println("FFMPEG :: ${e.message}")
+            println("FFMPEG ALREADY RUNNING :: ${e.message}")
             Crashlytics.log("FFMPEG -- ${e.message}")
+        } catch (ex: Exception) {
+            println("wtf... ${ex.printStackTrace()}")
         }
-
     }
 
     var encodeDisp: Disposable? = null
-    private fun getVideo() {
+    private fun getNewHDVideoForUpload(video: SavedVideo) {
         encodeDisp = videosManager
-            .onGetEncodedVideo(currentVideo?.clientId ?: "")
+            .onGetEncodedVideo(video?.clientId ?: "")
             .map {
                 currentVideo = it
             }
@@ -344,22 +394,21 @@ class VideoUploadWorker(
             }, {
 
             })
-
     }
 
-    @Throws(RuntimeException::class)
-    private fun fileIsNotCorrupt(file: File): Boolean {
-        return if (file.readBytes().isEmpty()) {
-            false
-        } else {
-            val retriever = MediaMetadataRetriever()
-            retriever.setDataSource(context, Uri.fromFile(file))
-            val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
-            val isVideo = "yes" == hasVideo
-            retriever.release()
-            isVideo
-        }
-    }
+//    @Throws(RuntimeException::class)
+//    private fun fileIsNotCorrupt(file: File): Boolean {
+//        return if (file.readBytes().isEmpty()) {
+//            false
+//        } else {
+//            val retriever = MediaMetadataRetriever()
+//            retriever.setDataSource(context, Uri.fromFile(file))
+//            val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+//            val isVideo = "yes" == hasVideo
+//            retriever.release()
+//            isVideo
+//        }
+//    }
 
     private fun stopUploadForNewFavorite() {
         Log.d(TAG, "Stopping upload for new favorite....")
@@ -374,7 +423,7 @@ class VideoUploadWorker(
     private var tokenDisposable: Disposable? = null
     private var awsDataDisposable: Disposable? = null
     private fun requestTokenForUpload(savedVideo: SavedVideo) {
-        uploading = true
+
         currentVideo = savedVideo
         Log.d(TAG, "getting token......")
         if (!interruptUpload) {
@@ -403,7 +452,6 @@ class VideoUploadWorker(
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?) {
-        Log.d(TAG, "being upload function......${File(currentVideo?.mediumRes).exists()}")
         if (!interruptUpload) {
             tokenDisposable =
                 uploadsManager
@@ -435,31 +483,54 @@ class VideoUploadWorker(
     var remainder: Int = 0
     var count = 0
     private fun checkFileStatusBeforeUpload() {
-        Log.d(TAG, "CHECKING FILE......")
+        Log.d(TAG, "CHECKING FILE..... ${currentVideo?.uploadId}.")
         if (!interruptUpload) {
             if (!currentVideo?.uploadId.isNullOrEmpty()) {
+                println("not null upload id $currentVideo")
                 chunkToUpload = baseChunkSize
                 if (currentVideo?.mediumUploaded == true && hdReady == true) {
+                    println("Medium was uploaded ... $currentVideo")
                     fullBytes = File(currentVideo?.encodedPath).readBytes()
                     currentVideo?.uploadState = UploadState.UPLOADING_HIGH
                     upload()
                 } else {
                     fullBytes = File(currentVideo?.mediumRes).readBytes()
-                    if (!fileIsNotCorrupt(File(currentVideo?.mediumRes)) || !File(currentVideo?.mediumRes).exists() || fullBytes.isEmpty()) {
+                    if (!File(currentVideo?.mediumRes).exists() || fullBytes.isEmpty()) {
+                        println("NOT CONTINUING UPLOADS!!!")
+                        println("NOT CONTINUING UPLOADS!!! --> Doesn't exist ${File(currentVideo?.mediumRes).exists()}")
+                        println("NOT CONTINUING UPLOADS!!! --> Empty bytes ${fullBytes.isEmpty()}")
                         uploading = false
                         videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
                     } else {
-
                         currentVideo?.uploadState = UploadState.UPLOADING_MEDIUM
                         upload()
                     }
                 }
             } else {
-                Log.d(TAG, "RESETTING FROM CHECK......")
-                uploading = false
-                videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
+                getVideoIdForFile(currentVideo)
             }
         } else stopUploadForNewFavorite()
+
+    }
+
+    var instance: Disposable? = null
+    private fun getVideoIdForFile(currentVideo: SavedVideo?) {
+        instance = uploadsManager
+            .getVideoInstance(currentVideo ?: return)
+            .map {
+                currentVideo.uploadId = it.video?.id
+                println("GETTING VIDEO ID FROM UPOAD WORKER ---- ${it.video.id}")
+                videosManager.updateUploadId(it.video.id ?: "", currentVideo)
+            }
+            .doOnError {
+                uploading = false
+                videosManager.resetUploadStateForCurrentVideo(currentVideo)
+            }
+            .subscribe({
+                this.checkFileStatusBeforeUpload()
+            }, {
+
+            })
 
     }
 

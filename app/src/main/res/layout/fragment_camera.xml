@@ -242,6 +242,7 @@
             android:layout_height="70dp"
             android:background="@drawable/tap"
             android:rotation="90"
+            android:soundEffectsEnabled="false"
             android:textAllCaps="false"
             android:textColor="@color/OT_White"
             app:layout_constraintBottom_toTopOf="@id/navSpace"

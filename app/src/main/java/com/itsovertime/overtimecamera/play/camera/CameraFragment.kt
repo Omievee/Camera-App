@@ -202,7 +202,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 synchronized(this) {
                     when (CAMERA) {
                         1 -> tapToSaveSelfie()
-                        else -> tapToSaveRegularRecording()
+                        else -> {
+                            tapToSaveRegularRecording()
+                        }
                     }
                 }
 
@@ -500,11 +502,28 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight)
             setVideoEncodingBitRate(32 * 1024 * 1024)
             setAudioEncodingBitRate(128 * 1000)
-            setVideoFrameRate(profile.videoFrameRate)
+            setVideoFrameRate(60)
         }
 
         mediaRecorder = recorder
     }
+
+    private fun enableShutterButton() {
+        activity?.runOnUiThread {
+            tapToSave.alpha = .5F
+            tapToSave.isClickable = false
+        }
+        val enable = object : TimerTask() {
+            override fun run() {
+                activity?.runOnUiThread {
+                    tapToSave.isClickable = true
+                    tapToSave.alpha = 1F
+                }
+            }
+        }
+        Timer().schedule(enable, 2500)
+    }
+
 
     @SuppressLint("CheckResult")
     override fun prepareCameraForRecording() {
@@ -513,16 +532,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             return
         }
 
-
         try {
             setUpMediaRecorder()
             mediaRecorder?.prepare()
+
             val texture = txView?.surfaceTexture.apply {
                 this?.setDefaultBufferSize(
                     videoSize?.width ?: 0, videoSize?.height
                         ?: 0
                 )
             }
+            mediaRecorder?.start()
             val previewSurface = Surface(texture)
             val recorderSurface = mediaRecorder?.surface
             val surfaces = ArrayList<Surface>().apply {
@@ -599,6 +619,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     var hideViews: TimerTask? = null
     var register: TimerTask? = null
     private fun startMediaRecorder() {
+        enableShutterButton()
         when (CAMERA) {
             0 -> {
                 hideViews = object : TimerTask() {
@@ -627,8 +648,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 }
 
                 println("======================== ${taggedAthletesArray.size}")
-
-                mediaRecorder?.start()
 //                testing()
                 Timer().schedule(hideViews, 2500)
             }

@@ -31,7 +31,7 @@ interface VideosManager {
     fun onNotifyWorkIsDone()
     fun onGetVideosForUpload(): Single<List<SavedVideo>>
     fun onGetVideosForUploadScreen(): Single<List<SavedVideo>>
-    fun encodeHighQualityTrim(savedVideo: SavedVideo): Observable<SavedVideo>
+    fun subscribeToEncodeComplete(): Observable<SavedVideo>
     fun onNotifyHDUploadsTriggered(hd: Boolean)
     fun subscribeToHDSwitch(): Observable<Boolean>
     fun updateEncodedPath(path: String, clientId: String)
