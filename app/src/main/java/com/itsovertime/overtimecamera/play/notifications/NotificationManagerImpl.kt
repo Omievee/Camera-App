@@ -8,7 +8,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.itsovertime.overtimecamera.play.application.OTApplication
 
 class NotificationManagerImpl(val context: OTApplication) : NotificationManager {
-    override fun onCreateNotificationChannel() {
+    override fun onCreateNotificationChannel(notificationMessage: String) {
         val name = "Uploads"
         val description = "Uploads in progress"
         val importance = android.app.NotificationManager.IMPORTANCE_HIGH
@@ -20,22 +20,20 @@ class NotificationManagerImpl(val context: OTApplication) : NotificationManager 
             context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
 
         notificationManager?.createNotificationChannel(channel)
+        onCreateProgressNotification(notificationMessage, 0, 0)
     }
 
     var uploadsBuilder = NotificationCompat.Builder(context, "Uploads")
     var notificationManager: android.app.NotificationManager? = null
     override fun onCreateProgressNotification(msg: String, progress: Int, maxProg: Int) {
-        onCreateNotificationChannel()
 
         uploadsBuilder.apply {
             setSmallIcon(R.drawable.sym_def_app_icon)
             setContentTitle(msg)
             setContentText("Uploads in progress")
-            setProgress(maxProg, progress, true)
+            setProgress(100, 0, true)
             priority = NotificationCompat.PRIORITY_HIGH
         }
-
-
 
         NotificationManagerCompat.from(context).notify(Uploads, uploadsBuilder.build())
     }

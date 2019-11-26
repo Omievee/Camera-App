@@ -106,7 +106,7 @@ class UploadsPresenter(
         if (isChecked) {
             manager.onNotifyHDUploadsTriggered(isChecked)
             userEnabledHDUploads = isChecked
-            view.updateAdapter(list, debug, userEnabledHDUploads)
+            view.updateAdapter(list.asReversed(), debug, userEnabledHDUploads)
         }
     }
 
@@ -116,7 +116,7 @@ class UploadsPresenter(
 
     fun updateAdapterForDebug() {
         debug = !debug
-        view.updateAdapter(list, debug, userEnabledHDUploads)
+        view.updateAdapter(list.asReversed(), debug, userEnabledHDUploads)
     }
 }
 

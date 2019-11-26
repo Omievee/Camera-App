@@ -114,11 +114,10 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                Log.d(TAG, "upload ID was saved to db...")
-                loadFromDB()
-//                if (isFirstRun) {
-//                    startUploadWorkManager()
-//                }
+                if (savedVideo.is_favorite) {
+                    newFave.onNext(true)
+                }
+
                 loadFromDB()
             }, {
                 it.printStackTrace()
@@ -381,30 +380,6 @@ class VideosManagerImpl(
             })
     }
 
-    var faveClicked: Boolean = false
-    var pendingVidRegistration: SavedVideo? = null
-    @SuppressLint("CheckResult")
-    override fun updateVideoFavorite(isFavorite: Boolean, video: SavedVideo) {
-        faveClicked = true
-        pendingVidRegistration?.is_favorite = true
-        registerVideo(pendingVidRegistration ?: return)
-        Single.fromCallable {
-            with(videoDao) {
-                this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = video.clientId)
-            }
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .onErrorReturn {
-                it.printStackTrace()
-            }
-            .doOnSuccess {
-                newFave.onNext(true)
-            }
-            .subscribe({
-            }, {
-                it.printStackTrace()
-            })
-    }
 
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
@@ -431,7 +406,7 @@ class VideosManagerImpl(
             }
 
             override fun onTranscodeCompleted() {
-                Log.d(TAG, "transcode complete...... medium uploaded? ${savedVideo.mediumUploaded}")
+                println("================== favorite video?? ${savedVideo.is_favorite}")
                 if (!savedVideo.mediumUploaded) {
                     registerVideo(savedVideo)
                 } else loadFromDB()
@@ -487,19 +462,33 @@ class VideosManagerImpl(
             }
             .subscribe({
                 Log.d(TAG, "saved video complete...")
-                //  loadFromDB()
-                if (isVideoDurationLongerThanMaxTime(video)) {
-                    trimVideo(video)
-                } else transcodeVideo(video, File(video.highRes))
-//                val timerTask = object : TimerTask() {
-//                    override fun run() {
-//                        if (!faveClicked) {
-//                            Log.d(TAG, "starting registration...")
-//                            pendingVidRegistration?.let { it1 -> registerVideo(it1) }
-//                        }
-//                    }
-//                }
-//                Timer().schedule(timerTask, 2000)
+                if (isVideoDurationLongerThanMaxTime(pendingVidRegistration ?: return@subscribe)) {
+                    trimVideo(pendingVidRegistration ?: return@subscribe)
+                } else transcodeVideo(
+                    pendingVidRegistration ?: return@subscribe,
+                    File(pendingVidRegistration?.highRes)
+                )
+            }, {
+                it.printStackTrace()
+            })
+    }
+
+    var pendingVidRegistration: SavedVideo? = null
+    @SuppressLint("CheckResult")
+    override fun updateVideoFavorite(isFavorite: Boolean, video: SavedVideo) {
+        pendingVidRegistration?.is_favorite = true
+        Single.fromCallable {
+            with(videoDao) {
+                this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = video.clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorReturn {
+                it.printStackTrace()
+            }
+            .doOnSuccess {
+            }
+            .subscribe({
             }, {
                 it.printStackTrace()
             })
@@ -514,6 +503,7 @@ class VideosManagerImpl(
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
+            println("")
             videosList.addAll(it.asReversed())
             val totalUploaded = mutableListOf<SavedVideo>()
             totalUploaded.addAll(it)
@@ -528,46 +518,9 @@ class VideosManagerImpl(
                     checkConnection()
                     isFirstRun = false
                 }
-
-//                videosList.forEach {
-//                    println("check file for video.... ${doesFileContainVideo(File(it.mediumRes))}")
-//                }
-//                val register = videosList.find {
-//                    it.uploadId.isNullOrEmpty()
-//                }
-//                if (register != null && !disconnected) {
-//                    println("NULL ID!~!!  $register")
-//                    registerVideo(register)
-//                }
-//                for (savedVideo in videosList) {
-//                    if (File(savedVideo.mediumRes).readBytes().isEmpty()) {
-//                        transcodeVideo(savedVideo, File(savedVideo.trimmedVidPath))
-//                    }
-//                    Log.d(
-//                        TAG,
-//                        "logging upload ID & file name... ${savedVideo.uploadId} && ${File(
-//                            savedVideo.highRes
-//                        ).name} "
-//                    )
-//                }
             }, {
                 it.printStackTrace()
             })
-    }
-
-
-    @Throws(java.lang.RuntimeException::class)
-    private fun doesFileContainVideo(file: File): Boolean {
-        return if (file.readBytes().isEmpty()) {
-            false
-        } else {
-            val retriever = MediaMetadataRetriever()
-            retriever.setDataSource(context, Uri.fromFile(file))
-            val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
-            val isVideo = "yes" == hasVideo
-            retriever.release()
-            isVideo
-        }
     }
 
     var wifiDisp: Disposable? = null
@@ -609,10 +562,6 @@ class VideosManagerImpl(
     }
 
     override fun onNotifyWorkIsDone() {
-//        val vid = videosList.find { !it.mediumUploaded }
-//        if (vid != null) {
-//            doWork()
-//        }
     }
 
 
@@ -627,8 +576,10 @@ class VideosManagerImpl(
         var medPath = ""
         var encodePath = ""
         val uploadId: String
+        var state :  UploadState = UploadState.QUEUED
         when (currentVideo.mediumUploaded) {
             true -> {
+                state = UploadState.UPLOADED_MEDIUM
                 medPath = currentVideo.mediumRes.toString()
                 uploadId = currentVideo.uploadId.toString()
                 trimPath = if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
@@ -666,7 +617,7 @@ class VideosManagerImpl(
         Single.fromCallable {
             with(videoDao) {
                 this?.resetUploadDataForVideo(
-                    uploadState = UploadState.QUEUED,
+                    uploadState = state,
                     uploadId = uploadId,
                     lastID = currentVideo.clientId,
                     trimmedVidPath = trimPath,

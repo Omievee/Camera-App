@@ -201,12 +201,6 @@ class VideoUploadWorker(
         up?.dispose()
         tokenDisposable?.dispose()
 
-
-        val notifMsg = when (hdReady) {
-            true -> "Uploading High Quality Videos.."
-            else -> "Uploading Medium Quality Videos.."
-        }
-
         println(
             "List Sizes :::: " +
                     "Fave List:: ${faveList.size} " +
@@ -231,12 +225,16 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     Log.d(TAG, "uploading favorite video.... ${faveList[0]}.")
-                    if (File(faveList[0].mediumRes).exists()) {
-                        uploadingIsTrue()
-                        requestTokenForUpload(faveList[0])
-                        faveList.remove(faveList[0])
+                    if (!faveList[0].mediumRes.isNullOrEmpty()) {
+                        if (File(faveList[0].mediumRes).exists()) {
+                            uploadingIsTrue()
+                            requestTokenForUpload(faveList[0])
+                            faveList.remove(faveList[0])
+                        } else {
+                            uploadingIsFalse()
+                            videosManager.resetUploadStateForCurrentVideo(faveList[0])
+                        }
                     } else {
-                        uploadingIsFalse()
                         videosManager.resetUploadStateForCurrentVideo(faveList[0])
                     }
                 }
@@ -247,17 +245,23 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     Log.d(TAG, "uploading standard video.... ${standardList[0]}.")
-                    if (File(standardList[0].mediumRes).exists()) {
-                        uploadingIsTrue()
-                        requestTokenForUpload(standardList[0])
-                        standardList.remove(standardList[0])
+                    if (!standardList[0].mediumRes.isNullOrEmpty()) {
+                        if (File(standardList[0].mediumRes).exists()) {
+                            uploadingIsTrue()
+                            requestTokenForUpload(standardList[0])
+                            standardList.remove(standardList[0])
+                        } else {
+                            uploadingIsFalse()
+                            videosManager.resetUploadStateForCurrentVideo(standardList[0])
+                        }
                     } else {
-                        uploadingIsFalse()
                         videosManager.resetUploadStateForCurrentVideo(standardList[0])
                     }
-
                 }
+
+
             }
+
             faveListHQ.size > 0 && hdReady ?: false -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
                 synchronized(this) {
@@ -292,15 +296,11 @@ class VideoUploadWorker(
 
 
     private fun fileForHDEncodedVideo(fileName: String, clientId: String): File {
-        println("starting this func..")
         val mediaStorageDir =
             File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "UploadHD")
-        println("media storage started..")
-        println("media storage started.. $mediaStorageDir")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             println("Failed....")
         }
-        println("pre save...")
         videosManager.updateEncodedPath(
             File(mediaStorageDir.path + File.separator + "1080.$fileName").absolutePath,
             clientId
@@ -310,9 +310,11 @@ class VideoUploadWorker(
 
     var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
     private fun encodeVideoForUpload(savedVideo: SavedVideo) {
+        notifications.onCreateNotificationChannel("Uploading High Quality Videos. Do not close app.")
         if (!savedVideo.encodedPath.isNullOrEmpty()) {
-            if (File(savedVideo.encodedPath).exists())
+            if (File(savedVideo.encodedPath).exists()) {
                 File(savedVideo.encodedPath).delete()
+            }
         }
         val encodeFile = when (savedVideo.trimmedVidPath.isNullOrEmpty()) {
             true -> File(savedVideo.highRes)
