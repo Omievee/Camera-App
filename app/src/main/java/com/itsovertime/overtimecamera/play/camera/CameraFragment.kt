@@ -730,7 +730,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
         athleteRecycler.layoutManager =
             LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-        detectOrientation()
+        // detectOrientation()
 
         cameraView.setOnTouchListener(this)
 

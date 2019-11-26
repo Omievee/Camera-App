@@ -64,12 +64,13 @@ interface VideoObjectDAO {
     @Query("UPDATE SavedVideo SET isProcessed = :isProcessed WHERE clientId = :lastID")
     fun updateVideoIsProcessed(isProcessed: Boolean, lastID: String)
 
-    @Query("UPDATE SavedVideo SET  uploadState = :uploadState, uploadId = :uploadId, mediumRes = :mediumVidPath, trimmedVidPath = :trimmedVidPath WHERE clientId = :lastID")
+    @Query("UPDATE SavedVideo SET  uploadState = :uploadState, uploadId = :uploadId, mediumRes = :mediumVidPath, trimmedVidPath = :trimmedVidPath, encodedPath = :encodedPath WHERE clientId = :lastID")
     fun resetUploadDataForVideo(
         uploadState: UploadState,
         uploadId: String,
         mediumVidPath: String?,
         trimmedVidPath: String,
+        encodedPath: String,
         lastID: String
     )
 

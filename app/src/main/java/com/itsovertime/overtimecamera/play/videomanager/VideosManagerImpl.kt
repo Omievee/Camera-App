@@ -74,6 +74,7 @@ class VideosManagerImpl(
 
     @SuppressLint("CheckResult")
     override fun updateHighuploaded(qualityUploaded: Boolean, clientId: String) {
+        println("VIDEO WAS UPDATED!! $clientId")
         Single.fromCallable {
             with(videoDao) {
                 this?.updateHighUpload(qualityUploaded, clientId, UploadState.UPLOADED_HIGH)
@@ -185,56 +186,6 @@ class VideosManagerImpl(
 
 
     override fun subscribeToEncodeComplete(): Observable<SavedVideo> {
-//        val newFile =
-//            fileForHDEncodedVideo(File(savedVideo.trimmedVidPath).name, savedVideo.clientId)
-//        val encodeCommand = arrayOf(
-//            // I command reads from designated input file
-//            readInput,
-//            // file input
-//            File(savedVideo.trimmedVidPath).absolutePath,
-//            // video codec to write to
-//            videoCodec,
-//            // value of codec - H264
-//            codecValue,
-//            "-preset",
-//            "ultrafast",
-//            "-crf",
-//            "28",
-//            "-maxrate",
-//            "16000k",
-//            "-bufsize",
-//            "16000k",
-//            // new file
-//            newFile.absolutePath
-//        )
-//        try {
-//            synchronized(this) {
-//                ffmpeg.execute(encodeCommand, object : ExecuteBinaryResponseHandler() {
-//                    override fun onSuccess(message: String?) {
-//                        super.onSuccess(message)
-//                        println("Successful... $message")
-//                    }
-//
-//                    override fun onProgress(message: String?) {
-//                        super.onProgress(message)
-//                    }
-//
-//                    override fun onFinish() {
-//                        super.onFinish()
-//                        Log.d(TAG, "COMPLETE FROM ENCODING!")
-//                    }
-//
-//                    override fun onFailure(message: String?) {
-//                        super.onFailure(message)
-//                        Crashlytics.log("Failed to execute ffmpeg -- $message")
-//                    }
-//                })
-//            }
-//        } catch (e: FFmpegCommandAlreadyRunningException) {
-//            println("FFMPEG :: ${e.message}")
-//            Crashlytics.log("FFMPEG -- ${e.message}")
-//        }
-
         return encodedVid
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -481,7 +432,6 @@ class VideosManagerImpl(
 
             override fun onTranscodeCompleted() {
                 Log.d(TAG, "transcode complete...... medium uploaded? ${savedVideo.mediumUploaded}")
-
                 if (!savedVideo.mediumUploaded) {
                     registerVideo(savedVideo)
                 } else loadFromDB()
@@ -578,6 +528,10 @@ class VideosManagerImpl(
                     checkConnection()
                     isFirstRun = false
                 }
+
+//                videosList.forEach {
+//                    println("check file for video.... ${doesFileContainVideo(File(it.mediumRes))}")
+//                }
 //                val register = videosList.find {
 //                    it.uploadId.isNullOrEmpty()
 //                }
@@ -599,6 +553,21 @@ class VideosManagerImpl(
             }, {
                 it.printStackTrace()
             })
+    }
+
+
+    @Throws(java.lang.RuntimeException::class)
+    private fun doesFileContainVideo(file: File): Boolean {
+        return if (file.readBytes().isEmpty()) {
+            false
+        } else {
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(context, Uri.fromFile(file))
+            val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+            val isVideo = "yes" == hasVideo
+            retriever.release()
+            isVideo
+        }
     }
 
     var wifiDisp: Disposable? = null
@@ -646,6 +615,7 @@ class VideosManagerImpl(
 //        }
     }
 
+
     private var isFirstRun: Boolean = true
     var work: Operation? = null
 
@@ -653,38 +623,55 @@ class VideosManagerImpl(
     @SuppressLint("CheckResult")
     override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
         Log.d(TAG, "Reset happened......")
-        val med: String
+        var trimPath = ""
+        var medPath = ""
+        var encodePath = ""
         val uploadId: String
         when (currentVideo.mediumUploaded) {
             true -> {
-                med = currentVideo.mediumRes.toString()
+                medPath = currentVideo.mediumRes.toString()
                 uploadId = currentVideo.uploadId.toString()
+                trimPath = if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
+                    currentVideo.trimmedVidPath.toString()
+                } else {
+                    ""
+                }
+                if (!currentVideo.encodedPath.isNullOrEmpty()) {
+                    encodePath = ""
+                    val encodeFile = File(currentVideo.encodedPath)
+                    if (encodeFile.exists()) {
+                        encodeFile.delete()
+                    }
+                }
             }
             else -> {
-                med = ""
                 uploadId = ""
                 if (!currentVideo.mediumRes.isNullOrEmpty()) {
+                    medPath = ""
                     val video = File(currentVideo.mediumRes)
                     if (video.exists()) {
                         video.delete()
                     }
                 }
+                if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
+                    trimPath = ""
+                    val trimFile = File(currentVideo.trimmedVidPath)
+                    if (trimFile.exists()) {
+                        trimFile.delete()
+                    }
+                }
             }
         }
-        if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
-            val trim = File(currentVideo.trimmedVidPath)
-            if (trim.exists()) {
-                trim.delete()
-            }
-        }
+
         Single.fromCallable {
             with(videoDao) {
                 this?.resetUploadDataForVideo(
                     uploadState = UploadState.QUEUED,
                     uploadId = uploadId,
                     lastID = currentVideo.clientId,
-                    trimmedVidPath = "",
-                    mediumVidPath = med
+                    trimmedVidPath = trimPath,
+                    mediumVidPath = medPath,
+                    encodedPath = encodePath
                 )
             }
             with(videoDao) {
@@ -693,14 +680,12 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-//                if (it?.mediumUploaded == false){
-//                    registerVideo(it)
-//                }
-                    it?.let { it1 ->
-                        if (isVideoDurationLongerThanMaxTime(it1)) {
-                            trimVideo(it1)
-                        } else transcodeVideo(it1, File(it1.highRes))
-                    }
+                if (it?.mediumUploaded == false) {
+                    if (isVideoDurationLongerThanMaxTime(it)) {
+                        trimVideo(it)
+                    } else transcodeVideo(it, File(it.highRes))
+                } else loadFromDB()
+
             }, {
                 it.printStackTrace()
             })
@@ -725,5 +710,4 @@ class VideosManagerImpl(
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
-
 }
