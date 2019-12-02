@@ -5,5 +5,5 @@ interface NotificationManager {
     fun onCreateProgressNotification(msg: String, progress: Int, maxProg: Int)
     fun onUpdateProgressNotification(progress: Int, maxProg: Int)
     fun onCreateStandardNotification(msg: String)
-    fun onCreateNotificationChannel()
+    fun onCreateNotificationChannel(notificationMessage:String)
 }

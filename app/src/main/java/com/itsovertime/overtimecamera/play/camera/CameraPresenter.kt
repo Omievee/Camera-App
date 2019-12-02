@@ -84,7 +84,6 @@ class CameraPresenter(
             manager.saveHighQualityVideoToDB(video ?: return)
             view.engageCamera()
         }
-
     }
 
 
@@ -94,7 +93,6 @@ class CameraPresenter(
         manager.loadFromDB()
         user()
         startUploadWorkManager()
-
     }
 
     private fun startUploadWorkManager() {
