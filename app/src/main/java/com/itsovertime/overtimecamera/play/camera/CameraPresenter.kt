@@ -162,6 +162,7 @@ class CameraPresenter(
         totalDisposable = manager
             .subscribeToVideoGallerySize()
             .subscribe({
+                println("PRESENTER CALLED :::: $it")
                 view.updateUploadsIconCount(it.toString())
             }, {
 

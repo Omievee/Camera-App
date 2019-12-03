@@ -54,5 +54,7 @@
     <string name="hd_uploads_button">Upload</string>
     <string name="hd_uploads_cancel_button">Cancel</string>
     <string name="uploads_finished">Finished Uploads</string>
+    <string name="MXP_TOKEN">267c6caa15ebb0261477b8ca1a11c516</string>
+    <string name="MXP_TOKEN_BETA">d23ac736332543445ba2ab5344f407f4</string>
 
 </resources>

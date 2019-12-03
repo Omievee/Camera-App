@@ -12,6 +12,8 @@ import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
+import com.itsovertime.overtimecamera.play.analytics.AnalyticsProperties
+import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -35,12 +37,14 @@ import java.io.IOException
 class VideosManagerImpl(
     val context: OTApplication,
     val manager: UploadsManager,
-    val wifi: com.itsovertime.overtimecamera.play.wifimanager.WifiManager
+    val wifi: com.itsovertime.overtimecamera.play.wifimanager.WifiManager,
+    val analytics: OTAnalyticsManager
 ) : VideosManager {
 
 
+    var data = AppDatabase.getAppDataBase(context)
     override fun onGetVideosForUploadScreen(): Single<List<SavedVideo>> {
-        return db!!.videoDao()
+        return data!!.videoDao()
             .getVideosForUpload()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -117,7 +121,6 @@ class VideosManagerImpl(
                 if (savedVideo.is_favorite) {
                     newFave.onNext(true)
                 }
-
                 loadFromDB()
             }, {
                 it.printStackTrace()
@@ -249,7 +252,6 @@ class VideosManagerImpl(
                         override fun onFinish() {
                             super.onFinish()
                             Log.d(TAG, "finished trim.......")
-
                             transcodeVideo(savedVideo, newFile)
                         }
 
@@ -384,21 +386,15 @@ class VideosManagerImpl(
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
     override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
-        println("Transcode ..........")
+        println("Starting Transcode ..........")
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
 
 
         val listener = object : MediaTranscoder.Listener {
-            override fun onTranscodeProgress(progress: Double) {
-                println("transcode $progress && ${File(savedVideo.highRes).name}")
-            }
-
-            override fun onTranscodeCanceled() {
-                println("canceled from transcode")
-            }
-
+            override fun onTranscodeProgress(progress: Double) {}
+            override fun onTranscodeCanceled() {}
             override fun onTranscodeFailed(exception: Exception?) {
                 Log.d(TAG, "transcode failed.. ${exception?.message}...")
                 exception?.printStackTrace()
@@ -406,10 +402,11 @@ class VideosManagerImpl(
             }
 
             override fun onTranscodeCompleted() {
-                println("================== favorite video?? ${savedVideo.is_favorite}")
-                if (!savedVideo.mediumUploaded) {
-                    registerVideo(savedVideo)
-                } else loadFromDB()
+                println("Transcode complete... ${savedVideo.uploadId}")
+                when (savedVideo.uploadId.isNullOrEmpty()) {
+                    true -> registerVideo(savedVideo)
+                    else -> loadFromDB()
+                }
             }
         }
         try {
@@ -436,7 +433,6 @@ class VideosManagerImpl(
             retriever.setDataSource(context, Uri.fromFile(File(file.highRes)))
             val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             val timeInMillisec = time.toLong() / 1000
-            println("Time from video length..... $timeInMillisec")
             retriever.release()
             return timeInMillisec > file.max_video_length
         } catch (e: IllegalArgumentException) {
@@ -503,7 +499,6 @@ class VideosManagerImpl(
         Single.fromCallable {
             db?.videoDao()?.getVideos()
         }.map {
-            println("")
             videosList.addAll(it.asReversed())
             val totalUploaded = mutableListOf<SavedVideo>()
             totalUploaded.addAll(it)
@@ -548,13 +543,23 @@ class VideosManagerImpl(
             .retry(3)
             .doOnError {
                 loadFromDB()
+
                 it.printStackTrace()
+                analytics.onTrackUploadEvent(
+                    "Failed to register Video",
+                    AnalyticsProperties(client_id = saved.clientId, failed_response = it.message)
+                )
             }
             .map {
+
                 uploadId = it.video.id ?: return@map
                 Log.d(TAG, "upload id received...")
             }
             .subscribe({
+                analytics.onTrackUploadEvent(
+                    "Registered Video",
+                    AnalyticsProperties(client_id = saved.clientId, upload_id = uploadId)
+                )
                 updateUploadId(uploadId, saved)
             }, {
                 it.printStackTrace()
@@ -576,7 +581,7 @@ class VideosManagerImpl(
         var medPath = ""
         var encodePath = ""
         val uploadId: String
-        var state :  UploadState = UploadState.QUEUED
+        var state: UploadState = UploadState.QUEUED
         when (currentVideo.mediumUploaded) {
             true -> {
                 state = UploadState.UPLOADED_MEDIUM
@@ -596,7 +601,10 @@ class VideosManagerImpl(
                 }
             }
             else -> {
-                uploadId = ""
+                uploadId = if (currentVideo?.uploadId.isNullOrEmpty()) {
+                    ""
+                } else currentVideo?.uploadId.toString()
+
                 if (!currentVideo.mediumRes.isNullOrEmpty()) {
                     medPath = ""
                     val video = File(currentVideo.mediumRes)

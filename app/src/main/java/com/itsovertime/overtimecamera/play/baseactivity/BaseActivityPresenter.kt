@@ -4,12 +4,22 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.itsovertime.overtimecamera.play.R
+import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.network.AccessResponse
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
+import com.mixpanel.android.mpmetrics.MixpanelAPI
 import io.reactivex.disposables.Disposable
 
-class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationManager) {
+class BaseActivityPresenter(
+    val view: BaseActivity,
+    val auth: AuthenticationManager,
+    val analytics: OTAnalyticsManager
+) {
+
+    fun onCreate() {
+        analytics.initMixpanel()
+    }
 
     fun displayPermission() {
         view.beginPermissionsFlow()
@@ -80,6 +90,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     }
 
     fun onDestroy() {
+        analytics.onDestroyMixpanel()
         verifyDisposable?.dispose()
         codeDisposable?.dispose()
         authDis?.dispose()

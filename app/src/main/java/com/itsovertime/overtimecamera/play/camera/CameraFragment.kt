@@ -646,8 +646,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                         }
                     }
                 }
-
-                println("======================== ${taggedAthletesArray.size}")
 //                testing()
                 Timer().schedule(hideViews, 2500)
             }

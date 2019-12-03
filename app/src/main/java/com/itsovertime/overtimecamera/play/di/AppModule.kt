@@ -1,6 +1,8 @@
 package com.itsovertime.overtimecamera.play.di
 
 import androidx.work.WorkerFactory
+import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
+import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManagerImpl
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManagerImpl
@@ -33,10 +35,11 @@ class AppModule {
     fun provideVideosManager(
         context: OTApplication,
         manager: UploadsManager,
-        wifi: WifiManager
+        wifi: WifiManager,
+        analytics: OTAnalyticsManager
     ): VideosManager {
         return VideosManagerImpl(
-            context, manager, wifi
+            context, manager, wifi, analytics
         )
     }
 
@@ -83,13 +86,15 @@ class AppModule {
         uploads: UploadsManager,
         videos: VideosManager,
         progress: ProgressManager,
-        notifications: NotificationManager
+        notifications: NotificationManager,
+        analytics: OTAnalyticsManager
     ): WorkerFactory {
         return DaggerWorkerFactory(
             uploads,
             videos,
             progress,
-            notifications
+            notifications,
+            analytics
         )
     }
 
@@ -104,5 +109,12 @@ class AppModule {
     @Singleton
     fun provideNotificationManager(context: OTApplication): NotificationManager {
         return NotificationManagerImpl(context)
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideAnalyticsManager(context: OTApplication, api: Api): OTAnalyticsManager {
+        return OTAnalyticsManagerImpl(context, api)
     }
 }

@@ -19,7 +19,6 @@ class UploadsPresenter(
     private val progressManager: ProgressManager
 ) {
     fun onCreate() {
-        manager.loadFromDB()
         subscribeToNetworkUpdates()
     }
 
@@ -39,6 +38,8 @@ class UploadsPresenter(
     fun onRefresh() {
         view.swipe2RefreshIsTrue()
         loadVideoGallery()
+//        view.swipe2RefreshIsFalse()
+//
     }
 
     fun onResume() {
