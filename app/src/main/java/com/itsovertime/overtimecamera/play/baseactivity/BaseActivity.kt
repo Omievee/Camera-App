@@ -232,6 +232,11 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
 
+//        val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+//        power.addThermalStatusListener {
+//            println("Current Thermal is.... $it")
+//        }
+
 
         window.apply {
             setFlags(
@@ -254,8 +259,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             }
         }
 
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        val currentStatus = powerManager
+
 
         scheduleJob()
     }

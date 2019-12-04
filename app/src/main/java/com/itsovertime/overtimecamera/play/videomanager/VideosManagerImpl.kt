@@ -12,7 +12,7 @@ import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
-import com.itsovertime.overtimecamera.play.analytics.AnalyticsProperties
+import com.itsovertime.overtimecamera.play.analytics.UploadProperties
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
@@ -20,8 +20,6 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
-import com.otaliastudios.transcoder.Transcoder
-import com.otaliastudios.transcoder.TranscoderListener
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -546,7 +544,7 @@ class VideosManagerImpl(
                 it.printStackTrace()
                 analytics.onTrackUploadEvent(
                     "Failed to register Video",
-                    AnalyticsProperties(client_id = saved.clientId, failed_response = it.message)
+                    UploadProperties(client_id = saved.clientId, failed_response = it.message)
                 )
             }
             .map {
@@ -557,7 +555,7 @@ class VideosManagerImpl(
             .subscribe({
                 analytics.onTrackUploadEvent(
                     "Registered Video",
-                    AnalyticsProperties(client_id = saved.clientId, upload_id = uploadId)
+                    UploadProperties(client_id = saved.clientId, upload_id = uploadId)
                 )
                 updateUploadId(uploadId, saved)
             }, {

@@ -19,6 +19,7 @@ class BaseActivityPresenter(
 
     fun onCreate() {
         analytics.initMixpanel()
+        analytics.onTrackDeviceThermalStatus(view)
     }
 
     fun displayPermission() {

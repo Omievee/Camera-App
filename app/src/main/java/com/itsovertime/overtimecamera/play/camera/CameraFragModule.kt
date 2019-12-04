@@ -1,5 +1,6 @@
 package com.itsovertime.overtimecamera.play.camera
 
+import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.di.FragmentScope
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
@@ -16,9 +17,10 @@ class CameraFragModule {
         fragment: CameraFragment,
         manager: VideosManager,
         eventManager: EventManager,
-        authManager: AuthenticationManager
+        authManager: AuthenticationManager,
+        analytics: OTAnalyticsManager
     ): CameraPresenter =
-        CameraPresenter(fragment, manager, authManager, eventManager)
+        CameraPresenter(fragment, manager, authManager, eventManager, analytics)
 }
 
 

@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.model.Event
@@ -33,7 +34,8 @@ class CameraPresenter(
     val view: CameraFragment,
     val manager: VideosManager,
     val authManager: AuthenticationManager,
-    private val eventsManager: EventManager
+    private val eventsManager: EventManager,
+    val analytics: OTAnalyticsManager
 ) {
 
     private var filePath: String? = null
@@ -46,6 +48,7 @@ class CameraPresenter(
             val mediaStorageDir =
                 File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Capture")
             if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+                analytics.onTrackFailedToCreateFile()
             }
 
             filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
@@ -81,6 +84,7 @@ class CameraPresenter(
             )
         }
         synchronized(this) {
+            analytics.onTrackVideoFileCreated(video)
             manager.saveHighQualityVideoToDB(video ?: return)
             view.engageCamera()
         }
@@ -298,6 +302,14 @@ class CameraPresenter(
 
     fun register() {
 
+    }
+
+    fun onTrackEvent(event: Event) {
+        analytics.onTrackSelectedEvent(event)
+    }
+
+    fun onTrackStartedRecording() {
+        analytics.onTrackCameraRecording()
     }
 
 }

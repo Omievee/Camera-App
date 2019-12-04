@@ -77,10 +77,6 @@ class OTApplication : Application(), HasActivityInjector, HasServiceInjector {
         configureWorkManager()
     }
 
-    private fun configureMixPanel() {
-
-    }
-
     fun inject() {
         DaggerAppComponent
             .builder()

@@ -89,7 +89,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     val listener: EventsClickListener = object : EventsClickListener {
         override fun onEventSelected(event: Event) {
-
+            presenter.onTrackEvent(event)
             eventTitle.text = ""
             presenter.changeEvent(event)
             presenter.hideEvents()
@@ -298,11 +298,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             selfieTimer.base = SystemClock.elapsedRealtime();
             tapToSave.setImageResource(R.drawable.selfie_record_red_stop)
             selfieMsg.visibility = View.GONE
-            selfieTimer.start()
             mediaRecorder?.start()
+            selfieTimer.start()
+
             selfieTimer.onChronometerTickListener =
                 Chronometer.OnChronometerTickListener {
                     count++
+
                     if (count == 30) {
                         progressBar.visibility = View.VISIBLE
                         tapToSaveSelfie()
@@ -475,17 +477,38 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
         val recorder = MediaRecorder()
 
-        when (sensorOrientation) {
-            SENSOR_ORIENTATION_DEFAULT_DEGREES -> recorder.setOrientationHint(
-                DEFAULT_ORIENTATIONS.get(
-                    rotation ?: 0
-                )
-            )
-            SENSOR_ORIENTATION_INVERSE_DEGREES -> recorder.setOrientationHint(
-                INVERSE_ORIENTATIONS.get(
-                    rotation ?: 0
-                )
-            )
+
+        when (CAMERA) {
+            0 -> {
+                when (sensorOrientation) {
+                    SENSOR_ORIENTATION_DEFAULT_DEGREES -> recorder.setOrientationHint(
+                        DEFAULT_ORIENTATIONS.get(
+                            rotation ?: 0
+                        )
+                    )
+                    SENSOR_ORIENTATION_INVERSE_DEGREES -> recorder.setOrientationHint(
+                        INVERSE_ORIENTATIONS.get(
+                            rotation ?: 0
+                        )
+                    )
+                }
+            }
+            1 -> {
+                when (sensorOrientation) {
+                    SENSOR_ORIENTATION_DEFAULT_DEGREES -> recorder.setOrientationHint(
+                        INVERSE_ORIENTATIONS.get(
+                            rotation ?: 0
+                        )
+
+                    )
+                    SENSOR_ORIENTATION_INVERSE_DEGREES -> recorder.setOrientationHint(
+                        DEFAULT_ORIENTATIONS.get(
+                            rotation ?: 0
+                        )
+                    )
+
+                }
+            }
         }
 
 
@@ -622,9 +645,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     var hideViews: TimerTask? = null
     var register: TimerTask? = null
     private fun startMediaRecorder() {
-        enableShutterButton()
         when (CAMERA) {
             0 -> {
+                enableShutterButton()
+                presenter.onTrackStartedRecording()
                 hideViews = object : TimerTask() {
                     override fun run() {
                         favoriteIcon?.let {
@@ -937,8 +961,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             val map =
                 characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
                     ?: throw RuntimeException("Cannot get available preview/video sizes")
-            sensorOrientation =
-                characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
+            sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
 
             when (camera) {

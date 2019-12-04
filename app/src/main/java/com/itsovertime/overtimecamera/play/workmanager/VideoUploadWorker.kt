@@ -11,7 +11,7 @@ import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
-import com.itsovertime.overtimecamera.play.analytics.AnalyticsProperties
+import com.itsovertime.overtimecamera.play.analytics.UploadProperties
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -429,7 +429,7 @@ class VideoUploadWorker(
                         )
                         analyticsManager.onTrackUploadEvent(
                             Failed_Token,
-                            AnalyticsProperties(
+                            UploadProperties(
                                 client_id = savedVideo.clientId,
                                 failed_response = it.message
                             )
@@ -441,7 +441,7 @@ class VideoUploadWorker(
                     .doAfterNext {
                         analyticsManager.onTrackUploadEvent(
                             Upload_Token,
-                            AnalyticsProperties(
+                            UploadProperties(
                                 client_id = savedVideo.clientId,
                                 s3_bucket = tokenResponse?.S3Bucket,
                                 s3_key = tokenResponse?.S3Key
@@ -468,7 +468,7 @@ class VideoUploadWorker(
                         checkFileStatusBeforeUpload(video)
                         analyticsManager.onTrackUploadEvent(
                             Register_Upload,
-                            AnalyticsProperties(
+                            UploadProperties(
                                 client_id = video.clientId,
                                 upload_id = video.uploadId
                             )
@@ -478,7 +478,7 @@ class VideoUploadWorker(
                         uploadingIsFalse()
                         analyticsManager.onTrackUploadEvent(
                             Failed_Register_Upload,
-                            AnalyticsProperties(
+                            UploadProperties(
                                 client_id = video.clientId,
                                 failed_response = it.message
                             )
@@ -562,7 +562,7 @@ class VideoUploadWorker(
             .map {
                 analyticsManager.onTrackUploadEvent(
                     Register,
-                    AnalyticsProperties(client_id = currentVideo.clientId)
+                    UploadProperties(client_id = currentVideo.clientId)
                 )
                 currentVideo.uploadId = it.video?.id
                 println("GETTING VIDEO ID FROM UPLOAD WORKER ---- ${it.video.id}")
@@ -572,7 +572,7 @@ class VideoUploadWorker(
                 uploadingIsFalse()
                 analyticsManager.onTrackUploadEvent(
                     Failed_Registration,
-                    AnalyticsProperties(
+                    UploadProperties(
                         client_id = currentVideo.clientId,
                         failed_response = it.message
                     )
@@ -630,7 +630,7 @@ class VideoUploadWorker(
                         }
                         analyticsManager.onTrackUploadEvent(
                             Uploaded_Part,
-                            AnalyticsProperties(
+                            UploadProperties(
                                 client_id = currentVideo?.clientId,
                                 upload_quality = qualityCheck(),
                                 part_index = uploadChunkIndex,
@@ -675,7 +675,7 @@ class VideoUploadWorker(
                         part_size = 0
                         analyticsManager.onTrackUploadEvent(
                             Failed_Uploaded_Part,
-                            AnalyticsProperties(
+                            UploadProperties(
                                 client_id = currentVideo?.clientId,
                                 upload_quality = qualityCheck(),
                                 part_index = uploadChunkIndex,
