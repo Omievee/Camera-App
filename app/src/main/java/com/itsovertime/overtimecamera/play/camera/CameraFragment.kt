@@ -89,6 +89,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     val listener: EventsClickListener = object : EventsClickListener {
         override fun onEventSelected(event: Event) {
+
             eventTitle.text = ""
             presenter.changeEvent(event)
             presenter.hideEvents()
@@ -129,8 +130,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 selfieMsg.visibility = View.VISIBLE
                 selfieTimer.visibility = View.VISIBLE
                 taggedView.visibility = View.GONE
+                navSpace.visibility = View.INVISIBLE
             }
             0 -> {
+                navSpace.visibility = View.VISIBLE
                 eventSpace.visibility = View.VISIBLE
                 taggedView.visibility = View.VISIBLE
                 selfieTimer.visibility = View.GONE
@@ -188,6 +191,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     @Inject
     lateinit var presenter: CameraPresenter
+
 
     override fun onClick(v: View?) {
         when (v?.id) {
@@ -294,8 +298,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             selfieTimer.base = SystemClock.elapsedRealtime();
             tapToSave.setImageResource(R.drawable.selfie_record_red_stop)
             selfieMsg.visibility = View.GONE
-            mediaRecorder?.start()
             selfieTimer.start()
+            mediaRecorder?.start()
             selfieTimer.onChronometerTickListener =
                 Chronometer.OnChronometerTickListener {
                     count++
@@ -430,7 +434,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         CAMERA = if (CAMERA == 0) 1 else 0
         selfieCameraEngaged = CAMERA != 0
 
-
         synchronized(lock = this) {
             deleteUnsavedFile()
             Single.fromCallable {
@@ -542,7 +545,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                         ?: 0
                 )
             }
-            mediaRecorder?.start()
+
             val previewSurface = Surface(texture)
             val recorderSurface = mediaRecorder?.surface
             val surfaces = ArrayList<Surface>().apply {
@@ -646,7 +649,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                         }
                     }
                 }
-//                testing()
+                mediaRecorder?.start()
                 Timer().schedule(hideViews, 2500)
             }
             1 -> {

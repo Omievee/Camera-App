@@ -11,8 +11,9 @@ import com.crashlytics.android.Crashlytics
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.iid.FirebaseInstanceId
+import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.R
-import com.itsovertime.overtimecamera.play.devid_id.DeviceId
+import com.itsovertime.overtimecamera.play.deviceid.DeviceId
 import com.itsovertime.overtimecamera.play.di.DaggerAppComponent
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import com.mixpanel.android.mpmetrics.MixpanelAPI
@@ -63,15 +64,21 @@ class OTApplication : Application(), HasActivityInjector, HasServiceInjector {
         val props = JSONObject()
         props.put("token", token)
         props.put("distinct_id", DeviceId.getID(this))
-        MixpanelAPI.getInstance(this, getString(R.string.MXP_TOKEN))
-            .registerSuperPropertiesOnce(props)
-        MixpanelAPI.getInstance(this, getString(R.string.MXP_TOKEN)).people.identify(
+        val key = when (BuildConfig.DEBUG) {
+            true -> getString(R.string.MXP_TOKEN_BETA)
+            else -> getString(R.string.MXP_TOKEN)
+        }
+        MixpanelAPI.getInstance(this, key).registerSuperPropertiesOnce(props)
+        MixpanelAPI.getInstance(this, key).people.identify(
             DeviceId.getID(
                 this
             )
         )
-
         configureWorkManager()
+    }
+
+    private fun configureMixPanel() {
+
     }
 
     fun inject() {

@@ -1,4 +1,4 @@
-package com.itsovertime.overtimecamera.play.devid_id
+package com.itsovertime.overtimecamera.play.deviceid
 
 import android.content.Context
 import android.provider.Settings

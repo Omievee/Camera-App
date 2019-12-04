@@ -543,7 +543,6 @@ class VideosManagerImpl(
             .retry(3)
             .doOnError {
                 loadFromDB()
-
                 it.printStackTrace()
                 analytics.onTrackUploadEvent(
                     "Failed to register Video",
