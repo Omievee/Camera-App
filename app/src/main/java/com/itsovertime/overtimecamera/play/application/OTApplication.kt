@@ -47,34 +47,38 @@ class OTApplication : Application(), HasActivityInjector, HasServiceInjector {
         Fresco.initialize(this)
         UserPreference.load(this)
         inject()
+
         RxJavaPlugins.setErrorHandler { throwable ->
             println("throws ::::::::::: ${throwable.cause}")
             println("throws ::::::::::: ${throwable.message}")
             println("throws ::::::::::: ${throwable.printStackTrace()}")
         }
 
-        FirebaseInstanceId.getInstance().instanceId
-            .addOnCompleteListener(OnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    Log.w("", "getInstanceId failed", task.exception)
-                    return@OnCompleteListener
-                }
-                token = task.result?.token.toString()
-            })
-        val props = JSONObject()
-        props.put("token", token)
-        props.put("distinct_id", DeviceId.getID(this))
-        val key = when (BuildConfig.DEBUG) {
-            true -> getString(R.string.MXP_TOKEN_BETA)
-            else -> getString(R.string.MXP_TOKEN)
-        }
-        MixpanelAPI.getInstance(this, key).registerSuperPropertiesOnce(props)
-        MixpanelAPI.getInstance(this, key).people.identify(
-            DeviceId.getID(
-                this
-            )
-        )
+//        FirebaseInstanceId.getInstance().instanceId
+//            .addOnCompleteListener(OnCompleteListener { task ->
+//                if (!task.isSuccessful) {
+//                    Log.w("", "getInstanceId failed", task.exception)
+//                    return@OnCompleteListener
+//                }
+//
+//                token = task.result?.token.toString()
+//                println("Token from FBCM::: $token")
+//            })
+//        val props = JSONObject()
+//        props.put("token", token)
+//        props.put("distinct_id", DeviceId.getID(this))
+//        val key = when (BuildConfig.DEBUG) {
+//            true -> getString(R.string.MXP_TOKEN_BETA)
+//            else -> getString(R.string.MXP_TOKEN)
+//        }
+//        MixpanelAPI.getInstance(this, key).registerSuperPropertiesOnce(props)
+//        MixpanelAPI.getInstance(this, key).people.identify(
+//            DeviceId.getID(
+//                this
+//            )
+//        )
         configureWorkManager()
+        println("DEVICE ID IS >...... ${DeviceId.getID(this)}")
     }
 
     fun inject() {

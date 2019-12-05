@@ -11,7 +11,6 @@ import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
-import com.itsovertime.overtimecamera.play.analytics.UploadProperties
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
@@ -69,11 +68,10 @@ class VideoUploadWorker(
             subscribeToNewFaves()
             subscribeToHDSwitch()
             subscribeToEncodeComplete()
-            getVideosFromDB()
             Result.success()
         } catch (throwable: Throwable) {
-            println("Error from worker... ${throwable.cause}")
             throwable.printStackTrace()
+            println("Error from worker... ${throwable.cause}")
             Result.failure()
         }
     }
@@ -227,14 +225,14 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     Log.d(TAG, "uploading favorite video.... ${faveList[0]}.")
-                    if (File(faveList[0].mediumRes).exists()) {
+                    if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists()) {
+                        uploadingIsFalse()
+                        videosManager.onResetCurrentVideo(faveList[0])
+
+                    } else {
                         uploadingIsTrue()
                         requestTokenForUpload(faveList[0])
                         faveList.remove(faveList[0])
-                    } else {
-                        println("RESET FROM FILE NOT FOUND FAVE")
-                        uploadingIsFalse()
-                        videosManager.resetUploadStateForCurrentVideo(faveList[0])
                     }
                 }
             }
@@ -243,16 +241,15 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    Log.d(TAG, "uploading standard video.... ${standardList[0]}.")
-                    Log.d(TAG, "uploading standard video.... ${standardList[0]}.")
-                    if (File(standardList[0].mediumRes).exists()) {
+                    println("Standard video uploading.....")
+                    if (standardList[0].mediumRes.isNullOrEmpty() || !File(standardList[0].mediumRes).exists()) {
+                        uploadingIsFalse()
+                        println("RESET FROM FILE NOT FOUND STANDARD")
+                        videosManager.onResetCurrentVideo(standardList[0])
+                    } else {
                         uploadingIsTrue()
                         requestTokenForUpload(standardList[0])
                         standardList.remove(standardList[0])
-                    } else {
-                        uploadingIsFalse()
-                        println("RESET FROM FILE NOT FOUND STANDARD")
-                        videosManager.resetUploadStateForCurrentVideo(standardList[0])
                     }
                 }
             }
@@ -296,7 +293,7 @@ class VideoUploadWorker(
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
             println("Failed....")
         }
-        videosManager.updateEncodedPath(
+        videosManager.onUpdateEncodedPath(
             File(mediaStorageDir.path + File.separator + "1080.$fileName").absolutePath,
             clientId
         )
@@ -367,7 +364,7 @@ class VideoUploadWorker(
                         super.onFailure(message)
                         println("ENCODING FAILED")
                         uploadingIsFalse()
-                        videosManager.resetUploadStateForCurrentVideo(savedVideo)
+                        videosManager.onResetCurrentVideo(savedVideo)
                         Crashlytics.log("Failed to execute ffmpeg -- $message")
                     }
                 })
@@ -389,7 +386,7 @@ class VideoUploadWorker(
             }
             .doOnError {
                 uploadingIsFalse()
-                videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return@doOnError)
+                videosManager.onResetCurrentVideo(currentVideo ?: return@doOnError)
             }
             .subscribe({
                 requestTokenForUpload(currentVideo ?: return@subscribe)
@@ -421,19 +418,23 @@ class VideoUploadWorker(
                 uploadsManager
                     .getAWSDataForUpload()
                     .doOnError {
-                        it.printStackTrace()
-
-                        uploadingIsFalse()
-                        videosManager.resetUploadStateForCurrentVideo(
-                            currentVideo ?: return@doOnError
-                        )
-                        analyticsManager.onTrackUploadEvent(
-                            Failed_Token,
-                            UploadProperties(
-                                client_id = savedVideo.clientId,
-                                failed_response = it.message
+                        if (it.message.equals("HTTP 502 Bad Gateway")) {
+                            requestTokenForUpload(savedVideo)
+                        } else {
+                            it.printStackTrace()
+                            uploadingIsFalse()
+                            videosManager.onResetCurrentVideo(
+                                currentVideo ?: return@doOnError
                             )
-                        )
+                            analyticsManager.onTrackUploadEvent(
+                                Failed_Token,
+                                arrayOf(
+                                    "client_id = ${savedVideo.clientId}",
+                                    "failed_response = ${it.message}"
+                                )
+                            )
+                        }
+
                     }
                     .map {
                         tokenResponse = it
@@ -441,10 +442,10 @@ class VideoUploadWorker(
                     .doAfterNext {
                         analyticsManager.onTrackUploadEvent(
                             Upload_Token,
-                            UploadProperties(
-                                client_id = savedVideo.clientId,
-                                s3_bucket = tokenResponse?.S3Bucket,
-                                s3_key = tokenResponse?.S3Key
+                            arrayOf(
+                                "client_id = ${savedVideo.clientId}",
+                                "s3_bucket = ${tokenResponse?.S3Bucket}",
+                                "s3_key = ${tokenResponse?.S3Key} "
                             )
                         )
                         beginUpload(token = tokenResponse, video = savedVideo)
@@ -468,24 +469,29 @@ class VideoUploadWorker(
                         checkFileStatusBeforeUpload(video)
                         analyticsManager.onTrackUploadEvent(
                             Register_Upload,
-                            UploadProperties(
-                                client_id = video.clientId,
-                                upload_id = video.uploadId
+                            arrayOf(
+                                "client_id = ${video.clientId}",
+                                "upload_id = ${video.uploadId}"
                             )
                         )
                     }
                     .doOnError {
-                        uploadingIsFalse()
-                        analyticsManager.onTrackUploadEvent(
-                            Failed_Register_Upload,
-                            UploadProperties(
-                                client_id = video.clientId,
-                                failed_response = it.message
+
+                        if (it.message.equals("HTTP 502 Bad Gateway")) {
+                            beginUpload(token, video)
+                        } else {
+                            uploadingIsFalse()
+                            analyticsManager.onTrackUploadEvent(
+                                Failed_Register_Upload,
+                                arrayOf(
+                                    "client_id = ${video.clientId}",
+                                    "failed_response = ${it.message}"
+                                )
                             )
-                        )
-//                        videosManager.resetUploadStateForCurrentVideo(
-//                            currentVideo = currentVideo ?: return@doOnError
-//                        )
+                            videosManager.onResetCurrentVideo(
+                                currentVideo = currentVideo ?: return@doOnError
+                            )
+                        }
                     }
                     .subscribe({
                     }, {
@@ -523,7 +529,7 @@ class VideoUploadWorker(
                                 )
                                 println("NOT CONTINUING UPLOADS!!! --> File bytes empty ${fullBytes.isEmpty()}")
                                 uploadingIsFalse()
-                                videosManager.resetUploadStateForCurrentVideo(
+                                videosManager.onResetCurrentVideo(
                                     video
                                 )
                             } else {
@@ -562,22 +568,29 @@ class VideoUploadWorker(
             .map {
                 analyticsManager.onTrackUploadEvent(
                     Register,
-                    UploadProperties(client_id = currentVideo.clientId)
+                    arrayOf(
+                        "client_id = ${currentVideo.clientId}"
+                    )
                 )
                 currentVideo.uploadId = it.video?.id
                 println("GETTING VIDEO ID FROM UPLOAD WORKER ---- ${it.video.id}")
-                videosManager.updateUploadId(it.video.id ?: "", currentVideo)
+                videosManager.onUpdateUploadIdInDb(it.video.id ?: "", currentVideo)
             }
             .doOnError {
-                uploadingIsFalse()
-                analyticsManager.onTrackUploadEvent(
-                    Failed_Registration,
-                    UploadProperties(
-                        client_id = currentVideo.clientId,
-                        failed_response = it.message
+                if (it.message.equals("HTTP 502 Bad Gateway")) {
+                    getVideoIdForFile(currentVideo)
+                } else {
+                    uploadingIsFalse()
+                    analyticsManager.onTrackUploadEvent(
+                        Failed_Registration,
+                        arrayOf(
+                            "client_id = ${currentVideo.clientId}",
+                            "failed_response = ${it.message}"
+                        )
                     )
-                )
-                videosManager.resetUploadStateForCurrentVideo(currentVideo)
+                    videosManager.onResetCurrentVideo(currentVideo)
+                }
+
             }
             .subscribe({
                 this.checkFileStatusBeforeUpload(video = currentVideo)
@@ -630,15 +643,15 @@ class VideoUploadWorker(
                         }
                         analyticsManager.onTrackUploadEvent(
                             Uploaded_Part,
-                            UploadProperties(
-                                client_id = currentVideo?.clientId,
-                                upload_quality = qualityCheck(),
-                                part_index = uploadChunkIndex,
-                                part_offset = previousStartPlusDynamicChunk,
-                                chunkSize = chunkToUpload,
-                                part_size = part_size,
-                                total_size = fullFileSize,
-                                progress = prog
+                            arrayOf(
+                                "client_id = ${currentVideo?.clientId}",
+                                "upload_quality = ${qualityCheck()}",
+                                "part_index = $uploadChunkIndex",
+                                "part_offset = $previousStartPlusDynamicChunk",
+                                "chunkSize = $chunkToUpload",
+                                "part_size = $part_size",
+                                "total_size = $fullFileSize",
+                                "progress = $prog"
                             )
                         )
                         if (it.body()?.success == true) {
@@ -652,7 +665,6 @@ class VideoUploadWorker(
                             }
 
                             if (startRange >= end) {
-                                Log.d(TAG, "checking for completed upload......")
                                 checkForComplete()
                                 startRange = 0
                                 chunkToUpload = 0
@@ -664,32 +676,35 @@ class VideoUploadWorker(
                                 uploadChunkIndex++
                                 upload()
                             }
-
-
                         }
                     }
                     .doOnError {
-                        startRange = 0
-                        uploadChunkIndex = 0
-                        prog = 0
-                        part_size = 0
-                        analyticsManager.onTrackUploadEvent(
-                            Failed_Uploaded_Part,
-                            UploadProperties(
-                                client_id = currentVideo?.clientId,
-                                upload_quality = qualityCheck(),
-                                part_index = uploadChunkIndex,
-                                part_offset = previousStartPlusDynamicChunk,
-                                chunkSize = chunkToUpload,
-                                part_size = part_size,
-                                total_size = fullFileSize,
-                                failed_response = it.message
+                        if (it.message.equals("HTTP 502 Bad Gateway")) {
+                            upload()
+                        } else {
+                            startRange = 0
+                            uploadChunkIndex = 0
+                            prog = 0
+                            part_size = 0
+                            analyticsManager.onTrackUploadEvent(
+                                Failed_Uploaded_Part,
+                                arrayOf(
+                                    "client_id = ${currentVideo?.clientId}",
+                                    "upload_quality = ${qualityCheck()}",
+                                    "part_index = $uploadChunkIndex",
+                                    "part_offset = $previousStartPlusDynamicChunk",
+                                    "chunkSize = $chunkToUpload",
+                                    "part_size = $part_size",
+                                    "total_size = $fullFileSize",
+                                    "failed_response = ${it.message}"
+                                )
                             )
-                        )
-                        uploadingIsFalse()
-                        videosManager.resetUploadStateForCurrentVideo(
-                            currentVideo = currentVideo ?: return@doOnError
-                        )
+                            uploadingIsFalse()
+                            videosManager.onResetCurrentVideo(
+                                currentVideo = currentVideo ?: return@doOnError
+                            )
+                        }
+
                     }
                     .subscribe({
                     }, {
@@ -725,11 +740,14 @@ class VideoUploadWorker(
                 complete = uploadsManager
                     .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
                     .doOnError {
-                        Log.d(TAG, "ERROR FROM COMPLETE CHECK......")
-                        videosManager.resetUploadStateForCurrentVideo(
-                            currentVideo = currentVideo ?: return@doOnError
-                        )
-                        uploadingIsFalse()
+                        if (it.message.equals("HTTP 502 Bad Gateway")) {
+                            checkForComplete()
+                        } else {
+                            uploadingIsFalse()
+                            videosManager.onResetCurrentVideo(
+                                currentVideo ?: return@doOnError
+                            )
+                        }
                         it.printStackTrace()
                     }
                     .subscribe({
@@ -741,7 +759,9 @@ class VideoUploadWorker(
                             CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
                             else -> {
                                 //uploadingIsFalse()
-                                pingServerForStatus()
+                                videosManager.onResetCurrentVideo(
+                                    currentVideo ?: return@subscribe
+                                )
                             }
                         }
                     }, {
@@ -763,11 +783,11 @@ class VideoUploadWorker(
         if (!stopUploadForNewFavorite) {
             synchronized(this) {
                 try {
-                    getVideoDimensions(path = path ?: "")
+                    getVideoDimensions(path = path)
                 } catch (arg: IllegalAccessException) {
                     arg.printStackTrace()
                     uploadingIsFalse()
-                    videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
+                    videosManager.onResetCurrentVideo(currentVideo ?: return)
                 }
 
                 serverDis = uploadsManager
@@ -780,16 +800,28 @@ class VideoUploadWorker(
                         vid = currentVideo ?: return
                     )
                     .doOnError {
-                        it.printStackTrace()
+                        if (it.message.equals("HTTP 502 Bad Gateway")) {
+                            finalizeUpload(upload)
+                        } else {
+                            uploadingIsFalse()
+                            videosManager.onResetCurrentVideo(
+                                currentVideo ?: return@doOnError
+                            )
+                            it.printStackTrace()
+                        }
                     }
                     .doAfterNext {
-                        //                        analyticsManager.onTrackUploadEvent(
-//                            Completed,
-//                            AnalyticsProperties(
-//                                client_id = currentVideo?.clientId,
-//                                s3_key =
-//                                )
-//                        )
+                        println("Server response>>>>>>>>>>>>>>")
+                        analyticsManager.onTrackUploadEvent(
+                            Completed,
+                            arrayOf(
+                                "client_id = ${currentVideo?.clientId}",
+                                "s3.key = ${upload?.S3Key}",
+                                "upload.quality = ${qualityCheck()}",
+                                "upload.upload_rate = ",
+                                "upload.time = "
+                            )
+                        )
                         progressManager.onUpdateProgress(
                             currentVideo?.clientId ?: "",
                             100,
@@ -807,20 +839,14 @@ class VideoUploadWorker(
                         getVideosFromDB()
                     }
                     .subscribe({
-
                     },
                         {
                             it.printStackTrace()
 
-//                            uploadingIsFalse()
-//                            videosManager.resetUploadStateForCurrentVideo(
-//                                currentVideo ?: return@subscribe
-//                            )
+
                         })
             }
         } else stopUploadForNewFavorite()
-
-
     }
 
 
@@ -838,12 +864,12 @@ class VideoUploadWorker(
 
     var width: Int = 0
     var height: Int = 0
-    private fun getVideoDimensions(path: String) {
+    private fun getVideoDimensions(path: String?) {
         val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(path)
         var width = 0
         var height = 0
         try {
+            retriever.setDataSource(path)
             width =
                 Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH))
             height =
@@ -851,11 +877,11 @@ class VideoUploadWorker(
             retriever.release()
         } catch (nf: NumberFormatException) {
             uploadingIsFalse()
-            videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
+            videosManager.onResetCurrentVideo(currentVideo ?: return)
             retriever.release()
         } catch (ia: IllegalArgumentException) {
             uploadingIsFalse()
-            videosManager.resetUploadStateForCurrentVideo(currentVideo ?: return)
+            videosManager.onResetCurrentVideo(currentVideo ?: return)
             retriever.release()
         }
         this.width = width

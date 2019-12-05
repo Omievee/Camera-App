@@ -150,7 +150,11 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         this.prog = progress
         this.hd = hd
         this.id = id
-        adapter.updateProgress(id, progress, hd)
+        val vid = list?.find {
+            it.clientId == this.id
+        }
+        adapter.updateProgress(list?.indexOf(vid) ?: 0, prog, hd)
+
     }
 
     override fun displayNoNetworkConnection() {
@@ -219,9 +223,13 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
                 )
             )
         )
-        adapter.updateProgress(id, prog, hd)
-        uploadsRecycler.adapter = adapter
+        val vid = list?.find {
+            it.clientId == this.id
+        }
+        adapter.updateProgress(list?.indexOf(vid) ?: 0, prog, hd)
         adapter.notifyDataSetChanged()
+
+        uploadsRecycler.adapter = adapter
         (uploadsRecycler.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = true
     }
 

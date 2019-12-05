@@ -15,6 +15,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
+import com.itsovertime.overtimecamera.play.progress.ProgressManagerImpl
 import com.itsovertime.overtimecamera.play.progressbar.ProgressBarAnimation
 import kotlinx.android.synthetic.main.upload_item_view.view.*
 import java.io.File
@@ -98,18 +99,22 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
     }
 
     var value: Int = 0
-    fun updateMediumProgress(value: Int) {
-        this.value += value
-        if (value == 100) {
-            check1.visibility = View.VISIBLE
+    fun updateMediumProgress(id: String, prog: Int, hd: Boolean) {
+        println("UPDATING PROGRES!! ::: $prog")
+        this.value += prog
+        if (savedVideo?.clientId == id) {
+            if (prog >= 99) {
+                check1.visibility = View.VISIBLE
+            }
+            medQProgressBar.setProgress(
+                value, true
+            )
         }
-        medQProgressBar.setProgress(
-            this.value, true
-        )
     }
 
     fun updateHighProgress(value: Int) {
         this.value += value
+
         if (value == 100) {
             check2.visibility = View.VISIBLE
         }

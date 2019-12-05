@@ -506,7 +506,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                             rotation ?: 0
                         )
                     )
-
                 }
             }
         }

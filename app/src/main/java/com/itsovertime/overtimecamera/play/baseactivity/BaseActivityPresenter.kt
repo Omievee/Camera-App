@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
+import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.network.AccessResponse
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import com.mixpanel.android.mpmetrics.MixpanelAPI
@@ -18,8 +19,7 @@ class BaseActivityPresenter(
 ) {
 
     fun onCreate() {
-        analytics.initMixpanel()
-        analytics.onTrackDeviceThermalStatus(view)
+        analytics.initMixpanel(cntx = view, userId = UserPreference.userId)
     }
 
     fun displayPermission() {
@@ -139,6 +139,8 @@ class BaseActivityPresenter(
             .doOnNext {
                 val res = it.body() ?: return@doOnNext
                 UserPreference.userId = res.data.user.id
+                println("user id is ...${UserPreference.userId}")
+
                 retrieveFullUser()
             }
             .doOnError {
@@ -150,6 +152,7 @@ class BaseActivityPresenter(
 
             })
     }
+
 
     var userDisposable: Disposable? = null
     var allowAccess: Boolean = false
@@ -168,6 +171,7 @@ class BaseActivityPresenter(
             .subscribe({
                 auth.saveUserToDB(it.user)
                 UserPreference.accessAllowed = it.user.is_camera_authorized ?: false
+
                 if (!UserPreference.accessAllowed) {
                     if (it.user.is_banned || it.user.is_suspended || it.user.is_camera_rejected) {
                         logOut()

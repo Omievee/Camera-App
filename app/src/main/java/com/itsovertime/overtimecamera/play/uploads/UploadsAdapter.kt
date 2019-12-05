@@ -4,14 +4,16 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.baseviewholder.BaseViewHolder
+import kotlinx.android.synthetic.main.upload_item_view.view.*
 
 class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
-    var holder: UploadsView? = null
+    var holder: BaseViewHolder? = null
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-        this.holder = holder.itemView as UploadsView
-        holder.itemView.bind(
-            list?.get(position) ?: return, debug, isHD
-        )
+
+        (holder.itemView as UploadsView).bind(list?.get(position) ?: return, debug, isHD)
+
+        println("uploads list:::: ${list?.get(position)?.is_favorite} && ${list?.get(position)?.clientId}")
+        this.holder = holder
     }
 
     var data: UploadsViewData? = null
@@ -20,13 +22,21 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
             field?.diffResult?.dispatchUpdatesTo(this)
         }
 
-    fun updateProgress(id: String, prog: Int, hd: Boolean) {
-        if (hd) {
-            holder?.updateHighProgress(prog)
-        } else holder?.updateMediumProgress(prog)
+    fun updateProgress(index: Int, prog: Int, hd: Boolean) {
+
+
+//        println("this is the video.... ${list?.indexOf(vid)}")
+        println("index for uploading.... $index")
+//        (holder?.itemView as UploadsView).getChildAt(index)
+//            .medQProgressBar.setProgress(
+//            prog,
+//            true
+//        )
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
+
         return BaseViewHolder(UploadsView(parent.context).apply {
             layoutParams =
                 ViewGroup.MarginLayoutParams(

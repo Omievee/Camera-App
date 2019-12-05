@@ -5,14 +5,12 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
-import androidx.work.Operation
 import com.crashlytics.android.Crashlytics
 import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
-import com.itsovertime.overtimecamera.play.analytics.UploadProperties
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
@@ -30,6 +28,7 @@ import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 
 class VideosManagerImpl(
@@ -56,7 +55,7 @@ class VideosManagerImpl(
     }
 
     @SuppressLint("CheckResult")
-    override fun updateTaggedAthleteField(
+    override fun onUpdatedTaggedAthletesInDb(
         taggedAthletesArray: ArrayList<String>,
         clientId: String
     ) {
@@ -84,7 +83,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                loadFromDB()
+                onLoadDb()
             }, {
                 it.printStackTrace()
             })
@@ -99,7 +98,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                loadFromDB()
+                onLoadDb()
             }, {
                 it.printStackTrace()
             })
@@ -108,7 +107,7 @@ class VideosManagerImpl(
     var db = AppDatabase.getAppDataBase(context = context)
     private var videoDao = db?.videoDao()
     @SuppressLint("CheckResult")
-    override fun updateUploadId(uplaodId: String, savedVideo: SavedVideo) {
+    override fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo) {
         Single.fromCallable {
             with(videoDao) {
                 this?.updateUploadId(uplaodId, savedVideo.clientId)
@@ -119,7 +118,7 @@ class VideosManagerImpl(
                 if (savedVideo.is_favorite) {
                     newFave.onNext(true)
                 }
-                loadFromDB()
+                onLoadDb()
             }, {
                 it.printStackTrace()
             })
@@ -162,14 +161,17 @@ class VideosManagerImpl(
     }
 
     var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
-    override fun loadFFMPEG() {
+    override fun onLoadFFMPEG() {
         try {
+
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
                 override fun onFailure() {
                     super.onFailure()
                     Crashlytics.log("FFMPEG -- LOAD FAILURE")
                 }
             })
+
+
         } catch (e: FFmpegNotSupportedException) {
             e.printStackTrace()
             Crashlytics.log("FFMPEG not supported -- ${e.message}")
@@ -205,66 +207,84 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-
+    var start: Long = 0L
+    var finish: Long = 0L
     @Synchronized
-    private fun trimVideo(savedVideo: SavedVideo) {
+    private fun onTrimVideo(savedVideo: SavedVideo) {
         println("STARTING TRIM!! $savedVideo")
-        synchronized(this) {
-            val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
-            val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
-            val complexCommand = arrayOf(
-                //seek to end of video
-                seekToEndOf,
-                //given amount of time from Event -
-                maxVideoLengthFromEvent,
-                // Y command overwrites files w/ out permission
-                commandYOverwrite,
-                // I command reads from designated input file
-                readInput,
-                // file input
-                File(savedVideo.highRes).absolutePath,
-                // video codec to write to
-                videoCodec,
-                // value of codec - H264
-                "libx264",
-                // C command dictates what to do w/ file
-                commandCCopy,
-                // copy the file to given location
-                copyVideo,
-                // new file that was copied from old
-                newFile.absolutePath
-            )
-            try {
-                synchronized(this) {
-                    ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
-                        override fun onSuccess(message: String?) {
-                            super.onSuccess(message)
-                            Log.d(TAG, "successful trim...")
-                        }
+        val newFile = fileForTrimmedVideo(File(savedVideo.highRes).name, savedVideo.clientId)
+        val maxVideoLengthFromEvent = "-${savedVideo.max_video_length}"
+        val complexCommand = arrayOf(
+            //seek to end of video
+            seekToEndOf,
+            //given amount of time from Event -
+            maxVideoLengthFromEvent,
+            // Y command overwrites files w/ out permission
+            commandYOverwrite,
+            // I command reads from designated input file
+            readInput,
+            // file input
+            File(savedVideo.highRes).absolutePath,
+            // video codec to write to
+            videoCodec,
+            // value of codec - H264
+            "h264",
+            // C command dictates what to do w/ file
+            commandCCopy,
+            // copy the file to given location
+            copyVideo,
+            // new file that was copied from old
+            newFile.absolutePath
+        )
+        try {
+            synchronized(this) {
+                ffmpeg.execute(complexCommand, object : ExecuteBinaryResponseHandler() {
+                    override fun onSuccess(message: String?) {
+                        super.onSuccess(message)
 
-                        override fun onProgress(message: String?) {
-                            super.onProgress(message)
-                            println("Trim progress -- $message")
-                        }
+                        onTransCodeVideo(savedVideo, newFile)
+                        Log.d(TAG, "successful trim...")
+                    }
 
-                        override fun onFinish() {
-                            super.onFinish()
-                            Log.d(TAG, "finished trim.......")
-                            transcodeVideo(savedVideo, newFile)
-                        }
+                    override fun onProgress(message: String?) {
+                        super.onProgress(message)
+                        println("Trim progress -- $message")
+                    }
 
-                        override fun onFailure(message: String?) {
-                            super.onFailure(message)
-                            println("TRIM FAILURE $message")
-                            Crashlytics.log("Failed to execute ffmpeg -- $message")
-                        }
-                    })
-                }
-            } catch (e: FFmpegCommandAlreadyRunningException) {
-                println("FFMPEG :: ${e.message}")
-                Crashlytics.log("FFMPEG -- ${e.message}")
+                    override fun onStart() {
+                        super.onStart()
+                        start = System.currentTimeMillis()
+                    }
+
+                    override fun onFinish() {
+                        super.onFinish()
+
+                        finish = System.currentTimeMillis()
+                        analytics.onTrackTrim(
+                            arrayOf(
+                                "video_client_id = ${savedVideo.clientId}",
+                                "duration = ${(TimeUnit.MILLISECONDS.toSeconds(finish - start))}",
+                                "trimmed_to = ${savedVideo.max_video_length}",
+                                "trimmed_from = ${TimeUnit.MILLISECONDS.toSeconds(
+                                    assetTimeLength(savedVideo)
+                                )}"
+                            )
+                        )
+
+                    }
+
+                    override fun onFailure(message: String?) {
+                        super.onFailure(message)
+                        println("TRIM FAILURE $message")
+                        Crashlytics.log("Failed to execute ffmpeg -- $message")
+                    }
+                })
             }
+        } catch (e: FFmpegCommandAlreadyRunningException) {
+            println("FFMPEG :: ${e.message}")
+            Crashlytics.log("FFMPEG -- ${e.message}")
         }
+
 
     }
 
@@ -277,7 +297,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorReturn {
-                loadFromDB()
+                onLoadDb()
                 it.printStackTrace()
             }
             .subscribe({
@@ -288,7 +308,7 @@ class VideosManagerImpl(
 
 
     @SuppressLint("CheckResult")
-    override fun updateEncodedPath(path: String, clientId: String) {
+    override fun onUpdateEncodedPath(path: String, clientId: String) {
         Single.fromCallable {
             with(videoDao) {
                 this?.updateEncodedPath(path, clientId)
@@ -363,7 +383,7 @@ class VideosManagerImpl(
 
 
     @SuppressLint("CheckResult")
-    override fun updateVideoFunny(isFunny: Boolean, clientId: String) {
+    override fun onVideoIsFunny(isFunny: Boolean, clientId: String) {
         pendingVidRegistration?.is_funny = true
         Single.fromCallable {
             with(videoDao) {
@@ -383,46 +403,61 @@ class VideosManagerImpl(
 
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
-    override fun transcodeVideo(savedVideo: SavedVideo, videoFile: File) {
+    override fun onTransCodeVideo(savedVideo: SavedVideo, videoFile: File) {
         println("Starting Transcode ..........")
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
 
 
-        val listener = object : MediaTranscoder.Listener {
-            override fun onTranscodeProgress(progress: Double) {}
-            override fun onTranscodeCanceled() {}
-            override fun onTranscodeFailed(exception: Exception?) {
-                Log.d(TAG, "transcode failed.. ${exception?.message}...")
-                exception?.printStackTrace()
-                resetUploadStateForCurrentVideo(savedVideo)
-            }
+        synchronized(this) {
+            val listener = object : MediaTranscoder.Listener {
+                override fun onTranscodeProgress(progress: Double) {}
+                override fun onTranscodeCanceled() {}
+                override fun onTranscodeFailed(exception: Exception?) {
+                    Log.d(TAG, "transcode failed.. ${exception?.message}...")
+                    exception?.printStackTrace()
+                    onResetCurrentVideo(savedVideo)
+                }
 
-            override fun onTranscodeCompleted() {
-                println("Transcode complete... ${savedVideo.uploadId}")
-                when (savedVideo.uploadId.isNullOrEmpty()) {
-                    true -> registerVideo(savedVideo)
-                    else -> loadFromDB()
+                override fun onTranscodeCompleted() {
+                    println("Transcode complete... ${savedVideo.uploadId}")
+                    when (savedVideo.uploadId.isNullOrEmpty()) {
+                        true -> onRegisterVideoWithServer(savedVideo)
+                        else -> onLoadDb()
+                    }
                 }
             }
+            try {
+                MediaTranscoder.getInstance().transcodeVideo(
+                    fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
+                    MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
+                )
+            } catch (r: RuntimeException) {
+                Crashlytics.log("MediaTranscoder-Error ${r.message}")
+                r.printStackTrace()
+            } catch (io: IOException) {
+                Crashlytics.log("MediaTranscoder-Error ${io.message}")
+                io.printStackTrace()
+            } catch (ia: IllegalArgumentException) {
+                Crashlytics.log("MediaTranscoder-Error ${ia.message}")
+                ia.printStackTrace()
+            }
         }
-        try {
-            MediaTranscoder.getInstance().transcodeVideo(
-                fileDescriptor, compressedFile(videoFile, savedVideo).absolutePath,
-                MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
-            )
-        } catch (r: RuntimeException) {
-            Crashlytics.log("MediaTranscoder-Error ${r.message}")
-            r.printStackTrace()
-        } catch (io: IOException) {
-            Crashlytics.log("MediaTranscoder-Error ${io.message}")
-            io.printStackTrace()
-        } catch (ia: IllegalArgumentException) {
-            Crashlytics.log("MediaTranscoder-Error ${ia.message}")
-            ia.printStackTrace()
-        }
+    }
 
+    fun assetTimeLength(video: SavedVideo): Long {
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, Uri.fromFile(File(video.highRes)))
+            val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            val timeInMillisec = time.toLong() / 1000
+            retriever.release()
+            return timeInMillisec
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+        }
+        return 0L
     }
 
     private fun isVideoDurationLongerThanMaxTime(file: SavedVideo): Boolean {
@@ -442,7 +477,7 @@ class VideosManagerImpl(
     var TAG = "VIDEO PROCESS"
     @SuppressLint("CheckResult")
     @Synchronized
-    override fun saveHighQualityVideoToDB(video: SavedVideo) {
+    override fun onSaveVideoToDb(video: SavedVideo) {
         pendingVidRegistration = video
         this.lastVideoMaxTime = video.max_video_length.toString()
         Single.fromCallable {
@@ -457,8 +492,8 @@ class VideosManagerImpl(
             .subscribe({
                 Log.d(TAG, "saved video complete...")
                 if (isVideoDurationLongerThanMaxTime(pendingVidRegistration ?: return@subscribe)) {
-                    trimVideo(pendingVidRegistration ?: return@subscribe)
-                } else transcodeVideo(
+                    onTrimVideo(pendingVidRegistration ?: return@subscribe)
+                } else onTransCodeVideo(
                     pendingVidRegistration ?: return@subscribe,
                     File(pendingVidRegistration?.highRes)
                 )
@@ -469,7 +504,7 @@ class VideosManagerImpl(
 
     var pendingVidRegistration: SavedVideo? = null
     @SuppressLint("CheckResult")
-    override fun updateVideoFavorite(isFavorite: Boolean, video: SavedVideo) {
+    override fun onVideoIsFavorite(isFavorite: Boolean, video: SavedVideo) {
         pendingVidRegistration?.is_favorite = true
         Single.fromCallable {
             with(videoDao) {
@@ -492,7 +527,7 @@ class VideosManagerImpl(
     var videosList = mutableListOf<SavedVideo>()
     @Synchronized
     @SuppressLint("CheckResult")
-    override fun loadFromDB() {
+    override fun onLoadDb() {
         videosList.clear()
         Single.fromCallable {
             db?.videoDao()?.getVideos()
@@ -533,31 +568,30 @@ class VideosManagerImpl(
     }
 
     var disp: Disposable? = null
-    override fun registerVideo(saved: SavedVideo) {
+    override fun onRegisterVideoWithServer(saved: SavedVideo) {
         var uploadId = ""
         disp?.dispose()
         disp = manager
             .getVideoInstance(saved)
             .retry(3)
             .doOnError {
-                loadFromDB()
+                onLoadDb()
                 it.printStackTrace()
                 analytics.onTrackUploadEvent(
                     "Failed to register Video",
-                    UploadProperties(client_id = saved.clientId, failed_response = it.message)
+                    arrayOf("client_id = ${saved.clientId}", "failed_response = ${it.message}")
                 )
             }
             .map {
-
                 uploadId = it.video.id ?: return@map
                 Log.d(TAG, "upload id received...")
             }
             .subscribe({
                 analytics.onTrackUploadEvent(
                     "Registered Video",
-                    UploadProperties(client_id = saved.clientId, upload_id = uploadId)
+                    arrayOf("client_id = ${saved.clientId}", "upload_id = ${uploadId}")
                 )
-                updateUploadId(uploadId, saved)
+                onUpdateUploadIdInDb(uploadId, saved)
             }, {
                 it.printStackTrace()
             })
@@ -568,11 +602,8 @@ class VideosManagerImpl(
 
 
     private var isFirstRun: Boolean = true
-    var work: Operation? = null
-
-
     @SuppressLint("CheckResult")
-    override fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo) {
+    override fun onResetCurrentVideo(currentVideo: SavedVideo) {
         Log.d(TAG, "Reset happened......")
         var trimPath = ""
         var medPath = ""
@@ -638,9 +669,9 @@ class VideosManagerImpl(
             .subscribe({
                 if (it?.mediumUploaded == false) {
                     if (isVideoDurationLongerThanMaxTime(it)) {
-                        trimVideo(it)
-                    } else transcodeVideo(it, File(it.highRes))
-                } else loadFromDB()
+                        onTrimVideo(it)
+                    } else onTransCodeVideo(it, File(it.highRes))
+                } else onLoadDb()
 
             }, {
                 it.printStackTrace()

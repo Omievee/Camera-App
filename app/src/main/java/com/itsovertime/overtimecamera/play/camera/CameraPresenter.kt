@@ -85,7 +85,7 @@ class CameraPresenter(
         }
         synchronized(this) {
             analytics.onTrackVideoFileCreated(video)
-            manager.saveHighQualityVideoToDB(video ?: return)
+            manager.onSaveVideoToDb(video ?: return)
             view.engageCamera()
         }
     }
@@ -93,9 +93,10 @@ class CameraPresenter(
 
     fun onCreate() {
         subscribeToGallerySize()
-        manager.loadFFMPEG()
-        manager.loadFromDB()
+        manager.onLoadFFMPEG()
+        manager.onLoadDb()
         user()
+
         startUploadWorkManager()
     }
 
@@ -136,7 +137,7 @@ class CameraPresenter(
 
     fun updateFavoriteField() {
         video?.is_favorite = true
-        manager.updateVideoFavorite(true, video ?: return)
+        manager.onVideoIsFavorite(true, video ?: return)
     }
 
     fun cameraSwitch() {
@@ -149,7 +150,7 @@ class CameraPresenter(
 
     fun updateFunnyField() {
         video?.is_funny = true
-        manager.updateVideoFunny(isFunny = true, clientId = clientId)
+        manager.onVideoIsFunny(isFunny = true, clientId = clientId)
     }
 
     fun deletePreviousFile() {
@@ -196,7 +197,6 @@ class CameraPresenter(
         eventDisposable = eventsManager
             .getEvents()
             .map { er ->
-                println("User ID Is ${user?.id}")
                 er.events.forEachIndexed { i, event ->
                     event.videographer_ids.forEach { s ->
                         if (s == user?.id) {
@@ -294,7 +294,7 @@ class CameraPresenter(
     }
 
     fun updateTaggedAthletesField(taggedAthletesArray: ArrayList<String>) {
-        manager.updateTaggedAthleteField(
+        manager.onUpdatedTaggedAthletesInDb(
             taggedAthletesArray = taggedAthletesArray,
             clientId = clientId
         )

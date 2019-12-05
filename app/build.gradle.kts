@@ -12,11 +12,13 @@ plugins {
 
 
 android {
-    compileSdkVersion(29)
+
+    //DO NOT COMPILE TO APK 29... BREAKS FFMPEG TRIMMING..
+    compileSdkVersion(28)
     defaultConfig {
         applicationId = "com.itsovertime.overtimecamera.play"
         minSdkVersion(28)
-        targetSdkVersion(29)
+        targetSdkVersion(28)
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"

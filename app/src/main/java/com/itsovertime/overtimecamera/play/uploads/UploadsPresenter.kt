@@ -29,6 +29,7 @@ class UploadsPresenter(
         progDisp = progressManager
             .subscribeToUploadProgress()
             .subscribe({
+                println("upload progress.... $it")
                 view.updateProgressBar(it.id, it.prog, it.isHD)
             }, {
 
