@@ -12,6 +12,8 @@ plugins {
 
 
 android {
+
+    //DO NOT COMPILE TO APK 29... BREAKS FFMPEG TRIMMING..
     compileSdkVersion(28)
     defaultConfig {
         applicationId = "com.itsovertime.overtimecamera.play"

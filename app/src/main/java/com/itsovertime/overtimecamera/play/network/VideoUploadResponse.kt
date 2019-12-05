@@ -14,18 +14,19 @@ data class CompleteResponse(
 }
 
 
-class ServerResponse(
+data class ServerResponse(
+    val video: Video
 )
 
 class ServerRequest(
     val source_high_quality_path: String? = null,
-    val source_medium_quality_path: String?=null,
+    val source_medium_quality_path: String? = null,
     val source_medium_quality_progress: Double = 1.0,
     val source_high_quality_progress: Double = 1.0,
-    val source_medium_quality_width: Int?=null,
-    val source_medium_quality_height: Int?=null,
-    val source_high_quality_width: Int?=null,
-    val source_high_quality_height: Int?=null
+    val source_medium_quality_width: Int? = null,
+    val source_medium_quality_height: Int? = null,
+    val source_high_quality_width: Int? = null,
+    val source_high_quality_height: Int? = null
 ) {
 
 }

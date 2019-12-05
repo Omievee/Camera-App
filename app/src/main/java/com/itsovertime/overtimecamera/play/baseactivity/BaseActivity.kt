@@ -12,6 +12,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
+import android.os.PowerManager
 import android.provider.Settings
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -25,12 +26,14 @@ import androidx.annotation.StringRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.camera.CameraFragment
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.onboarding.OnBoardingFragment
 import com.itsovertime.overtimecamera.play.onboarding.OnboardingActivity
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
+import com.mixpanel.android.mpmetrics.MixpanelAPI
 import dagger.android.AndroidInjection
 import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.activity_main.*
@@ -223,10 +226,16 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        presenter.onCreate()
         submit.setOnClickListener(this)
         resend.setOnClickListener(this)
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
+
+//        val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+//        power.addThermalStatusListener {
+//            println("Current Thermal is.... $it")
+//        }
 
 
         window.apply {
@@ -249,6 +258,9 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                 logOut()
             }
         }
+
+
+
         scheduleJob()
     }
 
@@ -282,6 +294,7 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         UserPreference.isChecked = false
         stopService(Intent(this, NetworkSchedulerService::class.java))
         presenter.onDestroy()
+
         super.onDestroy()
 
     }

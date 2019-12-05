@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.model.Event
@@ -33,7 +34,8 @@ class CameraPresenter(
     val view: CameraFragment,
     val manager: VideosManager,
     val authManager: AuthenticationManager,
-    private val eventsManager: EventManager
+    private val eventsManager: EventManager,
+    val analytics: OTAnalyticsManager
 ) {
 
     private var filePath: String? = null
@@ -46,6 +48,7 @@ class CameraPresenter(
             val mediaStorageDir =
                 File(view.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Capture")
             if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+                analytics.onTrackFailedToCreateFile()
             }
 
             filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
@@ -81,7 +84,8 @@ class CameraPresenter(
             )
         }
         synchronized(this) {
-            manager.saveHighQualityVideoToDB(video ?: return)
+            analytics.onTrackVideoFileCreated(video)
+            manager.onSaveVideoToDb(video ?: return)
             view.engageCamera()
         }
     }
@@ -89,9 +93,10 @@ class CameraPresenter(
 
     fun onCreate() {
         subscribeToGallerySize()
-        manager.loadFFMPEG()
-        manager.loadFromDB()
+        manager.onLoadFFMPEG()
+        manager.onLoadDb()
         user()
+
         startUploadWorkManager()
     }
 
@@ -132,7 +137,7 @@ class CameraPresenter(
 
     fun updateFavoriteField() {
         video?.is_favorite = true
-        manager.updateVideoFavorite(true, video ?: return)
+        manager.onVideoIsFavorite(true, video ?: return)
     }
 
     fun cameraSwitch() {
@@ -145,7 +150,7 @@ class CameraPresenter(
 
     fun updateFunnyField() {
         video?.is_funny = true
-        manager.updateVideoFunny(isFunny = true, clientId = clientId)
+        manager.onVideoIsFunny(isFunny = true, clientId = clientId)
     }
 
     fun deletePreviousFile() {
@@ -162,6 +167,7 @@ class CameraPresenter(
         totalDisposable = manager
             .subscribeToVideoGallerySize()
             .subscribe({
+                println("PRESENTER CALLED :::: $it")
                 view.updateUploadsIconCount(it.toString())
             }, {
 
@@ -191,7 +197,6 @@ class CameraPresenter(
         eventDisposable = eventsManager
             .getEvents()
             .map { er ->
-                println("User ID Is ${user?.id}")
                 er.events.forEachIndexed { i, event ->
                     event.videographer_ids.forEach { s ->
                         if (s == user?.id) {
@@ -289,7 +294,7 @@ class CameraPresenter(
     }
 
     fun updateTaggedAthletesField(taggedAthletesArray: ArrayList<String>) {
-        manager.updateTaggedAthleteField(
+        manager.onUpdatedTaggedAthletesInDb(
             taggedAthletesArray = taggedAthletesArray,
             clientId = clientId
         )
@@ -297,6 +302,14 @@ class CameraPresenter(
 
     fun register() {
 
+    }
+
+    fun onTrackEvent(event: Event) {
+        analytics.onTrackSelectedEvent(event)
+    }
+
+    fun onTrackStartedRecording() {
+        analytics.onTrackCameraRecording()
     }
 
 }

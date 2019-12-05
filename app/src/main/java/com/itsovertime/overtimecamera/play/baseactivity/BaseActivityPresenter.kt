@@ -4,12 +4,23 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.itsovertime.overtimecamera.play.R
+import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
+import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.network.AccessResponse
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
+import com.mixpanel.android.mpmetrics.MixpanelAPI
 import io.reactivex.disposables.Disposable
 
-class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationManager) {
+class BaseActivityPresenter(
+    val view: BaseActivity,
+    val auth: AuthenticationManager,
+    val analytics: OTAnalyticsManager
+) {
+
+    fun onCreate() {
+        analytics.initMixpanel(cntx = view, userId = UserPreference.userId)
+    }
 
     fun displayPermission() {
         view.beginPermissionsFlow()
@@ -80,6 +91,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
     }
 
     fun onDestroy() {
+        analytics.onDestroyMixpanel()
         verifyDisposable?.dispose()
         codeDisposable?.dispose()
         authDis?.dispose()
@@ -127,6 +139,8 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             .doOnNext {
                 val res = it.body() ?: return@doOnNext
                 UserPreference.userId = res.data.user.id
+                println("user id is ...${UserPreference.userId}")
+
                 retrieveFullUser()
             }
             .doOnError {
@@ -138,6 +152,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
 
             })
     }
+
 
     var userDisposable: Disposable? = null
     var allowAccess: Boolean = false
@@ -156,6 +171,7 @@ class BaseActivityPresenter(val view: BaseActivity, val auth: AuthenticationMana
             .subscribe({
                 auth.saveUserToDB(it.user)
                 UserPreference.accessAllowed = it.user.is_camera_authorized ?: false
+
                 if (!UserPreference.accessAllowed) {
                     if (it.user.is_banned || it.user.is_suspended || it.user.is_camera_rejected) {
                         logOut()

@@ -14,19 +14,19 @@ interface VideosManager {
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
     fun subscribeToVideoGallerySize(): Observable<Int>
     fun subscribeToNewFavoriteVideoEvent(): Observable<Boolean>
-    fun loadFromDB()
-    fun saveHighQualityVideoToDB(video: SavedVideo)
-    fun registerVideo(saved: SavedVideo)
-    fun transcodeVideo(savedVideo: SavedVideo, videoFile: File)
-    fun updateVideoFavorite(isFavorite: Boolean, video: SavedVideo)
-    fun updateVideoFunny(isFunny: Boolean, clientId: String)
+    fun onLoadDb()
+    fun onSaveVideoToDb(video: SavedVideo)
+    fun onRegisterVideoWithServer(saved: SavedVideo)
+    fun onTransCodeVideo(savedVideo: SavedVideo, videoFile: File)
+    fun onVideoIsFavorite(isFavorite: Boolean, video: SavedVideo)
+    fun onVideoIsFunny(isFunny: Boolean, clientId: String)
     fun updateVideoMd5(md5: String, clientId: String)
-    fun updateUploadId(uplaodId: String, savedVideo: SavedVideo)
+    fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo)
     fun updateVideoStatus(video: SavedVideo, state: UploadState)
-    fun updateTaggedAthleteField(taggedAthletesArray: ArrayList<String>, clientId: String)
-    fun resetUploadStateForCurrentVideo(currentVideo: SavedVideo)
+    fun onUpdatedTaggedAthletesInDb(taggedAthletesArray: ArrayList<String>, clientId: String)
+    fun onResetCurrentVideo(currentVideo: SavedVideo)
     fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String)
-    fun loadFFMPEG()
+    fun onLoadFFMPEG()
     fun updateHighuploaded(qualityUploaded: Boolean, clientId: String)
     fun onNotifyWorkIsDone()
     fun onGetVideosForUpload(): Single<List<SavedVideo>>
@@ -34,8 +34,7 @@ interface VideosManager {
     fun subscribeToEncodeComplete(): Observable<SavedVideo>
     fun onNotifyHDUploadsTriggered(hd: Boolean)
     fun subscribeToHDSwitch(): Observable<Boolean>
-    fun updateEncodedPath(path: String, clientId: String)
+    fun onUpdateEncodedPath(path: String, clientId: String)
     fun onGetEncodedVideo(clientId: String): Single<SavedVideo>
-
 
 }
