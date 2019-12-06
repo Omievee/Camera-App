@@ -38,13 +38,13 @@ class VideosManagerImpl(
     val analytics: OTAnalyticsManager
 ) : VideosManager {
 
-
     var data = AppDatabase.getAppDataBase(context)
     override fun onGetVideosForUploadScreen(): Single<List<SavedVideo>> {
         return data!!.videoDao()
             .getVideosForUpload()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+
     }
 
     override fun onGetVideosForUpload(): Single<List<SavedVideo>> {
@@ -75,15 +75,15 @@ class VideosManagerImpl(
 
     @SuppressLint("CheckResult")
     override fun updateHighuploaded(qualityUploaded: Boolean, clientId: String) {
-        println("VIDEO WAS UPDATED!! $clientId")
         Single.fromCallable {
             with(videoDao) {
                 this?.updateHighUpload(qualityUploaded, clientId, UploadState.UPLOADED_HIGH)
             }
+
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                onLoadDb()
+
             }, {
                 it.printStackTrace()
             })
@@ -95,10 +95,13 @@ class VideosManagerImpl(
             with(videoDao) {
                 this?.updateMediumUpload(qualityUploaded, clientId, UploadState.UPLOADED_MEDIUM)
             }
+            with(videoDao) {
+                this?.getVideos()
+            }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                onLoadDb()
+                updateUploadsCounter(it, false)
             }, {
                 it.printStackTrace()
             })
@@ -118,7 +121,7 @@ class VideosManagerImpl(
                 if (savedVideo.is_favorite) {
                     newFave.onNext(true)
                 }
-                onLoadDb()
+
             }, {
                 it.printStackTrace()
             })
@@ -163,7 +166,6 @@ class VideosManagerImpl(
     var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
     override fun onLoadFFMPEG() {
         try {
-
             ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
                 override fun onFailure() {
                     super.onFailure()
@@ -186,17 +188,22 @@ class VideosManagerImpl(
     private var commandCCopy = "-c"
     private var copyVideo = "copy"
 
-
+    private var encodedVid: BehaviorSubject<SavedVideo> = BehaviorSubject.create()
     override fun subscribeToEncodeComplete(): Observable<SavedVideo> {
         return encodedVid
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-    var encodedVid: BehaviorSubject<SavedVideo> = BehaviorSubject.create()
+    private var newVideos: BehaviorSubject<Boolean> = BehaviorSubject.create()
+    override fun subscribeToNewVideos(): Observable<Boolean> {
+        return newVideos
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
 
     var hdSubject: BehaviorSubject<Boolean> = BehaviorSubject.create()
-
     override fun onNotifyHDUploadsTriggered(hd: Boolean) {
         hdSubject.onNext(hd)
     }
@@ -297,7 +304,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorReturn {
-                onLoadDb()
+
                 it.printStackTrace()
             }
             .subscribe({
@@ -404,7 +411,7 @@ class VideosManagerImpl(
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
     override fun onTransCodeVideo(savedVideo: SavedVideo, videoFile: File) {
-        println("Starting Transcode ..........")
+        println("STARTING TRANSCODE =========================================")
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
@@ -421,10 +428,10 @@ class VideosManagerImpl(
                 }
 
                 override fun onTranscodeCompleted() {
-                    println("Transcode complete... ${savedVideo.uploadId}")
+                    println("TRANSCODE COMPLETE ========================================= ${savedVideo.uploadId}")
                     when (savedVideo.uploadId.isNullOrEmpty()) {
                         true -> onRegisterVideoWithServer(savedVideo)
-                        else -> onLoadDb()
+                        else -> newVideos.onNext(true)
                     }
                 }
             }
@@ -484,13 +491,17 @@ class VideosManagerImpl(
             with(videoDao) {
                 this?.saveVideoData(video)
             }
+            with(videoDao) {
+                this?.getVideos()
+            }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .onErrorReturn {
+            .doOnError {
                 it.printStackTrace()
             }
             .subscribe({
-                Log.d(TAG, "saved video complete...")
+                updateUploadsCounter(it, false)
+                Log.d(TAG, "saved video complete... $pendingVidRegistration")
                 if (isVideoDurationLongerThanMaxTime(pendingVidRegistration ?: return@subscribe)) {
                     onTrimVideo(pendingVidRegistration ?: return@subscribe)
                 } else onTransCodeVideo(
@@ -500,6 +511,23 @@ class VideosManagerImpl(
             }, {
                 it.printStackTrace()
             })
+    }
+
+    private fun updateUploadsCounter(it: List<SavedVideo>?, firstLoad: Boolean) {
+
+        val pendingMediumUploads = mutableListOf<SavedVideo>()
+        it?.let { it1 -> pendingMediumUploads.addAll(it1) }
+        pendingMediumUploads.removeIf {
+            it.mediumUploaded
+        }
+        if (firstLoad && pendingMediumUploads.size > 0) {
+            newVideos.onNext(true)
+        }
+        total.onNext(pendingMediumUploads.size)
+        if (isFirstRun) {
+            isFirstRun = false
+            checkConnection()
+        }
     }
 
     var pendingVidRegistration: SavedVideo? = null
@@ -524,28 +552,16 @@ class VideosManagerImpl(
     }
 
     private var lastVideoMaxTime: String? = ""
-    var videosList = mutableListOf<SavedVideo>()
+
     @Synchronized
     @SuppressLint("CheckResult")
     override fun onLoadDb() {
-        videosList.clear()
         Single.fromCallable {
             db?.videoDao()?.getVideos()
-        }.map {
-            videosList.addAll(it.asReversed())
-            val totalUploaded = mutableListOf<SavedVideo>()
-            totalUploaded.addAll(it)
-            totalUploaded.removeIf {
-                it.mediumUploaded
-            }
-            total.onNext(totalUploaded.size)
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                if (isFirstRun) {
-                    checkConnection()
-                    isFirstRun = false
-                }
+                updateUploadsCounter(it, true)
             }, {
                 it.printStackTrace()
             })
@@ -575,7 +591,6 @@ class VideosManagerImpl(
             .getVideoInstance(saved)
             .retry(3)
             .doOnError {
-                onLoadDb()
                 it.printStackTrace()
                 analytics.onTrackUploadEvent(
                     "Failed to register Video",
@@ -583,6 +598,7 @@ class VideosManagerImpl(
                 )
             }
             .map {
+                newVideos.onNext(true)
                 uploadId = it.video.id ?: return@map
                 Log.d(TAG, "upload id received...")
             }
@@ -671,7 +687,7 @@ class VideosManagerImpl(
                     if (isVideoDurationLongerThanMaxTime(it)) {
                         onTrimVideo(it)
                     } else onTransCodeVideo(it, File(it.highRes))
-                } else onLoadDb()
+                }
 
             }, {
                 it.printStackTrace()
@@ -690,6 +706,7 @@ class VideosManagerImpl(
             .subscribeOn(Schedulers.single())
             .observeOn(AndroidSchedulers.mainThread())
     }
+
 
     var newFave: BehaviorSubject<Boolean> = BehaviorSubject.create()
     override fun subscribeToNewFavoriteVideoEvent(): Observable<Boolean> {

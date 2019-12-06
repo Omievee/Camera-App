@@ -76,23 +76,21 @@ class VideoUploadWorker(
         }
     }
 
-
     var queList = mutableListOf<SavedVideo>()
     var standardList = mutableListOf<SavedVideo>()
     var standardListHQ = mutableListOf<SavedVideo>()
     var faveList = mutableListOf<SavedVideo>()
     var faveListHQ = mutableListOf<SavedVideo>()
 
-
     var TAG = "UPLOADING PROCESS"
     var update: Disposable? = null
     private fun subscribeToUpdates() {
         update =
             videosManager
-                .subscribeToVideoGallerySize()
+                .subscribeToNewVideos()
                 .subscribe({
                     Log.d(TAG, "Subscribed to db updates.. $it... $uploading")
-                    if (it > 0 && !uploading) {
+                    if (it && !uploading) {
                         Log.d(TAG, "Getting videos $it && $uploading ")
                         getVideosFromDB()
                     }
@@ -118,10 +116,15 @@ class VideoUploadWorker(
             videosManager
                 .subscribeToNewFavoriteVideoEvent()
                 .subscribe({
-                    Log.d(TAG, "Subscribed to favorite updates.. $it...")
+                    Log.d("FAVORITE TRACKING", "Subscribed to favorite updates.. $it...")
+                    Log.d(
+                        "FAVORITE TRACKING",
+                        "Subscribed to favorite updates.. ${currentVideo?.is_favorite}..."
+                    )
                     if (it && (currentVideo?.is_favorite == false)) {
-                        Log.d(TAG, "New Favorite! $it...")
                         stopUploadForNewFavorite = true
+                        Log.d(TAG, "New Favorite! $it...")
+                        Log.d(TAG, "New Favorite! $stopUploadForNewFavorite...")
                     }
                 }, {
                     it.printStackTrace()
@@ -398,8 +401,8 @@ class VideoUploadWorker(
 
     private fun stopUploadForNewFavorite() {
         Log.d(TAG, "Stopping upload for new favorite....")
+      //  uploadingIsFalse()
         stopUploadForNewFavorite = false
-        uploadingIsFalse()
         hdReady = false
         currentVideo = null
         getVideosFromDB()
@@ -410,10 +413,13 @@ class VideoUploadWorker(
     private var tokenDisposable: Disposable? = null
     private var awsDataDisposable: Disposable? = null
     private fun requestTokenForUpload(savedVideo: SavedVideo) {
-
         currentVideo = savedVideo
-        Log.d(TAG, "getting token......")
+        Log.d(
+            "FAVORITE TRACKING",
+            "CURRENT VIDEO BEING UPLOADED ................... ${currentVideo?.is_favorite}"
+        )
         if (!stopUploadForNewFavorite) {
+            println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
             awsDataDisposable =
                 uploadsManager
                     .getAWSDataForUpload()
@@ -434,7 +440,6 @@ class VideoUploadWorker(
                                 )
                             )
                         }
-
                     }
                     .map {
                         tokenResponse = it
@@ -459,6 +464,7 @@ class VideoUploadWorker(
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?, video: SavedVideo) {
         if (!stopUploadForNewFavorite) {
+            println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
             tokenDisposable =
                 uploadsManager
                     .registerWithMD5(token ?: return, hdReady ?: false, video)
@@ -529,9 +535,9 @@ class VideoUploadWorker(
                                 )
                                 println("NOT CONTINUING UPLOADS!!! --> File bytes empty ${fullBytes.isEmpty()}")
                                 uploadingIsFalse()
-                                videosManager.onResetCurrentVideo(
-                                    video
-                                )
+//                                videosManager.onResetCurrentVideo(
+//                                    video
+//                                )
                             } else {
                                 println("Video is valid!")
                                 fullBytes = File(video?.mediumRes).readBytes()
@@ -557,7 +563,7 @@ class VideoUploadWorker(
         retriever.release()
         println("File Exists: ${file.exists()}")
         println("Bytes Size: : ${file.readBytes().size}")
-        println("Is Video: : ${isVideo}")
+        println("Is Video: : $isVideo")
         return file.exists() && file.readBytes().isNotEmpty() && isVideo
     }
 
@@ -610,6 +616,7 @@ class VideoUploadWorker(
     var prog: Int? = 0
     private fun upload() {
         if (!stopUploadForNewFavorite) {
+            println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
             Log.d(TAG, "Good file, starting upload......")
             val fullFileSize = fullBytes.size
             println("Filesize -------- $fullFileSize")
@@ -737,6 +744,7 @@ class VideoUploadWorker(
     private fun checkForComplete() {
         synchronized(this) {
             if (!stopUploadForNewFavorite) {
+                println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
                 complete = uploadsManager
                     .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
                     .doOnError {
@@ -782,6 +790,7 @@ class VideoUploadWorker(
         }
         if (!stopUploadForNewFavorite) {
             synchronized(this) {
+                println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
                 try {
                     getVideoDimensions(path = path)
                 } catch (arg: IllegalAccessException) {
@@ -894,6 +903,7 @@ class VideoUploadWorker(
 
     private fun uploadingIsFalse() {
         uploading = false
+        println("UPLOADING BOOLEAN =========================================== $uploading")
     }
 
     companion object {

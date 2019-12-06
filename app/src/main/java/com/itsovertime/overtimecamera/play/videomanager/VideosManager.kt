@@ -14,6 +14,10 @@ interface VideosManager {
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
     fun subscribeToVideoGallerySize(): Observable<Int>
     fun subscribeToNewFavoriteVideoEvent(): Observable<Boolean>
+    fun subscribeToHDSwitch(): Observable<Boolean>
+    fun subscribeToEncodeComplete(): Observable<SavedVideo>
+    fun subscribeToNewVideos(): Observable<Boolean>
+
     fun onLoadDb()
     fun onSaveVideoToDb(video: SavedVideo)
     fun onRegisterVideoWithServer(saved: SavedVideo)
@@ -31,9 +35,9 @@ interface VideosManager {
     fun onNotifyWorkIsDone()
     fun onGetVideosForUpload(): Single<List<SavedVideo>>
     fun onGetVideosForUploadScreen(): Single<List<SavedVideo>>
-    fun subscribeToEncodeComplete(): Observable<SavedVideo>
+
     fun onNotifyHDUploadsTriggered(hd: Boolean)
-    fun subscribeToHDSwitch(): Observable<Boolean>
+
     fun onUpdateEncodedPath(path: String, clientId: String)
     fun onGetEncodedVideo(clientId: String): Single<SavedVideo>
 

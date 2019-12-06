@@ -49,9 +49,9 @@
         <meta-data
                 android:name="io.fabric.ApiKey"
                 android:value="cbe7680d1c986532833d98dc1134f52925897f2e" />
-        <meta-data
-                android:name="com.mixpanel.android.MPConfig.EnableDebugLogging"
-                android:value="true" />
+<!--        <meta-data-->
+<!--                android:name="com.mixpanel.android.MPConfig.EnableDebugLogging"-->
+<!--                android:value="true" />-->
         <service
                 android:name=".network.NetworkSchedulerService"
                 android:exported="true"

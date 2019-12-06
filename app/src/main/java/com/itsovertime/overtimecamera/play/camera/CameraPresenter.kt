@@ -96,7 +96,6 @@ class CameraPresenter(
         manager.onLoadFFMPEG()
         manager.onLoadDb()
         user()
-
         startUploadWorkManager()
     }
 
