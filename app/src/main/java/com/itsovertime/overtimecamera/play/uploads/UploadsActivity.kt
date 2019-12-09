@@ -33,7 +33,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
 
 
     override fun updateMsg() {
-        uploadsMessage.text = ""
+        //  uploadsMessage.text = ""
     }
 
     override fun noVideos() {

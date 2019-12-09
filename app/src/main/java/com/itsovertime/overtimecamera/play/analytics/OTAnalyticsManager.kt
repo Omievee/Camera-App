@@ -7,7 +7,7 @@ import com.itsovertime.overtimecamera.play.model.User
 
 interface OTAnalyticsManager {
 
-    fun initMixpanel(cntx: Context, userId:String?)
+    fun initMixpanel(cntx: Context, userId: String?)
     fun onTrackDeviceThermalStatus(cntx: Context)
     fun onDestroyMixpanel()
     fun onTrackSelectedEvent(event: Event?)
@@ -17,5 +17,7 @@ interface OTAnalyticsManager {
     fun onTrackVideoFileCreated(savedVideo: SavedVideo?)
     fun onTrackUploadEvent(event: String, uploadProperties: Array<String>)
     fun onTrackTrim(properties: Array<String>)
+
+    fun debugMessage(tag: String, message: String)
 
 }

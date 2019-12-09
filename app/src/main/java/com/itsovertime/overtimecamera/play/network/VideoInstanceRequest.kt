@@ -22,7 +22,9 @@ data class VideoInstanceRequest(
     val event_id: String?,
     val address: String?,
     val duration_in_hours: Int? = 0,
-    val max_video_length: Int? = 12
+    val max_video_length: Int? = 12,
+    val filmed_at: String?
+    //val tagged_user_ids: ArrayList<String>? = arrayListOf()
 ) : Parcelable
 
 @Parcelize

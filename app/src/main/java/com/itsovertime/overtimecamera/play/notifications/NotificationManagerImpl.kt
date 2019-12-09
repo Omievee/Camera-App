@@ -15,6 +15,8 @@ class NotificationManagerImpl(val context: OTApplication) : NotificationManager 
         val channel = NotificationChannel("Uploads", name, importance)
         channel.description = description
 
+
+        println("notificaions channel.... $notificationMessage")
         // Add the channel
         notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
@@ -26,11 +28,10 @@ class NotificationManagerImpl(val context: OTApplication) : NotificationManager 
     var uploadsBuilder = NotificationCompat.Builder(context, "Uploads")
     var notificationManager: android.app.NotificationManager? = null
     override fun onCreateProgressNotification(msg: String, progress: Int, maxProg: Int) {
-
         uploadsBuilder.apply {
             setSmallIcon(R.drawable.sym_def_app_icon)
             setContentTitle(msg)
-            setContentText("Uploads in progress")
+            setContentText("Uploading HD Videos. Do not close the app.")
             setProgress(100, 0, true)
             priority = NotificationCompat.PRIORITY_HIGH
         }

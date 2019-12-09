@@ -43,8 +43,9 @@ class UploadsManagerImpl(
                     event_id = video?.event_id,
                     address = video?.address,
                     duration_in_hours = video?.duration_in_hours,
-                    max_video_length = video?.max_video_length
-//                    tagged_user_ids = video?.taggedUsers ?: arrayListOf()
+                    max_video_length = video?.max_video_length,
+                    filmed_at = video?.filmed_at
+                 //   tagged_user_ids = video?.taggedUsers
                 )
             ).observeOn(AndroidSchedulers.mainThread())
     }
@@ -72,7 +73,7 @@ class UploadsManagerImpl(
             }
             false -> {
                 println("MD5 DATA.......")
-                println("MD5 DATA.......${ md5(File(video.mediumRes).readBytes())}")
+                println("MD5 DATA.......${md5(File(video.mediumRes).readBytes())}")
                 md5(File(video.mediumRes).readBytes())
             }
         }

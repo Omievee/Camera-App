@@ -31,7 +31,7 @@ interface VideosManager {
     fun onResetCurrentVideo(currentVideo: SavedVideo)
     fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String)
     fun onLoadFFMPEG()
-    fun updateHighuploaded(qualityUploaded: Boolean, clientId: String)
+    fun updateHighuploaded(qualityUploaded: Boolean, video: SavedVideo)
     fun onNotifyWorkIsDone()
     fun onGetVideosForUpload(): Single<List<SavedVideo>>
     fun onGetVideosForUploadScreen(): Single<List<SavedVideo>>

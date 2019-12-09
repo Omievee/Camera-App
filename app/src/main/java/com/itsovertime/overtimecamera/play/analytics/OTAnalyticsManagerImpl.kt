@@ -2,6 +2,7 @@ package com.itsovertime.overtimecamera.play.analytics
 
 import android.content.Context
 import android.os.PowerManager
+import android.util.Log
 import com.itsovertime.overtimecamera.play.BuildConfig
 import com.itsovertime.overtimecamera.play.R
 import com.itsovertime.overtimecamera.play.application.OTApplication
@@ -57,7 +58,6 @@ class OTAnalyticsManagerImpl(val context: OTApplication, val api: Api) : OTAnaly
     }
 
     override fun onTrackCameraRecording() {
-
         mixpanelAPI?.track("Started Recording")
     }
 
@@ -80,6 +80,12 @@ class OTAnalyticsManagerImpl(val context: OTApplication, val api: Api) : OTAnaly
 
     override fun onTrackTrim(properties: Array<String>) {
 
+    }
+
+    override fun debugMessage(tag: String, message: String) {
+        if (BuildConfig.DEBUG) {
+            Log.d(tag, message)
+        }
     }
 }
 

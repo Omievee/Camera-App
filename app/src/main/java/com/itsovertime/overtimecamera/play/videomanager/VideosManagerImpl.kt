@@ -74,19 +74,25 @@ class VideosManagerImpl(
 
 
     @SuppressLint("CheckResult")
-    override fun updateHighuploaded(qualityUploaded: Boolean, clientId: String) {
+    override fun updateHighuploaded(qualityUploaded: Boolean, video: SavedVideo) {
         Single.fromCallable {
             with(videoDao) {
-                this?.updateHighUpload(qualityUploaded, clientId, UploadState.UPLOADED_HIGH)
+                this?.updateHighUpload(qualityUploaded, video.clientId, UploadState.UPLOADED_HIGH)
             }
 
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-
+                deleteSuccessfullyUploadedVideo(video)
             }, {
                 it.printStackTrace()
             })
+    }
+
+    private fun deleteSuccessfullyUploadedVideo(video: SavedVideo) {
+        if (File(video.encodedPath).exists()) {
+            File(video.encodedPath).delete()
+        }
     }
 
     @SuppressLint("CheckResult")
@@ -121,7 +127,6 @@ class VideosManagerImpl(
                 if (savedVideo.is_favorite) {
                     newFave.onNext(true)
                 }
-
             }, {
                 it.printStackTrace()
             })
@@ -502,7 +507,10 @@ class VideosManagerImpl(
             .subscribe({
                 updateUploadsCounter(it, false)
                 Log.d(TAG, "saved video complete... $pendingVidRegistration")
-                if (isVideoDurationLongerThanMaxTime(pendingVidRegistration ?: return@subscribe)) {
+                if (isVideoDurationLongerThanMaxTime(
+                        pendingVidRegistration ?: return@subscribe
+                    ) && pendingVidRegistration?.is_selfie == false
+                ) {
                     onTrimVideo(pendingVidRegistration ?: return@subscribe)
                 } else onTransCodeVideo(
                     pendingVidRegistration ?: return@subscribe,
@@ -514,20 +522,19 @@ class VideosManagerImpl(
     }
 
     private fun updateUploadsCounter(it: List<SavedVideo>?, firstLoad: Boolean) {
-
         val pendingMediumUploads = mutableListOf<SavedVideo>()
         it?.let { it1 -> pendingMediumUploads.addAll(it1) }
         pendingMediumUploads.removeIf {
             it.mediumUploaded
         }
         if (firstLoad && pendingMediumUploads.size > 0) {
+            analytics.debugMessage("Checking First Run", "this is a first run....")
             newVideos.onNext(true)
         }
-        total.onNext(pendingMediumUploads.size)
-        if (isFirstRun) {
-            isFirstRun = false
+        if (firstLoad) {
             checkConnection()
         }
+        total.onNext(pendingMediumUploads.size)
     }
 
     var pendingVidRegistration: SavedVideo? = null

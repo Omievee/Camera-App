@@ -74,8 +74,6 @@ data class SavedVideo(
     val highUploaded: Boolean = false,
     @ColumnInfo(name = "tagged")
     val taggedUsers: ArrayList<String>? = arrayListOf()
-
-
 ) : Parcelable
 
 enum class UploadState {
@@ -130,10 +128,10 @@ class taggedUserConvertor {
 
 }
 
-
+//
 //@ColumnInfo(name = "tagged")
 //val taggedUsers: List<TaggedUsers> = emptyList(),
 //@ColumnInfo(name = "videographers")
 //val videographers: List<User> = emptyList()
-//        @ColumnInfo(name = "team_id")
-//        val tagged_team_ids: List<String> = emptyList()
+//@ColumnInfo(name = "team_id")
+//val tagged_team_ids: List<String> = emptyList()

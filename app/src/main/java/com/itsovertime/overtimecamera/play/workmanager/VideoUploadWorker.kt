@@ -220,14 +220,14 @@ class VideoUploadWorker(
         if (HDListsAreEmpty) {
             hdReady = false
         }
-        Log.d(TAG, "Starting upload process... hdReady? $hdReady")
+
         when {
             faveList.size > 0 -> {
+
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    Log.d(TAG, "uploading favorite video.... ${faveList[0]}.")
                     if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists()) {
                         uploadingIsFalse()
                         videosManager.onResetCurrentVideo(faveList[0])
@@ -244,10 +244,8 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    println("Standard video uploading.....")
                     if (standardList[0].mediumRes.isNullOrEmpty() || !File(standardList[0].mediumRes).exists()) {
                         uploadingIsFalse()
-                        println("RESET FROM FILE NOT FOUND STANDARD")
                         videosManager.onResetCurrentVideo(standardList[0])
                     } else {
                         uploadingIsTrue()
@@ -259,6 +257,7 @@ class VideoUploadWorker(
 
             faveListHQ.size > 0 && hdReady ?: false -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
+                notifications.onCreateNotificationChannel("Uploads")
                 synchronized(this) {
                     uploadingIsTrue()
                     encodeVideoForUpload(faveListHQ[0])
@@ -267,6 +266,7 @@ class VideoUploadWorker(
             }
             standardListHQ.size > 0 && hdReady ?: false -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
+                notifications.onCreateNotificationChannel("Uploads")
                 synchronized(this) {
                     uploadingIsTrue()
                     println("uploading standard hd video :: ${standardListHQ[0]}")
@@ -401,7 +401,7 @@ class VideoUploadWorker(
 
     private fun stopUploadForNewFavorite() {
         Log.d(TAG, "Stopping upload for new favorite....")
-      //  uploadingIsFalse()
+        //  uploadingIsFalse()
         stopUploadForNewFavorite = false
         hdReady = false
         currentVideo = null
@@ -522,25 +522,24 @@ class VideoUploadWorker(
                         true -> {
                             fullBytes = File(video?.encodedPath).readBytes()
                             video?.uploadState = UploadState.UPLOADING_HIGH
-                            println("Video state:::::: ${video?.uploadState}")
+                            println("Video state:::::: ${video.uploadState}")
                             upload()
                         }
                         else -> {
                             if (!videoIsValid(File(currentVideo?.mediumRes))) {
-                                println("NOT CONTINUING UPLOADS!!!")
                                 println(
                                     "NOT CONTINUING UPLOADS!!! --> Does file exist ${File(
-                                        video?.mediumRes
+                                        video.mediumRes
                                     ).exists()}"
                                 )
                                 println("NOT CONTINUING UPLOADS!!! --> File bytes empty ${fullBytes.isEmpty()}")
                                 uploadingIsFalse()
-//                                videosManager.onResetCurrentVideo(
-//                                    video
-//                                )
+                                videosManager.onResetCurrentVideo(
+                                    video
+                                )
                             } else {
                                 println("Video is valid!")
-                                fullBytes = File(video?.mediumRes).readBytes()
+                                fullBytes = File(video.mediumRes).readBytes()
                                 video.uploadState = UploadState.UPLOADING_MEDIUM
                                 upload()
                             }
@@ -842,9 +841,12 @@ class VideoUploadWorker(
                             videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
                         } else {
                             currentVideo?.uploadState = UploadState.UPLOADED_HIGH
-                            videosManager.updateHighuploaded(true, currentVideo?.clientId ?: "")
+                            videosManager.updateHighuploaded(
+                                true,
+                                currentVideo ?: return@doAfterNext
+                            )
                         }
-                        Log.d(TAG, "REPEAT PROCESS.........")
+                        analyticsManager.debugMessage("FINAL STEP", "REPEATING PROCESS")
                         getVideosFromDB()
                     }
                     .subscribe({
@@ -889,6 +891,11 @@ class VideoUploadWorker(
             videosManager.onResetCurrentVideo(currentVideo ?: return)
             retriever.release()
         } catch (ia: IllegalArgumentException) {
+            uploadingIsFalse()
+            videosManager.onResetCurrentVideo(currentVideo ?: return)
+            retriever.release()
+        } catch (r: RuntimeException) {
+            r.printStackTrace()
             uploadingIsFalse()
             videosManager.onResetCurrentVideo(currentVideo ?: return)
             retriever.release()
