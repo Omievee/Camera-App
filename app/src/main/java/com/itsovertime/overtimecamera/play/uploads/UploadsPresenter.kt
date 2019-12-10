@@ -56,6 +56,7 @@ class UploadsPresenter(
             progressManager
                 .onUpdateUploadMessage()
                 .subscribe({
+                    println("Uploads message is $it")
                     when (it) {
                         UploadsMessage.Uploading_High -> view.setUploadingHdVideo()
                         UploadsMessage.Uploading_Medium -> view.setUploadingMedVideo()

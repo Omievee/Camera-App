@@ -124,9 +124,7 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                if (savedVideo.is_favorite) {
-                    newFave.onNext(true)
-                }
+
             }, {
                 it.printStackTrace()
             })
@@ -434,6 +432,9 @@ class VideosManagerImpl(
 
                 override fun onTranscodeCompleted() {
                     println("TRANSCODE COMPLETE ========================================= ${savedVideo.uploadId}")
+//                    if (savedVideo.is_favorite) {
+//                        newFave.onNext(savedVideo)
+//                    }
                     when (savedVideo.uploadId.isNullOrEmpty()) {
                         true -> onRegisterVideoWithServer(savedVideo)
                         else -> newVideos.onNext(true)
@@ -715,8 +716,8 @@ class VideosManagerImpl(
     }
 
 
-    var newFave: BehaviorSubject<Boolean> = BehaviorSubject.create()
-    override fun subscribeToNewFavoriteVideoEvent(): Observable<Boolean> {
+    var newFave: BehaviorSubject<SavedVideo> = BehaviorSubject.create()
+    override fun subscribeToNewFavoriteVideoEvent(): Observable<SavedVideo> {
         return newFave
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

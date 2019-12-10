@@ -1,5 +1,6 @@
 package com.itsovertime.overtimecamera.play.events
 
+import android.app.Activity
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.itsovertime.overtimecamera.play.baseviewholder.BaseViewHolder

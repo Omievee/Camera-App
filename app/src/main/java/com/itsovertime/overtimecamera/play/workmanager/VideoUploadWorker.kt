@@ -116,14 +116,10 @@ class VideoUploadWorker(
             videosManager
                 .subscribeToNewFavoriteVideoEvent()
                 .subscribe({
-                    Log.d("FAVORITE TRACKING", "Subscribed to favorite updates.. $it...")
-                    Log.d(
-                        "FAVORITE TRACKING",
-                        "Subscribed to favorite updates.. ${currentVideo?.is_favorite}..."
-                    )
-                    if (it && (currentVideo?.is_favorite == false)) {
+                    if (!currentVideo?.is_favorite!!) {
                         stopUploadForNewFavorite = true
-                        Log.d(TAG, "New Favorite! $it...")
+
+                        Log.d(TAG, "STOPPING FOR NEW Favorite! $it...")
                         Log.d(TAG, "New Favorite! $stopUploadForNewFavorite...")
                     }
                 }, {
@@ -162,12 +158,11 @@ class VideoUploadWorker(
             .onGetVideosForUpload()
             .map {
                 queList = it as MutableList<SavedVideo>
-
                 queList.removeIf {
                     it.highUploaded
 
                 }
-                Log.d(TAG, "Sorting Que....")
+                analyticsManager.debugMessage("Sorting Que", "=========================================")
                 val it = queList.iterator()
                 while (it.hasNext()) {
                     val video = it.next()
@@ -514,43 +509,42 @@ class VideoUploadWorker(
     var count = 0
     private fun checkFileStatusBeforeUpload(video: SavedVideo) {
         Log.d(TAG, "CHECKING FILE..... ${video?.uploadId}.")
-        when (!stopUploadForNewFavorite) {
-            true -> {
-                if (!video?.uploadId.isNullOrEmpty()) {
-                    chunkToUpload = baseChunkSize
-                    when (video?.mediumUploaded && hdReady == true) {
-                        true -> {
-                            fullBytes = File(video?.encodedPath).readBytes()
-                            video?.uploadState = UploadState.UPLOADING_HIGH
-                            println("Video state:::::: ${video.uploadState}")
+        if (!stopUploadForNewFavorite) {
+            if (!video?.uploadId.isNullOrEmpty()) {
+                chunkToUpload = baseChunkSize
+                when (video?.mediumUploaded && hdReady == true) {
+                    true -> {
+                        fullBytes = File(video?.encodedPath).readBytes()
+                        video?.uploadState = UploadState.UPLOADING_HIGH
+                        println("Video state:::::: ${video.uploadState}")
+                        upload()
+                    }
+                    else -> {
+                        if (!videoIsValid(File(video?.mediumRes))) {
+                            println(
+                                "NOT CONTINUING UPLOADS!!! --> Does file exist ${File(
+                                    video.mediumRes
+                                ).exists()}"
+                            )
+                            println("NOT CONTINUING UPLOADS!!! --> File bytes empty ${fullBytes.isEmpty()}")
+                            uploadingIsFalse()
+                            videosManager.onResetCurrentVideo(
+                                video
+                            )
+                        } else {
+                            println("Video is valid!")
+                            fullBytes = File(video.mediumRes).readBytes()
+                            video.uploadState = UploadState.UPLOADING_MEDIUM
                             upload()
                         }
-                        else -> {
-                            if (!videoIsValid(File(currentVideo?.mediumRes))) {
-                                println(
-                                    "NOT CONTINUING UPLOADS!!! --> Does file exist ${File(
-                                        video.mediumRes
-                                    ).exists()}"
-                                )
-                                println("NOT CONTINUING UPLOADS!!! --> File bytes empty ${fullBytes.isEmpty()}")
-                                uploadingIsFalse()
-                                videosManager.onResetCurrentVideo(
-                                    video
-                                )
-                            } else {
-                                println("Video is valid!")
-                                fullBytes = File(video.mediumRes).readBytes()
-                                video.uploadState = UploadState.UPLOADING_MEDIUM
-                                upload()
-                            }
-                        }
                     }
-                } else {
-                    getVideoIdForFile(currentVideo)
                 }
+            } else {
+                getVideoIdForFile(currentVideo)
             }
-            else -> stopUploadForNewFavorite()
-        }
+
+
+        } else stopUploadForNewFavorite()
     }
 
     @Throws(RuntimeException::class)

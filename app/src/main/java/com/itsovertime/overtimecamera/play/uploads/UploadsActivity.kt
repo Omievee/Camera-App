@@ -37,6 +37,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     }
 
     override fun noVideos() {
+        println("we are here....")
         uploadsMessage.text = getString(R.string.uploads_finished)
         uploadsIcon.visibility = View.INVISIBLE
     }
@@ -62,7 +63,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
             setFlags(
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-            );
+            )
         }
         swipe2refresh.setColorSchemeResources(
             R.color.OT_Orange,

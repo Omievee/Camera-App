@@ -755,7 +755,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         athleteRecycler.layoutManager =
             LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         // detectOrientation()
-
         cameraView.setOnTouchListener(this)
 
         val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
@@ -766,6 +765,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             params.height = 0
         }
         navSpace.layoutParams = params
+        activity
         //testing()
 
     }

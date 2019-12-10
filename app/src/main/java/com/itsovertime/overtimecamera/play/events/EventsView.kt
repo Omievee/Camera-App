@@ -34,6 +34,7 @@ class EventsView(context: Context, attributeSet: AttributeSet? = null) :
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
+
     }
 
     fun bind(event: Event) {

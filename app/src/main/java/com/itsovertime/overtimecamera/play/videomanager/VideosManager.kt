@@ -13,7 +13,7 @@ interface VideosManager {
 
     fun subscribeToVideoGallery(): Observable<List<SavedVideo>>
     fun subscribeToVideoGallerySize(): Observable<Int>
-    fun subscribeToNewFavoriteVideoEvent(): Observable<Boolean>
+    fun subscribeToNewFavoriteVideoEvent(): Observable<SavedVideo>
     fun subscribeToHDSwitch(): Observable<Boolean>
     fun subscribeToEncodeComplete(): Observable<SavedVideo>
     fun subscribeToNewVideos(): Observable<Boolean>
