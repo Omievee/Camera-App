@@ -23,11 +23,9 @@ import android.view.View.OnTouchListener
 import android.widget.Chronometer
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.itsovertime.overtimecamera.play.BuildConfig
@@ -135,7 +133,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             0 -> {
                 navSpace.visibility = View.VISIBLE
                 eventSpace.visibility = View.VISIBLE
-                taggedView.visibility = View.VISIBLE
+                taggedView.visibility = View.GONE
                 selfieTimer.visibility = View.GONE
                 selfieMsg.visibility = View.GONE
                 pauseButton.visibility = View.VISIBLE
@@ -143,8 +141,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 topView.visibility = View.VISIBLE
                 tapToSave.setImageResource(R.drawable.tap)
                 selfieCameraEngaged = false
-                favoriteIcon.visibility = View.VISIBLE
-                hahaIcon.visibility = View.VISIBLE
+                favoriteIcon.visibility = View.GONE
+                hahaIcon.visibility = View.GONE
                 progressBar.visibility = View.VISIBLE
             }
         }
@@ -253,6 +251,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 paused = true
                 progress.visibility = View.VISIBLE
                 deleteUnsavedFile()
+                if (CAMERA == 1) {
+                    resetSelfieViews()
+                }
                 releaseCamera(tapToSave = false)
                 startActivity(Intent(context, UploadsActivity::class.java))
             }
@@ -300,24 +301,28 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             selfieMsg.visibility = View.GONE
             mediaRecorder?.start()
             selfieTimer.start()
-
+            enableMainShutterButton()
             selfieTimer.onChronometerTickListener =
                 Chronometer.OnChronometerTickListener {
                     count++
-
                     if (count == 30) {
-                        progressBar.visibility = View.VISIBLE
+                        progress.visibility = View.VISIBLE
                         tapToSaveSelfie()
                         count = 0
                     }
                 }
         } else {
-            selfieMsg.visibility = View.VISIBLE
-            tapToSave.setImageResource(R.drawable.selfie_record_red)
-            selfieTimer.base = SystemClock.elapsedRealtime();
-            selfieTimer.stop()
+            resetSelfieViews()
             releaseCamera(tapToSave = true)
         }
+    }
+
+    private fun resetSelfieViews() {
+        count = 0
+        selfieMsg.visibility = View.VISIBLE
+        tapToSave.setImageResource(R.drawable.selfie_record_red)
+        selfieTimer.base = SystemClock.elapsedRealtime()
+        selfieTimer.stop()
     }
 
     private var callback: UploadsButtonClick? = null
@@ -435,7 +440,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
         CAMERA = if (CAMERA == 0) 1 else 0
         selfieCameraEngaged = CAMERA != 0
-
+        if (CAMERA == 1) resetSelfieViews()
         synchronized(lock = this) {
             deleteUnsavedFile()
             Single.fromCallable {
@@ -533,7 +538,24 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         mediaRecorder = recorder
     }
 
-    private fun enableShutterButton() {
+//    fun enableSelfieShutterButton() {
+//        activity?.runOnUiThread {
+//            tapToSave.alpha = .5F
+//            tapToSave.isClickable = false
+//        }
+//        val enable = object : TimerTask() {
+//            override fun run() {
+//                activity?.runOnUiThread {
+//                    selfieButton.isClickable = true
+//                    selfieButton.alpha = 1F
+//                }
+//            }
+//        }
+//        Timer().schedule(enable, 2500)
+//    }
+
+
+    private fun enableMainShutterButton() {
         activity?.runOnUiThread {
             tapToSave.alpha = .5F
             tapToSave.isClickable = false
@@ -560,7 +582,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         try {
             setUpMediaRecorder()
             mediaRecorder?.prepare()
-
             val texture = txView?.surfaceTexture.apply {
                 this?.setDefaultBufferSize(
                     videoSize?.width ?: 0, videoSize?.height
@@ -644,9 +665,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     var hideViews: TimerTask? = null
     var register: TimerTask? = null
     private fun startMediaRecorder() {
+
         when (CAMERA) {
             0 -> {
-                enableShutterButton()
+                enableMainShutterButton()
                 presenter.onTrackStartedRecording()
                 hideViews = object : TimerTask() {
                     override fun run() {

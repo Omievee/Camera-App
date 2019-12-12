@@ -160,9 +160,11 @@ class VideoUploadWorker(
                 queList = it as MutableList<SavedVideo>
                 queList.removeIf {
                     it.highUploaded
-
                 }
-                analyticsManager.debugMessage("Sorting Que", "=========================================")
+                analyticsManager.debugMessage(
+                    "Sorting Que",
+                    "========================================="
+                )
                 val it = queList.iterator()
                 while (it.hasNext()) {
                     val video = it.next()
@@ -214,11 +216,13 @@ class VideoUploadWorker(
         }
         if (HDListsAreEmpty) {
             hdReady = false
+            notifications.onUpdateProgressNotification(
+                "HD Uploads complete!"
+            )
         }
 
         when {
             faveList.size > 0 -> {
-
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )
@@ -252,7 +256,11 @@ class VideoUploadWorker(
 
             faveListHQ.size > 0 && hdReady ?: false -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
-                notifications.onCreateNotificationChannel("Uploads")
+                notifications.onCreateProgressNotification(
+                    "Uploading HD Videos",
+                    "Do not close the app",
+                    true
+                )
                 synchronized(this) {
                     uploadingIsTrue()
                     encodeVideoForUpload(faveListHQ[0])
@@ -261,7 +269,11 @@ class VideoUploadWorker(
             }
             standardListHQ.size > 0 && hdReady ?: false -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
-                notifications.onCreateNotificationChannel("Uploads")
+                notifications.onCreateProgressNotification(
+                    "Uploading HD Videos",
+                    "Do not close the app",
+                    true
+                )
                 synchronized(this) {
                     uploadingIsTrue()
                     println("uploading standard hd video :: ${standardListHQ[0]}")
@@ -300,7 +312,7 @@ class VideoUploadWorker(
 
     var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
     private fun encodeVideoForUpload(savedVideo: SavedVideo) {
-        notifications.onCreateNotificationChannel("Uploading High Quality Videos. Do not close app.")
+
         if (!savedVideo.encodedPath.isNullOrEmpty()) {
             if (File(savedVideo.encodedPath).exists()) {
                 File(savedVideo.encodedPath).delete()

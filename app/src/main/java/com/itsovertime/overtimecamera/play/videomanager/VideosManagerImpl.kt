@@ -655,7 +655,7 @@ class VideosManagerImpl(
             else -> {
                 uploadId = if (currentVideo?.uploadId.isNullOrEmpty()) {
                     ""
-                } else currentVideo?.uploadId.toString()
+                } else currentVideo.uploadId.toString()
 
                 if (!currentVideo.mediumRes.isNullOrEmpty()) {
                     medPath = ""
@@ -696,7 +696,6 @@ class VideosManagerImpl(
                         onTrimVideo(it)
                     } else onTransCodeVideo(it, File(it.highRes))
                 }
-
             }, {
                 it.printStackTrace()
             })

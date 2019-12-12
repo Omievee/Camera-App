@@ -8,39 +8,47 @@ import androidx.core.app.NotificationManagerCompat
 import com.itsovertime.overtimecamera.play.application.OTApplication
 
 class NotificationManagerImpl(val context: OTApplication) : NotificationManager {
-    override fun onCreateNotificationChannel(notificationMessage: String) {
-        val name = "Uploads"
+    override fun onCreateNotificationChannel() {
+        val name = "HD Uploads"
         val description = "Uploads in progress"
         val importance = android.app.NotificationManager.IMPORTANCE_HIGH
         val channel = NotificationChannel("Uploads", name, importance)
         channel.description = description
 
-
-        println("notificaions channel.... $notificationMessage")
         // Add the channel
         notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
 
         notificationManager?.createNotificationChannel(channel)
-        onCreateProgressNotification(notificationMessage, 0, 0)
     }
 
-    var uploadsBuilder = NotificationCompat.Builder(context, "Uploads")
+    var uploadsBuilder: NotificationCompat.Builder? = null
     var notificationManager: android.app.NotificationManager? = null
-    override fun onCreateProgressNotification(msg: String, progress: Int, maxProg: Int) {
-        uploadsBuilder.apply {
+    override fun onCreateProgressNotification(msg: String, uploadMsg: String, ongoing: Boolean) {
+        onCreateNotificationChannel()
+
+        uploadsBuilder = NotificationCompat.Builder(context, "Uploads")
+        uploadsBuilder?.apply {
             setSmallIcon(R.drawable.sym_def_app_icon)
             setContentTitle(msg)
-            setContentText("Uploading HD Videos. Do not close the app.")
-            setProgress(100, 0, true)
+            setOngoing(ongoing)
+            setContentText(uploadMsg)
+            setProgress(0, 0, ongoing)
             priority = NotificationCompat.PRIORITY_HIGH
         }
 
-        NotificationManagerCompat.from(context).notify(Uploads, uploadsBuilder.build())
+        uploadsBuilder?.build()?.let { NotificationManagerCompat.from(context).notify(Uploads, it) }
     }
 
-    override fun onUpdateProgressNotification(progress: Int, maxProg: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun onUpdateProgressNotification(uploadMsg: String) {
+        uploadsBuilder?.apply {
+            setSmallIcon(R.drawable.sym_def_app_icon)
+            setContentTitle(uploadMsg)
+            setOngoing(false)
+            setProgress(0, 0, false)
+            priority = NotificationCompat.PRIORITY_HIGH
+        }
+        NotificationManagerCompat.from(context).notify(Uploads, uploadsBuilder?.build() ?: return)
     }
 
     override fun onCreateStandardNotification(msg: String) {
