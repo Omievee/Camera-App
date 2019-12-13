@@ -6,10 +6,7 @@ import android.view.TextureView
 
 
 class TXView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyle: Int = 0) :
-
-
     TextureView(context, attrs, defStyle) {
-
     private var ratioWidth = 0
     private var ratioHeight = 0
 

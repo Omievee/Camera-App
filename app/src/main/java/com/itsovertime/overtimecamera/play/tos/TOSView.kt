@@ -32,7 +32,6 @@ class TOSView(context: Context, attributeSet: AttributeSet? = null) :
             }
         }
         webview.loadUrl(context.getString(R.string.tos_url))
-
         webview.setOnTouchListener { v, event -> false }
     }
 }

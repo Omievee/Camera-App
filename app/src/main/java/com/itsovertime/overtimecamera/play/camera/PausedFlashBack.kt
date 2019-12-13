@@ -8,8 +8,6 @@ import com.itsovertime.overtimecamera.play.R
 
 class PausedFlashBack(context: Context, attributeSet: AttributeSet? = null) : ConstraintLayout(context, attributeSet) {
 
-
-
     init {
         View.inflate(context, R.layout.pause_flashback_view, this)
     }

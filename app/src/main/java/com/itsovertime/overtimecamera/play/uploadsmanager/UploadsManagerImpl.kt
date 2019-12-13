@@ -38,6 +38,7 @@ class UploadsManagerImpl(
                     client_id = UUID.fromString(video?.clientId),
                     is_favorite = video?.is_favorite ?: false,
                     is_selfie = video?.is_selfie ?: false,
+                    is_funny = video?.is_funny ?: false,
                     latitude = video?.latitude ?: 0.0,
                     longitude = video?.longitude ?: 0.0,
                     event_id = video?.event_id,
@@ -45,7 +46,7 @@ class UploadsManagerImpl(
                     duration_in_hours = video?.duration_in_hours,
                     max_video_length = video?.max_video_length,
                     filmed_at = video?.filmed_at
-                 //   tagged_user_ids = video?.taggedUsers
+                    //   tagged_user_ids = video?.taggedUsers
                 )
             ).observeOn(AndroidSchedulers.mainThread())
     }

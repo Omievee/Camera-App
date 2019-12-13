@@ -368,7 +368,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             val point = event?.pointerCount ?: 0
             if (point == 2) { //Multi touch.
                 currentFingerSpacing = getFingerSpacing(event ?: return false);
-                var delta = 0.3f; //Control this value to control the zooming sensibility
+                var delta = 0.5f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {
                     if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
                         if ((maximumZoomLevel - zoomLevel) <= delta) {
@@ -695,7 +695,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                     }
                 }
                 mediaRecorder?.start()
-                Timer().schedule(hideViews, 2500)
+                Timer().schedule(hideViews, 3500)
             }
             1 -> {
                 recording = false

@@ -24,7 +24,11 @@ import com.itsovertime.overtimecamera.play.progress.UploadsMessage
 import com.itsovertime.overtimecamera.play.uploads.CompleteResponse
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
+import io.reactivex.Scheduler
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import java.io.File
 import java.lang.Exception
 import java.lang.IllegalArgumentException
@@ -288,7 +292,6 @@ class VideoUploadWorker(
             }
             faveList.size == 0 && standardList.size == 0 && standardListHQ.size == 0 && faveListHQ.size == 0 -> {
                 println("FINISHED WORK!!")
-                videosManager.onNotifyWorkIsDone()
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Finished
                 )
@@ -311,6 +314,7 @@ class VideoUploadWorker(
     }
 
     var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
+    @SuppressLint("CheckResult")
     private fun encodeVideoForUpload(savedVideo: SavedVideo) {
 
         if (!savedVideo.encodedPath.isNullOrEmpty()) {
@@ -322,75 +326,81 @@ class VideoUploadWorker(
             true -> File(savedVideo.highRes)
             else -> File(savedVideo.trimmedVidPath)
         }
+        Single.fromCallable {
+            val newFile =
+                fileForHDEncodedVideo(encodeFile.name, savedVideo.clientId)
+            val encodeCommand = arrayOf(
+                // I command reads from designated input file
+                "-i",
+                // file input
+                encodeFile.absolutePath,
+                // video codec to write to
+                "-vcodec",
+                // value of codec - H264
+                "h264",
+                "-preset",
+                "ultrafast",
+                "-crf",
+                "22",
+                "-maxrate",
+                "16000k",
+                "-bufsize",
+                "16000k",
+                // new file
+                newFile.absolutePath
+            )
+            try {
+                synchronized(this) {
+                    ffmpeg.execute(encodeCommand, object : ExecuteBinaryResponseHandler() {
+                        override fun onStart() {
+                            super.onStart()
+                            println("STARTING ENCODE!!")
+                        }
 
-        val newFile =
-            fileForHDEncodedVideo(encodeFile.name, savedVideo.clientId)
-        val encodeCommand = arrayOf(
-            // I command reads from designated input file
-            "-i",
-            // file input
-            encodeFile.absolutePath,
-            // video codec to write to
-            "-vcodec",
-            // value of codec - H264
-            "h264",
-            "-preset",
-            "ultrafast",
-            "-crf",
-            "22",
-            "-maxrate",
-            "16000k",
-            "-bufsize",
-            "16000k",
-            // new file
-            newFile.absolutePath
-        )
-        try {
-            synchronized(this) {
-                ffmpeg.execute(encodeCommand, object : ExecuteBinaryResponseHandler() {
-                    override fun onStart() {
-                        super.onStart()
-                        println("STARTING ENCODE!!")
-                    }
+                        override fun onSuccess(message: String?) {
+                            super.onSuccess(message)
+                            println("ENCODE Successful... $message")
+                        }
 
-                    override fun onSuccess(message: String?) {
-                        super.onSuccess(message)
-                        println("ENCODE Successful... $message")
-                    }
+                        override fun onProgress(message: String?) {
+                            super.onProgress(message)
+                            println("encode progress $message")
+                        }
 
-                    override fun onProgress(message: String?) {
-                        super.onProgress(message)
-                        println("encode progress $message")
-                    }
+                        override fun onFinish() {
+                            super.onFinish()
+                            println("ENCODING FINISHED...")
+                            getNewHDVideoForUpload(currentVideo ?: return)
 
-                    override fun onFinish() {
-                        super.onFinish()
-                        println("ENCODING FINISHED...")
-                        getNewHDVideoForUpload(currentVideo ?: return)
+                        }
 
-                    }
-
-                    override fun onFailure(message: String?) {
-                        super.onFailure(message)
-                        println("ENCODING FAILED")
-                        uploadingIsFalse()
-                        videosManager.onResetCurrentVideo(savedVideo)
-                        Crashlytics.log("Failed to execute ffmpeg -- $message")
-                    }
-                })
+                        override fun onFailure(message: String?) {
+                            super.onFailure(message)
+                            println("ENCODING FAILED")
+                            uploadingIsFalse()
+                            videosManager.onResetCurrentVideo(savedVideo)
+                            Crashlytics.log("Failed to execute ffmpeg -- $message")
+                        }
+                    })
+                }
+            } catch (e: FFmpegCommandAlreadyRunningException) {
+                println("FFMPEG ALREADY RUNNING :: ${e.message}")
+                Crashlytics.log("FFMPEG -- ${e.message}")
+            } catch (ex: Exception) {
+                ex.printStackTrace()
             }
-        } catch (e: FFmpegCommandAlreadyRunningException) {
-            println("FFMPEG ALREADY RUNNING :: ${e.message}")
-            Crashlytics.log("FFMPEG -- ${e.message}")
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({
+            }, {
+                it.printStackTrace()
+            })
     }
 
     var encodeDisp: Disposable? = null
     private fun getNewHDVideoForUpload(video: SavedVideo) {
         encodeDisp = videosManager
-            .onGetEncodedVideo(video?.clientId)
+            .onGetEncodedVideo(video.clientId)
             .map {
                 currentVideo = it
             }
@@ -524,38 +534,33 @@ class VideoUploadWorker(
         if (!stopUploadForNewFavorite) {
             if (!video?.uploadId.isNullOrEmpty()) {
                 chunkToUpload = baseChunkSize
-                when (video?.mediumUploaded && hdReady == true) {
-                    true -> {
-                        fullBytes = File(video?.encodedPath).readBytes()
-                        video?.uploadState = UploadState.UPLOADING_HIGH
-                        println("Video state:::::: ${video.uploadState}")
+                if (video.mediumUploaded && hdReady == true) {
+                    fullBytes = File(video.encodedPath).readBytes()
+                    video.uploadState = UploadState.UPLOADING_HIGH
+                    println("Video state:::::: ${video.uploadState}")
+                    upload()
+                } else {
+                    if (!videoIsValid(File(video.mediumRes))) {
+                        println(
+                            "NOT CONTINUING UPLOADS!!! --> Does file exist ${File(
+                                video.mediumRes
+                            ).exists()}"
+                        )
+                        println("NOT CONTINUING UPLOADS!!! --> File bytes empty ${fullBytes.isEmpty()}")
+                        uploadingIsFalse()
+//                            videosManager.onResetCurrentVideo(
+//                                video
+//                            )
+                    } else {
+                        println("Video is valid!")
+                        fullBytes = File(video.mediumRes).readBytes()
+                        video.uploadState = UploadState.UPLOADING_MEDIUM
                         upload()
-                    }
-                    else -> {
-                        if (!videoIsValid(File(video?.mediumRes))) {
-                            println(
-                                "NOT CONTINUING UPLOADS!!! --> Does file exist ${File(
-                                    video.mediumRes
-                                ).exists()}"
-                            )
-                            println("NOT CONTINUING UPLOADS!!! --> File bytes empty ${fullBytes.isEmpty()}")
-                            uploadingIsFalse()
-                            videosManager.onResetCurrentVideo(
-                                video
-                            )
-                        } else {
-                            println("Video is valid!")
-                            fullBytes = File(video.mediumRes).readBytes()
-                            video.uploadState = UploadState.UPLOADING_MEDIUM
-                            upload()
-                        }
                     }
                 }
             } else {
                 getVideoIdForFile(currentVideo)
             }
-
-
         } else stopUploadForNewFavorite()
     }
 

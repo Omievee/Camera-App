@@ -418,11 +418,12 @@ class VideosManagerImpl(
         val file = Uri.fromFile(videoFile)
         val parcelFileDescriptor = context.contentResolver.openAssetFileDescriptor(file, "rw")
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
-
-
         synchronized(this) {
             val listener = object : MediaTranscoder.Listener {
-                override fun onTranscodeProgress(progress: Double) {}
+                override fun onTranscodeProgress(progress: Double) {
+                    println("PROGRESS $progress")
+                }
+
                 override fun onTranscodeCanceled() {}
                 override fun onTranscodeFailed(exception: Exception?) {
                     Log.d(TAG, "transcode failed.. ${exception?.message}...")
@@ -436,8 +437,14 @@ class VideosManagerImpl(
 //                        newFave.onNext(savedVideo)
 //                    }
                     when (savedVideo.uploadId.isNullOrEmpty()) {
-                        true -> onRegisterVideoWithServer(savedVideo)
-                        else -> newVideos.onNext(true)
+                        true -> {
+                            println("registering video.....................")
+                            onRegisterVideoWithServer(savedVideo)
+                        }
+                        else -> {
+                            println("on next video.....................")
+                            newVideos.onNext(true)
+                        }
                     }
                 }
             }
@@ -513,10 +520,12 @@ class VideosManagerImpl(
                     ) && pendingVidRegistration?.is_selfie == false
                 ) {
                     onTrimVideo(pendingVidRegistration ?: return@subscribe)
-                } else onTransCodeVideo(
-                    pendingVidRegistration ?: return@subscribe,
-                    File(pendingVidRegistration?.highRes)
-                )
+                } else {
+                    onTransCodeVideo(
+                        pendingVidRegistration ?: return@subscribe,
+                        File(pendingVidRegistration?.highRes)
+                    )
+                }
             }, {
                 it.printStackTrace()
             })
@@ -551,9 +560,8 @@ class VideosManagerImpl(
             .onErrorReturn {
                 it.printStackTrace()
             }
-            .doOnSuccess {
-            }
             .subscribe({
+                println("Success from favoring video...")
             }, {
                 it.printStackTrace()
             })
@@ -604,6 +612,9 @@ class VideosManagerImpl(
                     "Failed to register Video",
                     arrayOf("client_id = ${saved.clientId}", "failed_response = ${it.message}")
                 )
+                if (it.message.equals("HTTP 502 Bad Gateway")) {
+                    onRegisterVideoWithServer(saved)
+                }
             }
             .map {
                 newVideos.onNext(true)
@@ -619,9 +630,6 @@ class VideosManagerImpl(
             }, {
                 it.printStackTrace()
             })
-    }
-
-    override fun onNotifyWorkIsDone() {
     }
 
 
