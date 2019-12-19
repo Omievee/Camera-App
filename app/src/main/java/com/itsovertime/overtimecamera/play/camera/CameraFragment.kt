@@ -90,7 +90,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             presenter.onTrackEvent(event)
             eventTitle.text = ""
             presenter.changeEvent(event)
-            presenter.hideEvents()
             eventSpace.visibility = View.VISIBLE
             selectedEvent = event
             hiddenEvents.visibility = View.GONE
@@ -397,7 +396,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 fingerSpacing = currentFingerSpacing.toInt()
             } else if (point == 1) { //Single touch point, needs to return true in order to detect one more touch point
                 if (event?.action == MotionEvent.ACTION_MOVE) {
-                    println("orientation?? >>>>> ${event}")
                     // determineVisibility()
                 }
                 return true;

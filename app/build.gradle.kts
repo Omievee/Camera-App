@@ -116,9 +116,6 @@ dependencies {
     implementation("net.ypresto.androidtranscoder:android-transcoder:0.2.0")
     //FFMPJEG - trimming
     implementation("com.writingminds:FFmpegAndroid:0.3.2")
-    //MP4 Parser - trimming
-    implementation("org.mp4parser:isoparser:1.9.27")
-
     //Fabric
     implementation("com.crashlytics.sdk.android:crashlytics:2.10.1@aar") { isTransitive = true }
     //FireBase

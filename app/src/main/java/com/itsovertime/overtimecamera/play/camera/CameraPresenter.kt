@@ -50,11 +50,9 @@ class CameraPresenter(
             if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
                 analytics.onTrackFailedToCreateFile()
             }
-
             filePath = mediaStorageDir.path + File.separator + "$photoFileName.mp4"
             return File(mediaStorageDir.path + File.separator + "$photoFileName.mp4")
         }
-
     }
 
     var e: Event? = null
@@ -108,6 +106,8 @@ class CameraPresenter(
     }
 
 
+
+
     private var countDownTimer: CountDownTimer? = null
     @SuppressLint("CheckResult")
     fun animateProgressBar(text: TextView, progressBar: ProgressBar, maxTime: Int) {
@@ -117,6 +117,7 @@ class CameraPresenter(
         progressBar.max = maxTime * 1000
         progressBar.startAnimation(anim)
         countDownTimer = object : CountDownTimer(maxTime * 1000L, 1000) {
+
             override fun onTick(millisUntilFinished: Long) {
                 view.activity?.runOnUiThread {
                     text.text =
@@ -288,19 +289,13 @@ class CameraPresenter(
         view.setUpDefaultEvent(event)
     }
 
-    fun hideEvents() {
 
-    }
 
     fun updateTaggedAthletesField(taggedAthletesArray: ArrayList<String>) {
         manager.onUpdatedTaggedAthletesInDb(
             taggedAthletesArray = taggedAthletesArray,
             clientId = clientId
         )
-    }
-
-    fun register() {
-
     }
 
     fun onTrackEvent(event: Event) {

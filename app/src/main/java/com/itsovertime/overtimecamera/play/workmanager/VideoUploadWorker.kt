@@ -234,7 +234,6 @@ class VideoUploadWorker(
                     if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists()) {
                         uploadingIsFalse()
                         videosManager.onResetCurrentVideo(faveList[0])
-
                     } else {
                         uploadingIsTrue()
                         requestTokenForUpload(faveList[0])
@@ -316,7 +315,6 @@ class VideoUploadWorker(
     var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
     @SuppressLint("CheckResult")
     private fun encodeVideoForUpload(savedVideo: SavedVideo) {
-
         if (!savedVideo.encodedPath.isNullOrEmpty()) {
             if (File(savedVideo.encodedPath).exists()) {
                 File(savedVideo.encodedPath).delete()
@@ -431,10 +429,6 @@ class VideoUploadWorker(
     private var awsDataDisposable: Disposable? = null
     private fun requestTokenForUpload(savedVideo: SavedVideo) {
         currentVideo = savedVideo
-        Log.d(
-            "FAVORITE TRACKING",
-            "CURRENT VIDEO BEING UPLOADED ................... ${currentVideo?.is_favorite}"
-        )
         if (!stopUploadForNewFavorite) {
             println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
             awsDataDisposable =
@@ -532,7 +526,7 @@ class VideoUploadWorker(
     private fun checkFileStatusBeforeUpload(video: SavedVideo) {
         Log.d(TAG, "CHECKING FILE..... ${video?.uploadId}.")
         if (!stopUploadForNewFavorite) {
-            if (!video?.uploadId.isNullOrEmpty()) {
+            if (!video.uploadId.isNullOrEmpty()) {
                 chunkToUpload = baseChunkSize
                 if (video.mediumUploaded && hdReady == true) {
                     fullBytes = File(video.encodedPath).readBytes()
@@ -541,16 +535,12 @@ class VideoUploadWorker(
                     upload()
                 } else {
                     if (!videoIsValid(File(video.mediumRes))) {
-                        println(
-                            "NOT CONTINUING UPLOADS!!! --> Does file exist ${File(
-                                video.mediumRes
-                            ).exists()}"
-                        )
-                        println("NOT CONTINUING UPLOADS!!! --> File bytes empty ${fullBytes.isEmpty()}")
                         uploadingIsFalse()
-//                            videosManager.onResetCurrentVideo(
-//                                video
-//                            )
+                        println("this is your file:: ${video.mediumRes}")
+                        println("this is your file:: ${video.highRes}")
+                        videosManager.onResetCurrentVideo(
+                            video
+                        )
                     } else {
                         println("Video is valid!")
                         fullBytes = File(video.mediumRes).readBytes()
@@ -559,7 +549,10 @@ class VideoUploadWorker(
                     }
                 }
             } else {
-                getVideoIdForFile(currentVideo)
+                println("Video id was null..$video")
+                uploadingIsFalse()
+                videosManager.onResetCurrentVideo(video)
+//                getVideoIdForFile(currentVideo)
             }
         } else stopUploadForNewFavorite()
     }
@@ -606,7 +599,6 @@ class VideoUploadWorker(
                     )
                     videosManager.onResetCurrentVideo(currentVideo)
                 }
-
             }
             .subscribe({
                 this.checkFileStatusBeforeUpload(video = currentVideo)
@@ -858,7 +850,8 @@ class VideoUploadWorker(
                             )
                         }
                         analyticsManager.debugMessage("FINAL STEP", "REPEATING PROCESS")
-                        getVideosFromDB()
+                        uploadingIsFalse()
+                        videosManager.onNotifyWorkIsDone()
                     }
                     .subscribe({
                     },
