@@ -24,7 +24,8 @@ import com.itsovertime.overtimecamera.play.progress.UploadsMessage
 import com.itsovertime.overtimecamera.play.uploads.CompleteResponse
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
-import io.reactivex.Scheduler
+import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
+import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -59,19 +60,25 @@ class VideoUploadWorker(
     @Inject
     lateinit var analyticsManager: OTAnalyticsManager
 
+    @Inject
+    lateinit var wifiManager: WifiManager
+
     private var hdReady: Boolean? = false
+
 
     @SuppressLint("CheckResult")
 
-    var stopUploadForNewFavorite: Boolean = false
-    var uploading: Boolean = false
 
+    var uploading: Boolean = false
+    var isConnectedToInternet: Boolean = false
+    private var stopUploadForNewFavorite: Boolean = false
     override fun doWork(): Result {
         return try {
             subscribeToUpdates()
             subscribeToNewFaves()
             subscribeToHDSwitch()
             subscribeToEncodeComplete()
+            subscribeToWifiStatus()
             Result.success()
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
@@ -103,6 +110,35 @@ class VideoUploadWorker(
                 })
     }
 
+    var wifiD: Disposable? = null
+    private fun subscribeToWifiStatus() {
+        wifiD =
+            wifiManager
+                .subscribeToNetworkUpdates()
+                .subscribe({
+                    println("Network check from upload worker... $it")
+                    isConnectedToInternet = when (it) {
+                        NETWORK_TYPE.UNKNOWN -> {
+                            uploadingIsFalse()
+                            false
+                        }
+                        else -> {
+                            getVideosFromDB()
+                            uploadingIsTrue()
+                            true
+                        }
+
+                    }
+                }, {
+                    it.printStackTrace()
+                })
+    }
+
+
+    private fun isDeviceConnected(): Boolean {
+        return isConnectedToInternet
+    }
+
     var en: Disposable? = null
     private fun subscribeToEncodeComplete() {
         en = videosManager
@@ -123,8 +159,6 @@ class VideoUploadWorker(
                     if (!currentVideo?.is_favorite!!) {
                         stopUploadForNewFavorite = true
 
-                        Log.d(TAG, "STOPPING FOR NEW Favorite! $it...")
-                        Log.d(TAG, "New Favorite! $stopUploadForNewFavorite...")
                     }
                 }, {
                     it.printStackTrace()
@@ -227,6 +261,7 @@ class VideoUploadWorker(
 
         when {
             faveList.size > 0 -> {
+
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )
@@ -279,7 +314,6 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     uploadingIsTrue()
-                    println("uploading standard hd video :: ${standardListHQ[0]}")
                     encodeVideoForUpload(standardListHQ[0])
                     standardListHQ.remove(standardListHQ[0])
                 }
@@ -290,7 +324,6 @@ class VideoUploadWorker(
                 )
             }
             faveList.size == 0 && standardList.size == 0 && standardListHQ.size == 0 && faveListHQ.size == 0 -> {
-                println("FINISHED WORK!!")
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Finished
                 )
@@ -416,7 +449,6 @@ class VideoUploadWorker(
 
     private fun stopUploadForNewFavorite() {
         Log.d(TAG, "Stopping upload for new favorite....")
-        //  uploadingIsFalse()
         stopUploadForNewFavorite = false
         hdReady = false
         currentVideo = null
@@ -429,12 +461,12 @@ class VideoUploadWorker(
     private var awsDataDisposable: Disposable? = null
     private fun requestTokenForUpload(savedVideo: SavedVideo) {
         currentVideo = savedVideo
-        if (!stopUploadForNewFavorite) {
-            println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
+        if (isDeviceConnected()) {
             awsDataDisposable =
                 uploadsManager
                     .getAWSDataForUpload()
                     .doOnError {
+
                         if (it.message.equals("HTTP 502 Bad Gateway")) {
                             requestTokenForUpload(savedVideo)
                         } else {
@@ -469,12 +501,12 @@ class VideoUploadWorker(
                     .subscribe({
                     }, {
                     })
-        } else stopUploadForNewFavorite()
+        }
     }
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?, video: SavedVideo) {
-        if (!stopUploadForNewFavorite) {
+        if (isDeviceConnected()) {
             println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
             tokenDisposable =
                 uploadsManager
@@ -513,7 +545,7 @@ class VideoUploadWorker(
                     .subscribe({
                     }, {
                     })
-        } else stopUploadForNewFavorite()
+        }
     }
 
     private var minChunkSize = (0.5 * 1024).toInt()
@@ -525,7 +557,7 @@ class VideoUploadWorker(
     var count = 0
     private fun checkFileStatusBeforeUpload(video: SavedVideo) {
         Log.d(TAG, "CHECKING FILE..... ${video?.uploadId}.")
-        if (!stopUploadForNewFavorite) {
+        if (isDeviceConnected()) {
             if (!video.uploadId.isNullOrEmpty()) {
                 chunkToUpload = baseChunkSize
                 if (video.mediumUploaded && hdReady == true) {
@@ -554,7 +586,7 @@ class VideoUploadWorker(
                 videosManager.onResetCurrentVideo(video)
 //                getVideoIdForFile(currentVideo)
             }
-        } else stopUploadForNewFavorite()
+        }
     }
 
     @Throws(RuntimeException::class)
@@ -570,43 +602,43 @@ class VideoUploadWorker(
         return file.exists() && file.readBytes().isNotEmpty() && isVideo
     }
 
-    var instance: Disposable? = null
-    private fun getVideoIdForFile(currentVideo: SavedVideo?) {
-        instance = uploadsManager
-            .getVideoInstance(currentVideo ?: return)
-            .map {
-                analyticsManager.onTrackUploadEvent(
-                    Register,
-                    arrayOf(
-                        "client_id = ${currentVideo.clientId}"
-                    )
-                )
-                currentVideo.uploadId = it.video?.id
-                println("GETTING VIDEO ID FROM UPLOAD WORKER ---- ${it.video.id}")
-                videosManager.onUpdateUploadIdInDb(it.video.id ?: "", currentVideo)
-            }
-            .doOnError {
-                if (it.message.equals("HTTP 502 Bad Gateway")) {
-                    getVideoIdForFile(currentVideo)
-                } else {
-                    uploadingIsFalse()
-                    analyticsManager.onTrackUploadEvent(
-                        Failed_Registration,
-                        arrayOf(
-                            "client_id = ${currentVideo.clientId}",
-                            "failed_response = ${it.message}"
-                        )
-                    )
-                    videosManager.onResetCurrentVideo(currentVideo)
-                }
-            }
-            .subscribe({
-                this.checkFileStatusBeforeUpload(video = currentVideo)
-            }, {
-
-            })
-
-    }
+//    var instance: Disposable? = null
+//    private fun getVideoIdForFile(currentVideo: SavedVideo?) {
+//        instance = uploadsManager
+//            .getVideoInstance(currentVideo ?: return)
+//            .map {
+//                analyticsManager.onTrackUploadEvent(
+//                    Register,
+//                    arrayOf(
+//                        "client_id = ${currentVideo.clientId}"
+//                    )
+//                )
+//                currentVideo.uploadId = it.video?.id
+//                println("GETTING VIDEO ID FROM UPLOAD WORKER ---- ${it.video.id}")
+//                videosManager.onUpdateUploadIdInDb(it.video.id ?: "", currentVideo)
+//            }
+//            .doOnError {
+//                if (it.message.equals("HTTP 502 Bad Gateway")) {
+//                    getVideoIdForFile(currentVideo)
+//                } else {
+//                    uploadingIsFalse()
+//                    analyticsManager.onTrackUploadEvent(
+//                        Failed_Registration,
+//                        arrayOf(
+//                            "client_id = ${currentVideo.clientId}",
+//                            "failed_response = ${it.message}"
+//                        )
+//                    )
+//                    videosManager.onResetCurrentVideo(currentVideo)
+//                }
+//            }
+//            .subscribe({
+//                this.checkFileStatusBeforeUpload(video = currentVideo)
+//            }, {
+//
+//            })
+//
+//    }
 
     private var startRange = 0
     private var chunkToUpload: Int = 0
@@ -617,7 +649,7 @@ class VideoUploadWorker(
     var part_size: Int? = 0
     var prog: Int? = 0
     private fun upload() {
-        if (!stopUploadForNewFavorite) {
+        if (isDeviceConnected()) {
             println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
             Log.d(TAG, "Good file, starting upload......")
             val fullFileSize = fullBytes.size
@@ -720,7 +752,7 @@ class VideoUploadWorker(
                         it.printStackTrace()
                     })
             }
-        } else stopUploadForNewFavorite()
+        }
     }
 
     private fun qualityCheck(): String {
@@ -745,7 +777,7 @@ class VideoUploadWorker(
     @Synchronized
     private fun checkForComplete() {
         synchronized(this) {
-            if (!stopUploadForNewFavorite) {
+            if (isDeviceConnected()) {
                 println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
                 complete = uploadsManager
                     .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
@@ -777,7 +809,7 @@ class VideoUploadWorker(
                     }, {
                         it.printStackTrace()
                     })
-            } else stopUploadForNewFavorite()
+            }
 
         }
     }
@@ -790,7 +822,7 @@ class VideoUploadWorker(
             true -> currentVideo?.encodedPath
             else -> currentVideo?.mediumRes
         }
-        if (!stopUploadForNewFavorite) {
+        if (isDeviceConnected()) {
             synchronized(this) {
                 println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
                 try {
@@ -861,7 +893,7 @@ class VideoUploadWorker(
 
                         })
             }
-        } else stopUploadForNewFavorite()
+        }
     }
 
 
@@ -939,7 +971,8 @@ class DaggerWorkerFactory(
     private val videos: VideosManager,
     private val progress: ProgressManager,
     private val notifications: NotificationManager,
-    private val analytics: OTAnalyticsManager
+    private val analytics: OTAnalyticsManager,
+    private val wifi: WifiManager
 ) : WorkerFactory() {
     override fun createWorker(
         appContext: Context,
@@ -958,6 +991,7 @@ class DaggerWorkerFactory(
                 instance.notifications = notifications
                 instance.progressManager = progress
                 instance.analyticsManager = analytics
+                instance.wifiManager = wifi
             }
         }
         return instance

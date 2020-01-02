@@ -12,7 +12,6 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
 
         (holder.itemView as UploadsView).bind(list?.get(position) ?: return, debug, isHD)
 
-        println("uploads list:::: ${list?.get(position)?.is_favorite} && ${list?.get(position)?.clientId}")
         this.holder = holder
     }
 

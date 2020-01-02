@@ -62,6 +62,7 @@ class UploadsPresenter(
                         UploadsMessage.Uploading_Medium -> view.setUploadingMedVideo()
                         UploadsMessage.Pending_High -> view.onNotifyOfPendingHDUploads()
                         UploadsMessage.Finished -> view.noVideos()
+                        UploadsMessage.NO_NETWORK -> view.displayNoNetworkConnection()
                         else -> view.setNoVideosMsg()
                     }
                 }, {

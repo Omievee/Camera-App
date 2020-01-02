@@ -87,14 +87,16 @@ class AppModule {
         videos: VideosManager,
         progress: ProgressManager,
         notifications: NotificationManager,
-        analytics: OTAnalyticsManager
+        analytics: OTAnalyticsManager,
+        wifi:WifiManager
     ): WorkerFactory {
         return DaggerWorkerFactory(
             uploads,
             videos,
             progress,
             notifications,
-            analytics
+            analytics,
+            wifi
         )
     }
 
