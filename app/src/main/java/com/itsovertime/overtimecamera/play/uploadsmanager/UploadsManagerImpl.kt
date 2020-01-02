@@ -73,7 +73,6 @@ class UploadsManagerImpl(
                 md5(File(video.encodedPath).readBytes()).toString()
             }
             false -> {
-                println("MD5 DATA.......")
                 println("MD5 DATA.......${md5(File(video.mediumRes).readBytes())}")
                 md5(File(video.mediumRes).readBytes())
             }

@@ -154,6 +154,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         val vid = list?.find {
             it.clientId == this.id
         }
+        println("progress prog:: $progress")
         adapter.updateProgress(list?.indexOf(vid) ?: 0, prog, hd)
 
     }

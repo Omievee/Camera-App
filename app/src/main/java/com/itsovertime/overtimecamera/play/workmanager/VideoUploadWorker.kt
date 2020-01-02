@@ -103,6 +103,7 @@ class VideoUploadWorker(
                     Log.d(TAG, "Subscribed to db updates.. $it... $uploading")
                     if (it && !uploading) {
                         Log.d(TAG, "Getting videos $it && $uploading ")
+                        uploadingIsTrue()
                         getVideosFromDB()
                     }
                 }, {
@@ -185,7 +186,7 @@ class VideoUploadWorker(
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
     fun getVideosFromDB() {
-
+        println("Started db query...")
         queList.clear()
         faveList.clear()
         standardList.clear()
@@ -230,7 +231,7 @@ class VideoUploadWorker(
 
             })
     }
-
+    var uploadingHD:Boolean = false
     @Synchronized
     private fun beginProcess() {
         serverDis?.dispose()
@@ -292,7 +293,7 @@ class VideoUploadWorker(
                 }
             }
 
-            faveListHQ.size > 0 && hdReady ?: false -> {
+            faveListHQ.size > 0 && hdReady ?: false && faveList.isEmpty() && standardList.isEmpty() -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
                 notifications.onCreateProgressNotification(
                     "Uploading HD Videos",
@@ -301,11 +302,12 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     uploadingIsTrue()
+                    uploadingHD = true
                     encodeVideoForUpload(faveListHQ[0])
                     faveListHQ.remove(faveListHQ[0])
                 }
             }
-            standardListHQ.size > 0 && hdReady ?: false -> {
+            standardListHQ.size > 0 && hdReady ?: false && faveList.isEmpty() && standardList.isEmpty() -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
                 notifications.onCreateProgressNotification(
                     "Uploading HD Videos",
@@ -314,6 +316,7 @@ class VideoUploadWorker(
                 )
                 synchronized(this) {
                     uploadingIsTrue()
+                    uploadingHD = true
                     encodeVideoForUpload(standardListHQ[0])
                     standardListHQ.remove(standardListHQ[0])
                 }
@@ -510,7 +513,7 @@ class VideoUploadWorker(
             println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
             tokenDisposable =
                 uploadsManager
-                    .registerWithMD5(token ?: return, hdReady ?: false, video)
+                    .registerWithMD5(token ?: return, uploadingHD, video)
                     .map {
                         encryptionResponse = it
                     }
@@ -560,7 +563,7 @@ class VideoUploadWorker(
         if (isDeviceConnected()) {
             if (!video.uploadId.isNullOrEmpty()) {
                 chunkToUpload = baseChunkSize
-                if (video.mediumUploaded && hdReady == true) {
+                if (video.mediumUploaded && uploadingHD) {
                     fullBytes = File(video.encodedPath).readBytes()
                     video.uploadState = UploadState.UPLOADING_HIGH
                     println("Video state:::::: ${video.uploadState}")
@@ -668,7 +671,7 @@ class VideoUploadWorker(
             progressManager.onUpdateProgress(
                 currentVideo?.clientId ?: "",
                 progress,
-                hdReady ?: false
+                uploadingHD
             )
 
             synchronized(this) {
@@ -756,7 +759,7 @@ class VideoUploadWorker(
     }
 
     private fun qualityCheck(): String {
-        return when (hdReady) {
+        return when (uploadingHD) {
             false -> "medium"
             else -> {
                 when (currentVideo?.trimmedVidPath.isNullOrEmpty()) {
@@ -818,7 +821,7 @@ class VideoUploadWorker(
     private var serverDis: Disposable? = null
     @Synchronized
     private fun finalizeUpload(upload: Upload?) {
-        val path = when (hdReady) {
+        val path = when (uploadingHD) {
             true -> currentVideo?.encodedPath
             else -> currentVideo?.mediumRes
         }
@@ -839,7 +842,7 @@ class VideoUploadWorker(
                         S3Key = upload?.S3Key ?: "",
                         vidWidth = width,
                         vidHeight = height,
-                        hq = hdReady ?: false,
+                        hq = uploadingHD,
                         vid = currentVideo ?: return
                     )
                     .doOnError {
@@ -868,7 +871,7 @@ class VideoUploadWorker(
                         progressManager.onUpdateProgress(
                             currentVideo?.clientId ?: "",
                             100,
-                            hdReady ?: false
+                            uploadingHD
                         )
 
                         if (currentVideo?.uploadState == UploadState.UPLOADING_MEDIUM) {

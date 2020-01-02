@@ -32,6 +32,7 @@ class ProgressManagerImpl(val context: OTApplication) : ProgressManager {
 
     private var progressSubject: BehaviorSubject<UploadProgress> = BehaviorSubject.create()
     override fun onUpdateProgress(id: String, progress: Int, hd: Boolean) {
+        println("Progress!! $progress")
         progressSubject.onNext(UploadProgress(id, progress, hd))
     }
 
