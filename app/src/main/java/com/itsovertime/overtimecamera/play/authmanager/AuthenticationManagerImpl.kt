@@ -97,6 +97,8 @@ class AuthenticationManagerImpl(
     }
 
     private fun getRandomString(sizeOfRandomString: Int): String {
+//        val r = Random()
+//        val i1 = r.nextInt(80 - 65) + 65
         val ALLOWED_CHARACTERS = "${userName} 0123456789qwertyuiopasdfghjklzxcvbnm"
         val random = Random()
         val sb = StringBuilder(sizeOfRandomString)

@@ -30,7 +30,10 @@ class UploadsPresenter(
             .subscribeToUploadProgress()
             .subscribe({
                 println("upload progress.... $it")
-                view.updateProgressBar(it.id, it.prog, it.isHD)
+                if (it.prog > 99) {
+                    view.updateAdapter(list.asReversed(), debug, userEnabledHDUploads)
+                } else view.updateProgressBar(it.id, it.prog, it.isHD)
+
             }, {
 
             })

@@ -23,6 +23,7 @@ import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.fragment_uploads.*
 import kotlinx.android.synthetic.main.upload_item_view.*
+import kotlinx.android.synthetic.main.upload_item_view.view.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
 import javax.inject.Inject
 
@@ -148,15 +149,18 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     var hd: Boolean = false
     var id: String = ""
     override fun updateProgressBar(id: String, progress: Int, hd: Boolean) {
-        this.prog = progress
+        this.prog += progress
         this.hd = hd
         this.id = id
         val vid = list?.find {
             it.clientId == this.id
         }
         println("progress prog:: $progress")
-        adapter.updateProgress(list?.indexOf(vid) ?: 0, prog)
+        val index = list?.indexOf(vid) ?: 0
 
+        (adapter.holder?.itemView as UploadsView).getChildAt(index)
+            .medQProgressBar.setProgress(this.prog, true)
+        adapter.notifyItemChanged(index)
     }
 
     override fun displayNoNetworkConnection() {
@@ -225,11 +229,6 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
                 )
             )
         )
-        val vid = list?.find {
-            it.clientId == this.id
-        }
-        adapter.updateProgress(list?.indexOf(vid) ?: 0, prog)
-        adapter.notifyDataSetChanged()
 
         uploadsRecycler.adapter = adapter
         (uploadsRecycler.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = true

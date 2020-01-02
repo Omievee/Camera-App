@@ -19,12 +19,15 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
             field?.diffResult?.dispatchUpdatesTo(this)
         }
 
+    var prog: Int = 0
     fun updateProgress(index: Int, prog: Int) {
-        (holder?.itemView as UploadsView).getChildAt(index)
-            .medQProgressBar.setProgress(
-            prog,
-            true
-        )
+        this.prog += prog
+//        (holder?.itemView as UploadsView).getChildAt(index)
+//            .medQProgressBar.setProgress(
+//            60,
+//            true
+//        )
+//        notifyItemChanged(index)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {

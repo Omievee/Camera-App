@@ -31,9 +31,10 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
     }
 
     fun bind(savedVideo: SavedVideo, debug: Boolean, hd: Boolean) {
+        println("CALLING ON BIND FROM VIEW")
         this.savedVideo = savedVideo
-        medQProgressBar.setProgress(0, false)
-        highQProgressBar.setProgress(0, false)
+//        medQProgressBar.setProgress(0, false)
+//        highQProgressBar.setProgress(0, false)
         check1.visibility = View.GONE
         check2.visibility = View.GONE
         when (debug) {
@@ -45,7 +46,8 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                 serverText.visibility = View.VISIBLE
                 medQProgressBar.visibility = View.GONE
                 highQProgressBar.visibility = View.GONE
-
+                check1.visibility = View.GONE
+                check2.visibility = View.GONE
                 uploadedText.text = when (savedVideo.uploadState) {
                     UploadState.UPLOADING_MEDIUM -> "Uploading medium quality"
                     UploadState.UPLOADED_MEDIUM -> "Uploaded medium quality"
@@ -85,8 +87,17 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                 }
             }
         }
-
-
+        if (savedVideo.mediumUploaded) {
+            medQProgressBar.setProgress(100, false)
+            check1.visibility = View.VISIBLE
+        }
+        if (savedVideo.highUploaded) {
+            highQProgressBar.setProgress(100, false)
+            check2.visibility = View.VISIBLE
+        }
+        if (savedVideo.highUploaded && savedVideo.mediumUploaded) {
+            pendingProgress.visibility = View.GONE
+        }
         faveIcon.visibility = when (savedVideo.is_favorite) {
             true -> View.VISIBLE
             else -> View.INVISIBLE
@@ -98,26 +109,4 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
             .into(thumbNail)
     }
 
-    var value: Int = 0
-    fun updateMediumProgress(id: String, prog: Int, hd: Boolean) {
-        println("UPDATING PROGRES!! ::: $prog")
-        this.value += prog
-        if (savedVideo?.clientId == id) {
-            if (prog >= 99) {
-                check1.visibility = View.VISIBLE
-            }
-            medQProgressBar.setProgress(
-                value, true
-            )
-        }
-    }
-
-    fun updateHighProgress(value: Int) {
-        this.value += value
-
-        if (value == 100) {
-            check2.visibility = View.VISIBLE
-        }
-        highQProgressBar.setProgress(this.value, true)
-    }
 }
