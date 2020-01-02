@@ -155,7 +155,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
             it.clientId == this.id
         }
         println("progress prog:: $progress")
-        adapter.updateProgress(list?.indexOf(vid) ?: 0, prog, hd)
+        adapter.updateProgress(list?.indexOf(vid) ?: 0, prog)
 
     }
 
@@ -228,7 +228,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         val vid = list?.find {
             it.clientId == this.id
         }
-        adapter.updateProgress(list?.indexOf(vid) ?: 0, prog, hd)
+        adapter.updateProgress(list?.indexOf(vid) ?: 0, prog)
         adapter.notifyDataSetChanged()
 
         uploadsRecycler.adapter = adapter

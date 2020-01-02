@@ -365,9 +365,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 char?.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) ?: 0F
             val currentFingerSpacing: Float
             val point = event?.pointerCount ?: 0
-            if (point == 2) { //Multi touch.
+            if (point == 2 && event?.action == MotionEvent.ACTION_MOVE) { //Multi touch.
                 currentFingerSpacing = getFingerSpacing(event ?: return false);
-                var delta = 0.5f; //Control this value to control the zooming sensibility
+                var delta = 1f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {
                     if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
                         if ((maximumZoomLevel - zoomLevel) <= delta) {
@@ -398,7 +398,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 if (event?.action == MotionEvent.ACTION_MOVE) {
                     // determineVisibility()
                 }
-                return true;
+                return true
             }
             captureSession?.setRepeatingRequest(
                 previewRequestBuilder.build(),

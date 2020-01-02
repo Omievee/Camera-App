@@ -255,6 +255,7 @@ class VideoUploadWorker(
         }
         if (HDListsAreEmpty) {
             hdReady = false
+            uploadingHD = false
             notifications.onUpdateProgressNotification(
                 "HD Uploads complete!"
             )
@@ -262,7 +263,6 @@ class VideoUploadWorker(
 
         when {
             faveList.size > 0 -> {
-
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )

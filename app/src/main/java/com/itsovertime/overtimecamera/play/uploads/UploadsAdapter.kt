@@ -9,9 +9,7 @@ import kotlinx.android.synthetic.main.upload_item_view.view.*
 class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
     var holder: BaseViewHolder? = null
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
-
         (holder.itemView as UploadsView).bind(list?.get(position) ?: return, debug, isHD)
-
         this.holder = holder
     }
 
@@ -21,21 +19,15 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
             field?.diffResult?.dispatchUpdatesTo(this)
         }
 
-    fun updateProgress(index: Int, prog: Int, hd: Boolean) {
-
-
-//        println("this is the video.... ${list?.indexOf(vid)}")
-        println("index for uploading.... $index")
-//        (holder?.itemView as UploadsView).getChildAt(index)
-//            .medQProgressBar.setProgress(
-//            prog,
-//            true
-//        )
-
+    fun updateProgress(index: Int, prog: Int) {
+        (holder?.itemView as UploadsView).getChildAt(index)
+            .medQProgressBar.setProgress(
+            prog,
+            true
+        )
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-
         return BaseViewHolder(UploadsView(parent.context).apply {
             layoutParams =
                 ViewGroup.MarginLayoutParams(
