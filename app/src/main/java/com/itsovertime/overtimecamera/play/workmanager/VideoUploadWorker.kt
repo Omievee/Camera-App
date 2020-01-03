@@ -476,7 +476,6 @@ class VideoUploadWorker(
                 uploadsManager
                     .getAWSDataForUpload()
                     .doOnError {
-
                         if (it.message.equals("HTTP 502 Bad Gateway")) {
                             requestTokenForUpload(savedVideo)
                         } else {
@@ -494,10 +493,10 @@ class VideoUploadWorker(
                             )
                         }
                     }
-                    .map {
-                        tokenResponse = it
-                    }
+
+
                     .doAfterNext {
+                        println("After next token.... $tokenResponse")
                         analyticsManager.onTrackUploadEvent(
                             Upload_Token,
                             arrayOf(
@@ -506,7 +505,7 @@ class VideoUploadWorker(
                                 "s3_key = ${tokenResponse?.S3Key} "
                             )
                         )
-                        beginUpload(token = tokenResponse, video = savedVideo)
+                        beginUpload(token = it, video = savedVideo)
                     }
                     .subscribe({
                     }, {
@@ -516,8 +515,8 @@ class VideoUploadWorker(
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?, video: SavedVideo) {
+        println("Begin upload....... ${isDeviceConnected()}")
         if (isDeviceConnected()) {
-            println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
             tokenDisposable =
                 uploadsManager
                     .registerWithMD5(token ?: return, uploadingHD, video)
