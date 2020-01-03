@@ -42,8 +42,6 @@ class UploadsPresenter(
     fun onRefresh() {
         view.swipe2RefreshIsTrue()
         loadVideoGallery()
-//        view.swipe2RefreshIsFalse()
-//
     }
 
     fun onResume() {

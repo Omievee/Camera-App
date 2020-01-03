@@ -6,7 +6,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.CompoundButton
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -21,7 +21,12 @@ import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
+import kotlinx.android.synthetic.main.activity_uploads.*
+import kotlinx.android.synthetic.main.fragment_camera.*
+import kotlinx.android.synthetic.main.fragment_camera.navSpace
 import kotlinx.android.synthetic.main.fragment_uploads.*
+import kotlinx.android.synthetic.main.fragment_uploads.swipe2refresh
+import kotlinx.android.synthetic.main.fragment_uploads.uploadsRecycler
 import kotlinx.android.synthetic.main.upload_item_view.*
 import kotlinx.android.synthetic.main.upload_item_view.view.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
@@ -37,8 +42,19 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         //  uploadsMessage.text = ""
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+
+        val displayCutout =
+            window.decorView.rootWindowInsets.displayCutout
+        if (displayCutout != null) {
+            val params = notchSpace.layoutParams as ConstraintLayout.LayoutParams
+            params.height = 65
+            notchSpace.layoutParams = params
+        }
+    }
+
     override fun noVideos() {
-        println("we are here....")
         uploadsMessage.text = getString(R.string.uploads_finished)
         uploadsIcon.visibility = View.INVISIBLE
     }
@@ -66,6 +82,8 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
             )
         }
+
+
         swipe2refresh.setColorSchemeResources(
             R.color.OT_Orange,
             R.color.OT_White,
@@ -87,7 +105,20 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
             )
         }
         uploadsRecycler.addItemDecoration(itemDecorator)
+        determineNavigationSpacing()
 
+
+    }
+
+    private fun determineNavigationSpacing() {
+        val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        val params = navSpace.layoutParams as ConstraintLayout.LayoutParams
+        if (resourceId > 0) {
+            params.height = resources.getDimensionPixelSize(resourceId)
+        } else {
+            params.height = 0
+        }
+        navSpace.layoutParams = params
     }
 
     override fun setUploadingHdVideo() {
@@ -190,19 +221,16 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
 
     override fun onResume() {
         super.onResume()
+
         presenter.onResume()
     }
 
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.settingsButton -> {
-                presenter.displayBottomSheetSettings()
-            }
+            R.id.settingsButton -> presenter.displayBottomSheetSettings()
             R.id.back -> onBackPressed()
-            R.id.debug -> {
-                presenter.updateAdapterForDebug()
-            }
+            R.id.debug -> presenter.updateAdapterForDebug()
         }
     }
 
@@ -232,10 +260,12 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
 
         uploadsRecycler.adapter = adapter
         (uploadsRecycler.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = true
+
     }
 
     @Inject
     lateinit var presenter: UploadsPresenter
+
 
 }
 

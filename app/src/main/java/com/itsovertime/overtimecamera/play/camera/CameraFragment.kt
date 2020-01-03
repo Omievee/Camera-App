@@ -268,7 +268,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     @Synchronized
     private fun tapToSaveRegularRecording() {
-
         register?.cancel()
         hideViews?.cancel()
         activity?.runOnUiThread {
@@ -366,8 +365,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             val currentFingerSpacing: Float
             val point = event?.pointerCount ?: 0
             if (point == 2 && event?.action == MotionEvent.ACTION_MOVE) { //Multi touch.
-                currentFingerSpacing = getFingerSpacing(event ?: return false);
-                var delta = 1f; //Control this value to control the zooming sensibility
+                currentFingerSpacing = getFingerSpacing(event);
+                var delta = .8f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {
                     if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
                         if ((maximumZoomLevel - zoomLevel) <= delta) {
@@ -768,15 +767,19 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         txView = cameraView
         presenter.setUpClicks()
         presenter.onCreate()
+        cameraView.setOnTouchListener(this)
         getEventData()
         eventsRecycler.layoutManager =
             LinearLayoutManager(context, RecyclerView.HORIZONTAL, true)
-
         athleteRecycler.layoutManager =
             LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-        // detectOrientation()
-        cameraView.setOnTouchListener(this)
+        detectOrientation()
+        determineNavigationSpacing()
+        //testing()
 
+    }
+
+    private fun determineNavigationSpacing() {
         val resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
         val params = navSpace.layoutParams as ConstraintLayout.LayoutParams
         if (resourceId > 0) {
@@ -785,9 +788,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             params.height = 0
         }
         navSpace.layoutParams = params
-        activity
-        //testing()
-
     }
 
 

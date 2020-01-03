@@ -51,7 +51,7 @@ data class Video(
     val is_favorite: Boolean? = false,
     val is_funny: Boolean? = false,
     val is_selfie: Boolean? = false,
-    val tagged_user_ids: Int? = 0,
+    val tagged_user_ids: Array<String>? = emptyArray(),
     val latitude: Double? = 0.0,
     val longitude: Double? = 0.0,
     val source_high_quality_path: String?,

@@ -82,9 +82,14 @@ class VideosManagerImpl(
                 this?.updateHighUpload(qualityUploaded, video.clientId, UploadState.UPLOADED_HIGH)
             }
 
+            with(videoDao) {
+                this?.getVideoForUpload(video.clientId)
+            }
+
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
+                println("This was the uploaded video... $it")
                 deleteSuccessfullyUploadedVideo(video)
             }, {
                 it.printStackTrace()
@@ -92,9 +97,7 @@ class VideosManagerImpl(
     }
 
     override fun onNotifyWorkIsDone() {
-        if (pendingMediumUploads.size > 0) {
-            newVideos.onNext(true)
-        } else if (mainList.size > 0) {
+        if (pendingMediumUploads.size > 0 || mainList.size > 0) {
             newVideos.onNext(true)
         }
     }
@@ -724,10 +727,13 @@ class VideosManagerImpl(
                     if (isVideoDurationLongerThanMaxTime(it)) {
                         onTrimVideo(it)
                     } else onTransCodeVideo(it, File(it.highRes))
+                } else {
+                    newVideos.onNext(true)
                 }
                 if (it?.uploadId.isNullOrEmpty() && it?.mediumUploaded == true) {
                     onRegisterVideoWithServer(it)
                 }
+
             }, {
                 it.printStackTrace()
             })

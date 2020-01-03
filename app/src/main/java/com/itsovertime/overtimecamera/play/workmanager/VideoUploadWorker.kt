@@ -205,8 +205,14 @@ class VideoUploadWorker(
                     "========================================="
                 )
                 val it = queList.iterator()
+//                it.forEach {
+//                    println("Video Status:: ${it}")
+//                }
                 while (it.hasNext()) {
                     val video = it.next()
+                    if (video.highUploaded) {
+                        it.remove()
+                    }
                     if (video.is_favorite && !video.mediumUploaded) {
                         faveList.add(video)
                         it.remove()
@@ -231,7 +237,8 @@ class VideoUploadWorker(
 
             })
     }
-    var uploadingHD:Boolean = false
+
+    var uploadingHD: Boolean = false
     @Synchronized
     private fun beginProcess() {
         serverDis?.dispose()
@@ -827,7 +834,6 @@ class VideoUploadWorker(
         }
         if (isDeviceConnected()) {
             synchronized(this) {
-                println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
                 try {
                     getVideoDimensions(path = path)
                 } catch (arg: IllegalAccessException) {
@@ -874,6 +880,8 @@ class VideoUploadWorker(
                             uploadingHD
                         )
 
+                        println("Finalized video..... ${currentVideo?.uploadState}")
+
                         if (currentVideo?.uploadState == UploadState.UPLOADING_MEDIUM) {
                             currentVideo?.uploadState = UploadState.UPLOADED_MEDIUM
                             videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
@@ -884,7 +892,6 @@ class VideoUploadWorker(
                                 currentVideo ?: return@doAfterNext
                             )
                         }
-                        analyticsManager.debugMessage("FINAL STEP", "REPEATING PROCESS")
                         uploadingIsFalse()
                         videosManager.onNotifyWorkIsDone()
                     }

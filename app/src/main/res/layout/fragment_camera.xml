@@ -166,7 +166,7 @@
             android:background="@android:color/transparent"
             android:rotation="90"
             android:src="@drawable/favebutton"
-            android:visibility="visible"
+            android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@id/navSpace"
             app:layout_constraintEnd_toStartOf="@id/tapToSave"
             app:layout_constraintStart_toStartOf="parent"
@@ -176,11 +176,11 @@
             android:id="@+id/hahaIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_double"
             android:background="@android:color/transparent"
             android:rotation="90"
             android:src="@drawable/haha"
-            android:layout_marginEnd="@dimen/margin_double"
-            android:visibility="visible"
+            android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@id/navSpace"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/tapToSave"
@@ -199,7 +199,6 @@
             app:layout_constraintBottom_toTopOf="@id/progressBar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
-
 
     <androidx.constraintlayout.widget.Guideline
             android:id="@+id/taggedGuide"

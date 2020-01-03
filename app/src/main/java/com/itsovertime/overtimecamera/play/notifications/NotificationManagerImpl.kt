@@ -44,6 +44,7 @@ class NotificationManagerImpl(val context: OTApplication) : NotificationManager 
         uploadsBuilder?.apply {
             setSmallIcon(R.drawable.sym_def_app_icon)
             setContentTitle(uploadMsg)
+            setContentText("")
             setOngoing(false)
             setProgress(0, 0, false)
             priority = NotificationCompat.PRIORITY_HIGH

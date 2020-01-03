@@ -31,10 +31,9 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
     }
 
     fun bind(savedVideo: SavedVideo, debug: Boolean, hd: Boolean) {
-        println("CALLING ON BIND FROM VIEW")
         this.savedVideo = savedVideo
-//        medQProgressBar.setProgress(0, false)
-//        highQProgressBar.setProgress(0, false)
+        medQProgressBar.setProgress(0, false)
+        highQProgressBar.setProgress(0, false)
         check1.visibility = View.GONE
         check2.visibility = View.GONE
         when (debug) {

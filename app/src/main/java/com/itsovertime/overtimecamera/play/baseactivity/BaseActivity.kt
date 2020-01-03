@@ -340,20 +340,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         }
     }
 
-    override fun onBackPressed() {
-        supportFragmentManager.fragments.forEach {
-            when (it) {
-                is CameraFragment -> {
-                    if (it.childFragmentManager.backStackEntryCount > 0) {
-                        it.childFragmentManager.popBackStack()
-                    }
-                    if (CameraFragment().fragmentIsVisibleToUser ?: return && it.childFragmentManager.backStackEntryCount == 0) {
-                        finishAffinity()
-                    }
-                }
-            }
-        }
-    }
 
     override fun onAttachFragment(fragment: Fragment?) {
         super.onAttachFragment(fragment)
@@ -361,7 +347,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
             fragment.setUploadsClickListener(this)
         }
     }
-
 }
 
 class CustomViewPageAdapter(
