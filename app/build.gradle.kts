@@ -42,8 +42,8 @@ android {
         getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
             )
         }
     }
@@ -129,6 +129,9 @@ dependencies {
     implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
     implementation("androidx.work:work-rxjava2:$WORKER_VERSION")
     implementation("androidx.work:work-runtime-ktx:$WORKER_VERSION")
+
+    //country code detection
+    implementation("io.michaelrocks:libphonenumber-android:8.10.16")
 
     //Testing
     testImplementation("junit:junit:4.12")
