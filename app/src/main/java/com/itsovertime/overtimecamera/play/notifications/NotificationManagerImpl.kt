@@ -22,11 +22,14 @@ class NotificationManagerImpl(val context: OTApplication) : NotificationManager 
         notificationManager?.createNotificationChannel(channel)
     }
 
+    override fun onClearNotifications() {
+        notificationManager?.cancelAll()
+    }
+
     var uploadsBuilder: NotificationCompat.Builder? = null
     var notificationManager: android.app.NotificationManager? = null
     override fun onCreateProgressNotification(msg: String, uploadMsg: String, ongoing: Boolean) {
         onCreateNotificationChannel()
-
         uploadsBuilder = NotificationCompat.Builder(context, "Uploads")
         uploadsBuilder?.apply {
             setSmallIcon(R.drawable.sym_def_app_icon)
@@ -61,5 +64,4 @@ class NotificationManagerImpl(val context: OTApplication) : NotificationManager 
         const val General = 0
         const val Uploads = 1
     }
-
 }

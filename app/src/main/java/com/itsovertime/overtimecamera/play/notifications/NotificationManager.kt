@@ -6,4 +6,5 @@ interface NotificationManager {
     fun onUpdateProgressNotification(uploadMsg: String)
     fun onCreateStandardNotification(msg: String)
     fun onCreateNotificationChannel()
+    fun onClearNotifications()
 }

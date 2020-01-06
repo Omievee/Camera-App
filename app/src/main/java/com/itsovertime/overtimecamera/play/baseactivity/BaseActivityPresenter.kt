@@ -8,6 +8,7 @@ import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.network.AccessResponse
+import com.itsovertime.overtimecamera.play.notifications.NotificationManager
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import com.mixpanel.android.mpmetrics.MixpanelAPI
 import io.reactivex.disposables.Disposable
@@ -15,7 +16,8 @@ import io.reactivex.disposables.Disposable
 class BaseActivityPresenter(
     val view: BaseActivity,
     val auth: AuthenticationManager,
-    val analytics: OTAnalyticsManager
+    val analytics: OTAnalyticsManager,
+    val notifications: NotificationManager
 ) {
 
     fun onCreate() {
@@ -96,6 +98,7 @@ class BaseActivityPresenter(
         codeDisposable?.dispose()
         authDis?.dispose()
         userDisposable?.dispose()
+        notifications.onClearNotifications()
     }
 
     fun resendAccessCode() {
