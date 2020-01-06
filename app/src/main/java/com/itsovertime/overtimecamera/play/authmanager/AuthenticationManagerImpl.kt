@@ -7,6 +7,10 @@ import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.User
 import com.itsovertime.overtimecamera.play.network.*
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
+import io.michaelrocks.libphonenumber.android.CountryCodeToRegionCodeMap
+import io.michaelrocks.libphonenumber.android.NumberParseException
+import io.michaelrocks.libphonenumber.android.PhoneNumberUtil
+import io.michaelrocks.libphonenumber.android.Phonenumber
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -23,6 +27,8 @@ class AuthenticationManagerImpl(
         UserPreference.userId = ""
         UserPreference.isSignUpComplete = false
     }
+
+    var phoneUtils: PhoneNumberUtil = PhoneNumberUtil.createInstance(context)
 
     var user: User? = null
     override fun getUserId(): Single<User>? {
@@ -128,15 +134,35 @@ class AuthenticationManagerImpl(
 
     var num: String = ""
     override fun onRequestAccessCodeForNumber(number: String): Single<LoginResponse> {
-        num = if (number.startsWith("1")) {
-            "+$number"
-        } else {
-            "+1$number"
-        }
+        val countryCode = phoneUtils.getCountryCodeForRegion(Locale.getDefault().country)
+        num = "+${countryCode}$number"
         return api
-            .verifyNumberForAccessCode(VerifyNumberRequest(phone = num))
+            .verifyNumberForAccessCode(
+                VerifyNumberRequest(
+                    phone = num
+                )
+            )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
-
 }
+
+//    private fun parseNumberForCorrectRegion(number: String): Phonenumber.PhoneNumber? {
+//        num = if (number.startsWith("+")) {
+//            number
+//        } else {
+//            "+$number"
+//        }
+//        var numberParsedForRegion: Phonenumber.PhoneNumber? = null
+//        try {
+//            numberParsedForRegion = phoneUtils.parse(
+//                num,
+//                Locale.getDefault().country
+//            )
+//            val code = numberParsedForRegion.countryCode
+//            println("Code? $code")
+//        } catch (parseException: NumberParseException) {
+//            parseException.printStackTrace()
+//        }
+//        return numberParsedForRegion
+//    }
