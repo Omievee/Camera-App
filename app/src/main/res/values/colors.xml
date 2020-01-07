@@ -7,5 +7,5 @@
     <color name="OT_Orange">#E57607</color>
     <color name="OT_White">#FFFF</color>
     <color name="OT_DarkGray">#323232</color>
-
+    <color name="black">#000000</color>
 </resources>

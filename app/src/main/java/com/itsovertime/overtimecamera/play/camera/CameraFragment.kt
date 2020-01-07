@@ -342,7 +342,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         pauseButton.setOnClickListener(this)
         pausedView.setOnClickListener(this)
         eventSpace.setOnClickListener(this)
-        cancel.setOnClickListener(this)
         hahaIcon.setOnClickListener(this)
         eventTitle.setOnClickListener(this)
         uploadButton.setOnClickListener(this)

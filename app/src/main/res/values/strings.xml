@@ -2,7 +2,7 @@
     <string name="app_name">OverTimeCamera</string>
 
     <string name="uploads_header">Upload Queue</string>
-    <string name="upload_queue_turn_on_wifi">Turn on HD uploading to finish (WiFi Recommended)</string>
+    <string name="upload_queue_turn_on_wifi">Turn on HD uploading to finish (Wi-Fi Recommended)</string>
     <string name="upload_queue_uploading_hd">Uploading high quality videos…</string>
     <string name="upload_queue_uploading_med">Uploading medium quality videos…</string>
     <string name="settings_view_terms"><![CDATA[Terms Of Service & Privacy Policy]]></string>
@@ -47,7 +47,7 @@
     <string name="auth_logout_not_authorized">You are not authorized</string>
     <string name="auth_invalid_code">Invalid Code</string>
     <string name="selfie_message">Record game recap.</string>
-    <string name="hd_videos_ready">HD videos are ready for upload. Turn on HD uploading. (WiFi Recommended)</string>
+    <string name="hd_videos_ready">HD videos are ready for upload. Turn on HD uploading. (Wi-Fi Recommended)</string>
     <string name="no_hd_videos_msg">No HD videos to upload..</string>
     <string name="hd_uploads_title">Turn on HD Uploads</string>
     <string name="hd_uploads_msg">A Wifi connection is recommended for HD uploads. Please do not close the app until uploads are complete</string>

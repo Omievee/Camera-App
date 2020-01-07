@@ -9,6 +9,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.inputmethodservice.Keyboard
+import android.inputmethodservice.KeyboardView
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
@@ -222,6 +224,8 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
     @Inject
     lateinit var presenter: BaseActivityPresenter
 
+
+    var customKeyboardView: KeyboardView? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
@@ -232,11 +236,12 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
         changeNum.setOnClickListener(this)
         allowPermissions.setOnClickListener(this)
 
+        customKeyboardView = KeyboardView(this, null)
+        customKeyboardView?.keyboard = Keyboard(this, R.xml.keyboard)
 //        val power = getSystemService(Context.POWER_SERVICE) as PowerManager
 //        power.addThermalStatusListener {
 //            println("Current Thermal is.... $it")
 //        }
-
 
         window.apply {
             setFlags(
@@ -258,9 +263,6 @@ class BaseActivity : OTActivity(), BaseActivityInt, CameraFragment.UploadsButton
                 logOut()
             }
         }
-
-
-
         scheduleJob()
     }
 

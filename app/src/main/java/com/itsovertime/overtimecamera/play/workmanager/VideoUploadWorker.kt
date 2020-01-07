@@ -583,7 +583,6 @@ class VideoUploadWorker(
                             video
                         )
                     } else {
-                        println("Video is valid!")
                         fullBytes = File(video.mediumRes).readBytes()
                         video.uploadState = UploadState.UPLOADING_MEDIUM
                         upload()

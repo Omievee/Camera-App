@@ -11,6 +11,7 @@ import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
@@ -26,11 +27,14 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
+import kotlinx.android.synthetic.main.fragment_camera.*
 import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
 import java.io.IOException
+import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 
 class VideosManagerImpl(
@@ -456,7 +460,12 @@ class VideosManagerImpl(
                             }
                             else -> {
                                 println("on next video.....................")
-                                newVideos.onNext(true)
+                                val alertWorker = object : TimerTask() {
+                                    override fun run() {
+                                        newVideos.onNext(true)
+                                    }
+                                }
+                                Timer().schedule(alertWorker, 2500)
                             }
                         }
                     }
@@ -472,6 +481,7 @@ class VideosManagerImpl(
                 r.printStackTrace()
             } catch (io: IOException) {
                 Crashlytics.log("MediaTranscoder-Error ${io.message}")
+
                 io.printStackTrace()
             } catch (ia: IllegalArgumentException) {
                 Crashlytics.log("MediaTranscoder-Error ${ia.message}")
@@ -728,6 +738,7 @@ class VideosManagerImpl(
                         onTrimVideo(it)
                     } else onTransCodeVideo(it, File(it.highRes))
                 } else {
+                    println("Else .. new video alert...")
                     newVideos.onNext(true)
                 }
                 if (it?.uploadId.isNullOrEmpty() && it?.mediumUploaded == true) {

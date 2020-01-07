@@ -266,23 +266,30 @@
             android:rotation="90"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/hahaIcon"
+            app:layout_constraintStart_toEndOf="@id/verticalGuide"
             app:layout_constraintTop_toTopOf="@id/bottomView" />
 
 
-    <com.itsovertime.overtimecamera.play.events.EventsRecyclerView
+    <androidx.cardview.widget.CardView
             android:id="@+id/hiddenEvents"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_margin="@dimen/margin_spacing_extra"
-            android:background="@drawable/rounded_view"
             android:visibility="gone"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:cardCornerRadius="5dp"
             app:layout_constraintBottom_toBottomOf="@id/bottomGuide"
             app:layout_constraintCircleRadius="@dimen/margin_standard"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/topGuide" />
+            app:layout_constraintTop_toTopOf="@id/topGuide">
 
+        <com.itsovertime.overtimecamera.play.events.EventsRecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:drawable/screen_background_dark_transparent" />
+
+    </androidx.cardview.widget.CardView>
 
     <com.itsovertime.overtimecamera.play.camera.PausedFlashBack
             android:id="@+id/pausedView"

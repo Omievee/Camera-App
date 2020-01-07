@@ -1,10 +1,12 @@
 package com.itsovertime.overtimecamera.play.uploads
 
 import android.app.AlertDialog
+import android.graphics.PorterDuff
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import android.widget.CompoundButton
+import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -173,7 +175,13 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     }
 
     private fun showToast(msg: String) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        val toast = Toast.makeText(this, msg, Toast.LENGTH_SHORT)
+        val view = toast.view
+        view.background.setColorFilter(resources.getColor(R.color.black, null), PorterDuff.Mode.SRC_IN);
+        val text = view.findViewById<TextView>(android.R.id.message)
+        text.setTextColor(resources.getColor(R.color.OT_White, null));
+        toast.show()
+
     }
 
     var prog: Int = 0

@@ -18,7 +18,6 @@ class NotificationManagerImpl(val context: OTApplication) : NotificationManager 
         // Add the channel
         notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
-
         notificationManager?.createNotificationChannel(channel)
     }
 
