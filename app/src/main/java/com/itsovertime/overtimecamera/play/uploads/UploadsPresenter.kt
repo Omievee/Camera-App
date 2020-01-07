@@ -1,15 +1,11 @@
 package com.itsovertime.overtimecamera.play.uploads
 
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.model.SavedVideo
-import com.itsovertime.overtimecamera.play.progress.ProgressManager
-import com.itsovertime.overtimecamera.play.progress.UploadsMessage
+import com.itsovertime.overtimecamera.play.progressmanager.ProgressManager
+import com.itsovertime.overtimecamera.play.progressmanager.UploadsMessage
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
-import com.itsovertime.overtimecamera.play.workmanager.VideoUploadWorker
 import io.reactivex.disposables.Disposable
 
 class UploadsPresenter(

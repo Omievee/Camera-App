@@ -19,8 +19,8 @@ import com.itsovertime.overtimecamera.play.network.EncryptedResponse
 import com.itsovertime.overtimecamera.play.network.TokenResponse
 import com.itsovertime.overtimecamera.play.network.Upload
 import com.itsovertime.overtimecamera.play.notifications.NotificationManager
-import com.itsovertime.overtimecamera.play.progress.ProgressManager
-import com.itsovertime.overtimecamera.play.progress.UploadsMessage
+import com.itsovertime.overtimecamera.play.progressmanager.ProgressManager
+import com.itsovertime.overtimecamera.play.progressmanager.UploadsMessage
 import com.itsovertime.overtimecamera.play.uploads.CompleteResponse
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager

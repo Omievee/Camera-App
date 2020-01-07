@@ -1,9 +1,7 @@
 package com.itsovertime.overtimecamera.play.uploads
 
 import com.itsovertime.overtimecamera.play.di.ActivityScope
-import com.itsovertime.overtimecamera.play.di.FragmentScope
-import com.itsovertime.overtimecamera.play.progress.ProgressManager
-import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
+import com.itsovertime.overtimecamera.play.progressmanager.ProgressManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import dagger.Module

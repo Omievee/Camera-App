@@ -1,4 +1,4 @@
-package com.itsovertime.overtimecamera.play.progress
+package com.itsovertime.overtimecamera.play.progressmanager
 
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import io.reactivex.BackpressureStrategy

@@ -1,8 +1,6 @@
-package com.itsovertime.overtimecamera.play.progress
+package com.itsovertime.overtimecamera.play.progressmanager
 
-import android.database.Observable
 import io.reactivex.Flowable
-import java.util.*
 
 interface ProgressManager {
 

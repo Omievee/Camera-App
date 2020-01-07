@@ -56,7 +56,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
 
     override fun noVideos() {
         uploadsMessage.text = getString(R.string.uploads_finished)
-        uploadsIcon.visibility = View.INVISIBLE
+        uploadsIcon.visibility = View.GONE
     }
 
     override fun setNoVideosMsg() {

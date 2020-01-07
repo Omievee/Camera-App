@@ -14,8 +14,8 @@ import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
 import com.itsovertime.overtimecamera.play.network.StaticApiModule
 import com.itsovertime.overtimecamera.play.notifications.NotificationManager
 import com.itsovertime.overtimecamera.play.notifications.NotificationManagerImpl
-import com.itsovertime.overtimecamera.play.progress.ProgressManager
-import com.itsovertime.overtimecamera.play.progress.ProgressManagerImpl
+import com.itsovertime.overtimecamera.play.progressmanager.ProgressManager
+import com.itsovertime.overtimecamera.play.progressmanager.ProgressManagerImpl
 import com.itsovertime.overtimecamera.play.workmanager.DaggerWorkerFactory
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManagerImpl

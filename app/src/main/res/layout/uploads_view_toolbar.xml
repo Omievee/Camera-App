@@ -104,7 +104,7 @@
             android:id="@+id/uploadsMessage"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_half"
+            android:layout_marginStart="@dimen/margin_standard"
             android:layout_marginTop="@dimen/margin_standard"
             android:maxLines="2"
             android:textColor="@android:color/black"
