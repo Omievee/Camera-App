@@ -120,10 +120,10 @@ class ZoomLayout : FrameLayout, OnScaleGestureListener {
     }
 
     private fun applyScaleAndTranslation() {
-        child().setScaleX(scale)
-        child().setScaleY(scale)
-        child().setTranslationX(dx)
-        child().setTranslationY(dy)
+        child().scaleX = scale
+        child().scaleY = scale
+        child().translationX = dx
+        child().translationY = dy
     }
 
     private fun child(): View {
