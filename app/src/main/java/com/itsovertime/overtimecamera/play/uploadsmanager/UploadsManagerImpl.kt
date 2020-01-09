@@ -68,8 +68,11 @@ class UploadsManagerImpl(
         hdReady: Boolean,
         video: SavedVideo
     ): Observable<EncryptedResponse> {
+        println("Hd ready ??? uploading hd.... $hdReady")
         val md5: String? = when (hdReady) {
             true -> {
+                println("MD5 is empty...")
+                println("MD5 DATA.......${md5(File(video.encodedPath).readBytes())}")
                 md5(File(video.encodedPath).readBytes()).toString()
             }
             false -> {
@@ -77,7 +80,6 @@ class UploadsManagerImpl(
                 md5(File(video.mediumRes).readBytes())
             }
         }
-        println("md5t ==== $md5")
         return api
             .uploadDataForMd5(
                 UploadRequest(

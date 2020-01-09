@@ -355,9 +355,10 @@ class VideoUploadWorker(
         return File(mediaStorageDir.path + File.separator + "1080.$fileName")
     }
 
-    var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
+
     @SuppressLint("CheckResult")
     private fun encodeVideoForUpload(savedVideo: SavedVideo) {
+        var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
         if (!savedVideo.encodedPath.isNullOrEmpty()) {
             if (File(savedVideo.encodedPath).exists()) {
                 File(savedVideo.encodedPath).delete()
@@ -367,6 +368,7 @@ class VideoUploadWorker(
             true -> File(savedVideo.highRes)
             else -> File(savedVideo.trimmedVidPath)
         }
+
         Single.fromCallable {
             val newFile =
                 fileForHDEncodedVideo(encodeFile.name, savedVideo.clientId)
@@ -377,16 +379,18 @@ class VideoUploadWorker(
                 encodeFile.absolutePath,
                 // video codec to write to
                 "-vcodec",
-                // value of codec - H264
+                // value of codec - h264
                 "h264",
                 "-preset",
                 "ultrafast",
                 "-crf",
-                "22",
+                "28",
                 "-maxrate",
                 "16000k",
                 "-bufsize",
                 "16000k",
+                "-filter:v",
+                "fps=fps=60",
                 // new file
                 newFile.absolutePath
             )
@@ -412,7 +416,6 @@ class VideoUploadWorker(
                             super.onFinish()
                             println("ENCODING FINISHED...")
                             getNewHDVideoForUpload(currentVideo ?: return)
-
                         }
 
                         override fun onFailure(message: String?) {
@@ -426,6 +429,9 @@ class VideoUploadWorker(
                 }
             } catch (e: FFmpegCommandAlreadyRunningException) {
                 println("FFMPEG ALREADY RUNNING :: ${e.message}")
+                ffmpeg.killRunningProcesses()
+
+                encodeVideoForUpload(currentVideo ?: return@fromCallable)
                 Crashlytics.log("FFMPEG -- ${e.message}")
             } catch (ex: Exception) {
                 ex.printStackTrace()
@@ -444,15 +450,17 @@ class VideoUploadWorker(
             .onGetEncodedVideo(video.clientId)
             .map {
                 currentVideo = it
+                if (!File(it?.encodedPath).exists()) {
+                    println("Wtf.. file is gone... ")
+                    // encodeVideoForUpload(currentVideo ?: return@map)
+                } else requestTokenForUpload(currentVideo ?: return@map)
             }
             .doOnError {
                 uploadingIsFalse()
                 videosManager.onResetCurrentVideo(currentVideo ?: return@doOnError)
             }
             .subscribe({
-                requestTokenForUpload(currentVideo ?: return@subscribe)
             }, {
-
             })
     }
 
@@ -496,7 +504,6 @@ class VideoUploadWorker(
 
 
                     .doAfterNext {
-                        println("After next token.... $tokenResponse")
                         analyticsManager.onTrackUploadEvent(
                             Upload_Token,
                             arrayOf(
@@ -515,45 +522,48 @@ class VideoUploadWorker(
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?, video: SavedVideo) {
-        println("Begin upload....... ${isDeviceConnected()}")
+        println("Begin upload....... ${isDeviceConnected()}&& $token && uploading hd? $uploadingHD")
+
         if (isDeviceConnected()) {
             tokenDisposable =
-                uploadsManager
-                    .registerWithMD5(token ?: return, uploadingHD, video)
-                    .map {
-                        encryptionResponse = it
-                    }
-                    .doAfterNext {
-                        checkFileStatusBeforeUpload(video)
-                        analyticsManager.onTrackUploadEvent(
-                            Register_Upload,
-                            arrayOf(
-                                "client_id = ${video.clientId}",
-                                "upload_id = ${video.uploadId}"
-                            )
-                        )
-                    }
-                    .doOnError {
-
-                        if (it.message.equals("HTTP 502 Bad Gateway")) {
-                            beginUpload(token, video)
-                        } else {
-                            uploadingIsFalse()
+                token?.let {
+                    uploadsManager
+                        .registerWithMD5(it, uploadingHD, video)
+                        .map {
+                            encryptionResponse = it
+                        }
+                        .doAfterNext {
+                            checkFileStatusBeforeUpload(video)
                             analyticsManager.onTrackUploadEvent(
-                                Failed_Register_Upload,
+                                Register_Upload,
                                 arrayOf(
                                     "client_id = ${video.clientId}",
-                                    "failed_response = ${it.message}"
+                                    "upload_id = ${video.uploadId}"
                                 )
                             )
-                            videosManager.onResetCurrentVideo(
-                                currentVideo = currentVideo ?: return@doOnError
-                            )
                         }
-                    }
-                    .subscribe({
-                    }, {
-                    })
+                        .doOnError {
+
+                            if (it.message.equals("HTTP 502 Bad Gateway")) {
+                                beginUpload(token, video)
+                            } else {
+                                uploadingIsFalse()
+                                analyticsManager.onTrackUploadEvent(
+                                    Failed_Register_Upload,
+                                    arrayOf(
+                                        "client_id = ${video.clientId}",
+                                        "failed_response = ${it.message}"
+                                    )
+                                )
+                                videosManager.onResetCurrentVideo(
+                                    currentVideo = currentVideo ?: return@doOnError
+                                )
+                            }
+                        }
+                        .subscribe({
+                        }, {
+                        })
+                }
         }
     }
 
@@ -790,15 +800,17 @@ class VideoUploadWorker(
                 complete = uploadsManager
                     .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
                     .doOnError {
+                        it.printStackTrace()
+                        println("ERROR FROM COMPLETE! ${it.message}")
                         if (it.message.equals("HTTP 502 Bad Gateway")) {
                             checkForComplete()
                         } else {
-                            uploadingIsFalse()
-                            videosManager.onResetCurrentVideo(
-                                currentVideo ?: return@doOnError
-                            )
+//                            uploadingIsFalse()
+//                            videosManager.onResetCurrentVideo(
+//                                currentVideo ?: return@doOnError
+//                            )
                         }
-                        it.printStackTrace()
+
                     }
                     .subscribe({
                         if (it.code() == 502) {
@@ -808,10 +820,11 @@ class VideoUploadWorker(
                             CompleteResponse.COMPLETING.name -> pingServerForStatus()
                             CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
                             else -> {
+                                println("This is an else from complete body........ ${it.body()?.status}")
                                 //uploadingIsFalse()
-                                videosManager.onResetCurrentVideo(
-                                    currentVideo ?: return@subscribe
-                                )
+//                                videosManager.onResetCurrentVideo(
+//                                    currentVideo ?: return@subscribe
+//                                )
                             }
                         }
                     }, {

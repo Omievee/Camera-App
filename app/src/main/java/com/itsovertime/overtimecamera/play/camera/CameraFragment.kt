@@ -346,6 +346,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         eventTitle.setOnClickListener(this)
         uploadButton.setOnClickListener(this)
         cameraView.setOnTouchListener(this)
+
     }
 
     var fingerSpacing = 0;
@@ -365,7 +366,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             val point = event?.pointerCount ?: 0
             if (point == 2 && event?.action == MotionEvent.ACTION_MOVE) { //Multi touch.
                 currentFingerSpacing = getFingerSpacing(event);
-                var delta = .8f; //Control this value to control the zooming sensibility
+                var delta = .11f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {
                     if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
                         if ((maximumZoomLevel - zoomLevel) <= delta) {
@@ -376,7 +377,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                         if ((zoomLevel - delta) < 1f) {
                             delta = zoomLevel - 1f;
                         }
-                        zoomLevel -= delta;
+                        zoomLevel -= delta
                     }
                     val ratio =
                         1 / zoomLevel; //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
@@ -388,7 +389,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                     zoom = Rect(
                         croppedWidth / 2, croppedHeight / 2,
                         rect.width() - croppedWidth / 2, rect.height() - croppedHeight / 2
-                    );
+                    )
                     previewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
                 }
                 fingerSpacing = currentFingerSpacing.toInt()
@@ -756,8 +757,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_camera, container, false)
+        val infl = inflater.inflate(R.layout.fragment_camera, container, false)
+        val myZoomView = context?.let { ZoomLayout(it) };
+        myZoomView?.addView(infl);
+        return myZoomView;
     }
+
 
     var selectedEvent: Event? = null
     private var evAdapter: EventsAdapter? = null
@@ -766,7 +771,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         txView = cameraView
         presenter.setUpClicks()
         presenter.onCreate()
-        cameraView.setOnTouchListener(this)
+        //cameraView.setOnTouchListener(MyScaleGestures(context))
         getEventData()
         eventsRecycler.layoutManager =
             LinearLayoutManager(context, RecyclerView.HORIZONTAL, true)

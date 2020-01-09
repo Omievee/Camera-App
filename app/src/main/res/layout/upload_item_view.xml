@@ -2,7 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="75dp">
+        android:layout_height="65dp">
 
     <ImageView
             android:id="@+id/thumbNail"
@@ -25,14 +25,14 @@
 
     <TextView
             android:id="@+id/medQT"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_standard"
             android:layout_marginTop="@dimen/margin_standard"
             android:text="@string/med"
             android:textAlignment="textStart"
             android:textColor="@android:color/black"
-            android:textSize="18sp"
+            android:textSize="14sp"
             android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@id/medQProgressBar"
             app:layout_constraintEnd_toStartOf="@id/check1"
@@ -41,14 +41,15 @@
 
     <ImageView
             android:id="@+id/check1"
-            android:layout_width="0dp"
-            android:layout_height="15dp"
-            android:layout_marginTop="@dimen/margin_half"
+            android:layout_width="13dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="@dimen/margin_half"
+            android:paddingTop="@dimen/margin_standard"
             android:src="@drawable/check"
             android:visibility="invisible"
-            app:layout_constraintEnd_toStartOf="@id/guide2"
+            app:layout_constraintBottom_toTopOf="@id/medQProgressBar"
             app:layout_constraintStart_toEndOf="@id/medQT"
-            app:layout_constraintTop_toTopOf="@id/medQT" />
+            app:layout_constraintTop_toTopOf="parent" />
 
 
     <androidx.constraintlayout.widget.Guideline
@@ -77,35 +78,35 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_percent=".85" />
+            app:layout_constraintGuide_percent=".87" />
 
 
     <TextView
             android:id="@+id/highQT"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_half"
             android:layout_marginTop="@dimen/margin_standard"
             android:text="@string/uploads_high"
             android:textAlignment="textStart"
             android:textColor="@android:color/black"
-            android:textSize="18sp"
+            android:textSize="14sp"
             android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@id/highQProgressBar"
-            app:layout_constraintEnd_toStartOf="@id/check2"
             app:layout_constraintStart_toEndOf="@id/guide2"
             app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
             android:id="@+id/check2"
-            android:layout_width="0dp"
-            android:layout_height="15dp"
-            android:layout_marginTop="@dimen/margin_half"
+            android:layout_width="13dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="@dimen/margin_half"
+            android:paddingTop="@dimen/margin_standard"
             android:src="@drawable/check"
             android:visibility="invisible"
-            app:layout_constraintEnd_toStartOf="@id/guide3"
+            app:layout_constraintBottom_toTopOf="@id/highQProgressBar"
             app:layout_constraintStart_toEndOf="@id/highQT"
-            app:layout_constraintTop_toTopOf="@id/highQT" />
+            app:layout_constraintTop_toTopOf="parent" />
 
 
     <TextView
@@ -215,9 +216,9 @@
 
     <ImageView
             android:id="@+id/faveIcon"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_margin="@dimen/margin_half"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginEnd="@dimen/margin_standard"
             android:src="@drawable/fave"
             android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="parent"

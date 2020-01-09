@@ -85,11 +85,9 @@ class VideosManagerImpl(
             with(videoDao) {
                 this?.updateHighUpload(qualityUploaded, video.clientId, UploadState.UPLOADED_HIGH)
             }
-
             with(videoDao) {
                 this?.getVideoForUpload(video.clientId)
             }
-
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
@@ -436,7 +434,6 @@ class VideosManagerImpl(
         val fileDescriptor = parcelFileDescriptor?.fileDescriptor
         synchronized(this) {
             try {
-
                 listener = object : MediaTranscoder.Listener {
                     override fun onTranscodeProgress(progress: Double) {
                         println("PROGRESS $progress")
@@ -474,7 +471,6 @@ class VideosManagerImpl(
                     fileDescriptor,
                     compressedFile(videoFile, savedVideo).absolutePath,
                     MediaFormatStrategyPresets.createAndroid720pStrategy(), listener
-
                 )
             } catch (r: RuntimeException) {
                 Crashlytics.log("MediaTranscoder-Error ${r.message}")
