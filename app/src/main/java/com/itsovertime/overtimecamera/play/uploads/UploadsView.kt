@@ -24,8 +24,8 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
 
     fun bind(savedVideo: SavedVideo, debug: Boolean, hd: Boolean) {
         this.savedVideo = savedVideo
-        medQProgressBar.setProgress(0, false)
-        highQProgressBar.setProgress(0, false)
+        //medQProgressBar.setProgress(0, false)
+        //highQProgressBar.setProgress(0, false)
         check1.visibility = View.GONE
         check2.visibility = View.GONE
         when (debug) {
@@ -65,15 +65,16 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                     true -> View.GONE
                     else -> View.VISIBLE
                 }
-                if (savedVideo.mediumUploaded) {
-                    medQProgressBar.setProgress(100, false)
-                    check1.visibility = View.VISIBLE
+
+                check1.visibility = when (savedVideo.mediumUploaded) {
+                    true -> View.VISIBLE
+                    else -> View.GONE
+                }
+                check2.visibility = when (savedVideo.highUploaded) {
+                    true -> View.VISIBLE
+                    else -> View.GONE
                 }
 
-                if (savedVideo.highUploaded) {
-                    highQProgressBar.setProgress(100, false)
-                    check2.visibility = View.VISIBLE
-                }
                 if (savedVideo.highUploaded && savedVideo.mediumUploaded) {
                     pendingProgress.visibility = View.GONE
                 }
@@ -85,6 +86,16 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
         faveIcon.visibility = when (savedVideo.is_favorite) {
             true -> View.VISIBLE
             else -> View.INVISIBLE
+        }
+
+        println("this is the upload state!! ${savedVideo.uploadState}")
+        when (savedVideo.mediumUploaded) {
+            true -> medQProgressBar.setProgress(100, true)
+            else -> medQProgressBar.setProgress(0, false)
+        }
+        when (savedVideo.highUploaded) {
+            true -> highQProgressBar.setProgress(100, true)
+            else -> highQProgressBar.setProgress(0, false)
         }
 
         Glide.with(context)

@@ -195,6 +195,7 @@
             android:layout_marginStart="@dimen/margin_half"
             android:layout_marginEnd="@dimen/margin_half"
             android:layout_marginBottom="@dimen/margin_half"
+            android:progress="0"
             android:progressBackgroundTint="@android:color/darker_gray"
             android:progressTint="@color/OT_Orange"
             android:secondaryProgressTint="@color/OT_DarkGray"
