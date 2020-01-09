@@ -64,7 +64,7 @@ class ZoomLayout : FrameLayout, OnScaleGestureListener {
                     MotionEvent.ACTION_POINTER_UP -> mode = Mode.NONE
                     MotionEvent.ACTION_UP -> {
                         Log.i(TAG, "UP")
-                        mode = Mode.NONE
+                        mode = Mode.DRAG
                         prevDx = dx
                         prevDy = dy
                     }

@@ -17,6 +17,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
     ConstraintLayout(context, attrs) {
 
     var savedVideo: SavedVideo? = null
+    var isUploading:Boolean?=null
 
     init {
         View.inflate(context, R.layout.upload_item_view, this)
@@ -28,6 +29,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
         //highQProgressBar.setProgress(0, false)
         check1.visibility = View.GONE
         check2.visibility = View.GONE
+
         when (debug) {
             true -> {
                 check1.visibility = View.GONE
