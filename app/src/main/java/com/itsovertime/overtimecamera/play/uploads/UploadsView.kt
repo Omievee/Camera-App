@@ -17,13 +17,14 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
     ConstraintLayout(context, attrs) {
 
     var savedVideo: SavedVideo? = null
-    var isUploading:Boolean?=null
+    var isUploading: Boolean? = null
 
     init {
         View.inflate(context, R.layout.upload_item_view, this)
     }
 
     fun bind(savedVideo: SavedVideo, debug: Boolean, hd: Boolean) {
+        println("calling on bind..................")
         this.savedVideo = savedVideo
         //medQProgressBar.setProgress(0, false)
         //highQProgressBar.setProgress(0, false)
@@ -92,11 +93,11 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
 
         println("this is the upload state!! ${savedVideo.uploadState}")
         when (savedVideo.mediumUploaded) {
-            true -> medQProgressBar.setProgress(100, true)
+            true -> medQProgressBar.setProgress(100, false)
             else -> medQProgressBar.setProgress(0, false)
         }
         when (savedVideo.highUploaded) {
-            true -> highQProgressBar.setProgress(100, true)
+            true -> highQProgressBar.setProgress(100, false)
             else -> highQProgressBar.setProgress(0, false)
         }
 

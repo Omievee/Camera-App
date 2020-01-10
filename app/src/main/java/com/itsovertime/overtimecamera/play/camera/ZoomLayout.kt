@@ -64,9 +64,7 @@ class ZoomLayout : FrameLayout, OnScaleGestureListener {
                     MotionEvent.ACTION_POINTER_UP -> mode = Mode.NONE
                     MotionEvent.ACTION_UP -> {
                         Log.i(TAG, "UP")
-                        mode = Mode.DRAG
-                        prevDx = dx
-                        prevDy = dy
+
                     }
                 }
             }
@@ -81,7 +79,7 @@ class ZoomLayout : FrameLayout, OnScaleGestureListener {
                 dy = dy.coerceAtLeast(-maxDy).coerceAtMost(maxDy)
                 Log.i(
                     TAG,
-                    "Width: " + child().getWidth().toString() + ", scale " + scale.toString() + ", dx " + dx
+                    "Width: " + child().width.toString() + ", scale " + scale.toString() + ", dx " + dx
                         .toString() + ", max " + maxDx
                 )
                 applyScaleAndTranslation()

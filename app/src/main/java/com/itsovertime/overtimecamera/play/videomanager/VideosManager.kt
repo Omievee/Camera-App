@@ -17,7 +17,7 @@ interface VideosManager {
     fun subscribeToHDSwitch(): Observable<Boolean>
     fun subscribeToEncodeComplete(): Observable<SavedVideo>
     fun subscribeToNewVideos(): Observable<Boolean>
-
+    fun subscribeToCompletedUploads(): Observable<SavedVideo>
     fun onLoadDb()
     fun onSaveVideoToDb(video: SavedVideo)
     fun onRegisterVideoWithServer(saved: SavedVideo)
@@ -32,7 +32,7 @@ interface VideosManager {
     fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String)
     fun onLoadFFMPEG()
     fun updateHighuploaded(qualityUploaded: Boolean, video: SavedVideo)
-    fun onNotifyWorkIsDone()
+    fun onNotifyWorkIsDone(savedVideo: SavedVideo)
 
     fun onGetVideosForUpload(): Single<List<SavedVideo>>
     fun onGetVideosForUploadScreen(): Single<List<SavedVideo>>

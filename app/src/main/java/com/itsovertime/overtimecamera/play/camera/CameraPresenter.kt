@@ -13,6 +13,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
@@ -100,7 +101,7 @@ class CameraPresenter(
     }
 
     private fun checkStorage() {
-      //  if(getAvailableInternalMemorySize() < )
+        //  if(getAvailableInternalMemorySize() < )
     }
 
     private fun startUploadWorkManager() {
@@ -108,7 +109,6 @@ class CameraPresenter(
             OneTimeWorkRequestBuilder<VideoUploadWorker>().addTag("UploadWork").build()
         WorkManager.getInstance(view.context ?: return)
             .enqueueUniqueWork("UploadWork", ExistingWorkPolicy.KEEP, workRequest)
-
     }
 
 

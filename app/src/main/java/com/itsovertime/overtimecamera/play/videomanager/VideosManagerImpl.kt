@@ -98,10 +98,11 @@ class VideosManagerImpl(
             })
     }
 
-    override fun onNotifyWorkIsDone() {
+    override fun onNotifyWorkIsDone(savedVideo: SavedVideo) {
         if (pendingMediumUploads.size > 0 || mainList.size > 0) {
             newVideos.onNext(true)
         }
+        completedSub.onNext(savedVideo)
     }
 
     private fun deleteSuccessfullyUploadedVideo(video: SavedVideo) {
@@ -215,6 +216,13 @@ class VideosManagerImpl(
     private var newVideos: BehaviorSubject<Boolean> = BehaviorSubject.create()
     override fun subscribeToNewVideos(): Observable<Boolean> {
         return newVideos
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
+    var completedSub: BehaviorSubject<SavedVideo> = BehaviorSubject.create()
+    override fun subscribeToCompletedUploads(): Observable<SavedVideo> {
+        return completedSub
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
@@ -457,12 +465,14 @@ class VideosManagerImpl(
                             }
                             else -> {
                                 println("on next video.....................")
-                                val alertWorker = object : TimerTask() {
-                                    override fun run() {
-                                        newVideos.onNext(true)
+                                synchronized(this) {
+                                    val alertWorker = object : TimerTask() {
+                                        override fun run() {
+                                            newVideos.onNext(true)
+                                        }
                                     }
+                                    Timer().schedule(alertWorker, 1500)
                                 }
-                                Timer().schedule(alertWorker, 2500)
                             }
                         }
                     }

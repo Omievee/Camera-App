@@ -44,6 +44,15 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         //  uploadsMessage.text = ""
     }
 
+    override fun updateCompletedUpload(index: Int) {
+//        (adapter.holder?.itemView as UploadsView).getChildAt(index).medQProgressBar.setProgress(
+//            100,
+//            true
+//        )
+//        (adapter.holder?.itemView as UploadsView).getChildAt(index).check1.visibility = View.VISIBLE
+//        adapter.notifyItemChanged(index)
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
@@ -203,7 +212,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         val index = list?.indexOf(vid) ?: 0
         println("upload index  = $index")
         (adapter.holder?.itemView as UploadsView).getChildAt(index).medQProgressBar.setProgress(
-            progress,
+            prog,
             true
         )
         adapter.notifyItemChanged(index)
@@ -274,16 +283,14 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         )
 
         uploadsRecycler.adapter = adapter
-        (uploadsRecycler.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = true
+        (uploadsRecycler.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
     }
 
     @Inject
     lateinit var presenter: UploadsPresenter
 
-
 }
-
 
 class UploadsViewData(
     val data: List<UploadsPresentation>,

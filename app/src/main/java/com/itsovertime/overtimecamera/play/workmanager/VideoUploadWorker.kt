@@ -13,6 +13,7 @@ import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.db.AppDatabase
+import com.itsovertime.overtimecamera.play.filemanager.FileManager
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
@@ -62,6 +63,9 @@ class VideoUploadWorker(
 
     @Inject
     lateinit var wifiManager: WifiManager
+
+    @Inject
+    lateinit var fileManager: FileManager
 
     private var hdReady: Boolean? = false
 
@@ -274,7 +278,10 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists()) {
+                    if (faveList[0].mediumRes.isNullOrEmpty() || !fileManager.onDoesFileExist(
+                            faveList[0].mediumRes.toString()
+                        )
+                    ) {
                         uploadingIsFalse()
                         videosManager.onResetCurrentVideo(faveList[0])
                     } else {
@@ -289,7 +296,10 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    if (standardList[0].mediumRes.isNullOrEmpty() || !File(standardList[0].mediumRes).exists()) {
+                    if (standardList[0].mediumRes.isNullOrEmpty() || !fileManager.onDoesFileExist(
+                            standardList[0].mediumRes.toString()
+                        )
+                    ) {
                         uploadingIsFalse()
                         videosManager.onResetCurrentVideo(standardList[0])
                     } else {
@@ -360,8 +370,8 @@ class VideoUploadWorker(
     private fun encodeVideoForUpload(savedVideo: SavedVideo) {
         var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
         if (!savedVideo.encodedPath.isNullOrEmpty()) {
-            if (File(savedVideo.encodedPath).exists()) {
-                File(savedVideo.encodedPath).delete()
+            if (fileManager.onDoesFileExist(savedVideo.encodedPath.toString())) {
+                fileManager.onDeleteFile(savedVideo.encodedPath.toString())
             }
         }
         val encodeFile = when (savedVideo.trimmedVidPath.isNullOrEmpty()) {
@@ -620,44 +630,6 @@ class VideoUploadWorker(
         return file.exists() && file.readBytes().isNotEmpty() && isVideo
     }
 
-//    var instance: Disposable? = null
-//    private fun getVideoIdForFile(currentVideo: SavedVideo?) {
-//        instance = uploadsManager
-//            .getVideoInstance(currentVideo ?: return)
-//            .map {
-//                analyticsManager.onTrackUploadEvent(
-//                    Register,
-//                    arrayOf(
-//                        "client_id = ${currentVideo.clientId}"
-//                    )
-//                )
-//                currentVideo.uploadId = it.video?.id
-//                println("GETTING VIDEO ID FROM UPLOAD WORKER ---- ${it.video.id}")
-//                videosManager.onUpdateUploadIdInDb(it.video.id ?: "", currentVideo)
-//            }
-//            .doOnError {
-//                if (it.message.equals("HTTP 502 Bad Gateway")) {
-//                    getVideoIdForFile(currentVideo)
-//                } else {
-//                    uploadingIsFalse()
-//                    analyticsManager.onTrackUploadEvent(
-//                        Failed_Registration,
-//                        arrayOf(
-//                            "client_id = ${currentVideo.clientId}",
-//                            "failed_response = ${it.message}"
-//                        )
-//                    )
-//                    videosManager.onResetCurrentVideo(currentVideo)
-//                }
-//            }
-//            .subscribe({
-//                this.checkFileStatusBeforeUpload(video = currentVideo)
-//            }, {
-//
-//            })
-//
-//    }
-
     private var startRange = 0
     private var chunkToUpload: Int = 0
     @SuppressLint("CheckResult")
@@ -805,10 +777,10 @@ class VideoUploadWorker(
                         if (it.message.equals("HTTP 502 Bad Gateway")) {
                             checkForComplete()
                         } else {
-//                            uploadingIsFalse()
-//                            videosManager.onResetCurrentVideo(
-//                                currentVideo ?: return@doOnError
-//                            )
+                            uploadingIsFalse()
+                            videosManager.onResetCurrentVideo(
+                                currentVideo ?: return@doOnError
+                            )
                         }
 
                     }
@@ -904,7 +876,7 @@ class VideoUploadWorker(
                             )
                         }
                         uploadingIsFalse()
-                        videosManager.onNotifyWorkIsDone()
+                        videosManager.onNotifyWorkIsDone(currentVideo ?: return@doAfterNext)
                     }
                     .subscribe({
                     },
@@ -993,7 +965,8 @@ class DaggerWorkerFactory(
     private val progress: ProgressManager,
     private val notifications: NotificationManager,
     private val analytics: OTAnalyticsManager,
-    private val wifi: WifiManager
+    private val wifi: WifiManager,
+    private val file: FileManager
 ) : WorkerFactory() {
     override fun createWorker(
         appContext: Context,
@@ -1013,6 +986,7 @@ class DaggerWorkerFactory(
                 instance.progressManager = progress
                 instance.analyticsManager = analytics
                 instance.wifiManager = wifi
+                instance.fileManager = file
             }
         }
         return instance
