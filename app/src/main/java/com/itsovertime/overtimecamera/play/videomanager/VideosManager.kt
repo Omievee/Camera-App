@@ -4,6 +4,7 @@ import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
+import com.itsovertime.overtimecamera.play.network.VideoInstanceRequest
 import io.reactivex.Observable
 import io.reactivex.Single
 import java.io.File
@@ -20,10 +21,12 @@ interface VideosManager {
     fun subscribeToCompletedUploads(): Observable<SavedVideo>
     fun onLoadDb()
     fun onSaveVideoToDb(video: SavedVideo)
-    fun onRegisterVideoWithServer(saved: SavedVideo)
+    fun onRegisterVideoWithServer( notifyWorker:Boolean,saved: SavedVideo)
     fun onTransCodeVideo(savedVideo: SavedVideo, videoFile: File)
     fun onVideoIsFavorite(isFavorite: Boolean, video: SavedVideo)
     fun onVideoIsFunny(isFunny: Boolean, clientId: String)
+
+
     fun updateVideoMd5(md5: String, clientId: String)
     fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo)
     fun updateVideoStatus(video: SavedVideo, state: UploadState)

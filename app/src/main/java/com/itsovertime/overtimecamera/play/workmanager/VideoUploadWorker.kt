@@ -209,9 +209,6 @@ class VideoUploadWorker(
                     "========================================="
                 )
                 val it = queList.iterator()
-//                it.forEach {
-//                    println("Video Status:: ${it}")
-//                }
                 while (it.hasNext()) {
                     val video = it.next()
                     if (video.highUploaded) {
@@ -278,10 +275,8 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    if (faveList[0].mediumRes.isNullOrEmpty() || !fileManager.onDoesFileExist(
-                            faveList[0].mediumRes.toString()
-                        )
-                    ) {
+
+                    if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists()) {
                         uploadingIsFalse()
                         videosManager.onResetCurrentVideo(faveList[0])
                     } else {
@@ -296,13 +291,11 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    if (standardList[0].mediumRes.isNullOrEmpty() || !fileManager.onDoesFileExist(
-                            standardList[0].mediumRes.toString()
-                        )
-                    ) {
+                    if (standardList[0].mediumRes.isNullOrEmpty() || !File(standardList[0].mediumRes).exists()) {
                         uploadingIsFalse()
                         videosManager.onResetCurrentVideo(standardList[0])
                     } else {
+                        println("UPLOADING STANDARD VIDEO")
                         uploadingIsTrue()
                         requestTokenForUpload(standardList[0])
                         standardList.remove(standardList[0])
@@ -595,18 +588,19 @@ class VideoUploadWorker(
                     println("Video state:::::: ${video.uploadState}")
                     upload()
                 } else {
-                    if (!videoIsValid(File(video.mediumRes))) {
-                        uploadingIsFalse()
-                        println("this is your file:: ${video.mediumRes}")
-                        println("this is your file:: ${video.highRes}")
-                        videosManager.onResetCurrentVideo(
-                            video
-                        )
-                    } else {
-                        fullBytes = File(video.mediumRes).readBytes()
-                        video.uploadState = UploadState.UPLOADING_MEDIUM
-                        upload()
-                    }
+                    fullBytes = File(video.mediumRes).readBytes()
+                    video.uploadState = UploadState.UPLOADING_MEDIUM
+                    upload()
+//                    if (!videoIsValid(File(video.mediumRes))) {
+//                        uploadingIsFalse()
+//                        println("this is your file:: ${video.mediumRes}")
+//                        println("this is your file:: ${video.highRes}")
+//                        videosManager.onResetCurrentVideo(
+//                            video
+//                        )
+//                    } else {
+//
+//                    }
                 }
             } else {
                 println("Video id was null..$video")
@@ -782,7 +776,6 @@ class VideoUploadWorker(
                                 currentVideo ?: return@doOnError
                             )
                         }
-
                     }
                     .subscribe({
                         if (it.code() == 502) {
@@ -793,10 +786,10 @@ class VideoUploadWorker(
                             CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
                             else -> {
                                 println("This is an else from complete body........ ${it.body()?.status}")
-                                //uploadingIsFalse()
-//                                videosManager.onResetCurrentVideo(
-//                                    currentVideo ?: return@subscribe
-//                                )
+                                uploadingIsFalse()
+                                videosManager.onResetCurrentVideo(
+                                    currentVideo ?: return@subscribe
+                                )
                             }
                         }
                     }, {

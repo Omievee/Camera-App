@@ -17,6 +17,7 @@ import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
+import com.itsovertime.overtimecamera.play.network.VideoInstanceRequest
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
 import com.otaliastudios.transcoder.Transcoder
@@ -140,12 +141,11 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                newVideos.onNext(true)
+                println("VIDEO REGISTRATION SUCCESSFUL.... $uplaodId")
             }, {
                 it.printStackTrace()
             })
     }
-
 
     @SuppressLint("CheckResult")
     override fun updateVideoStatus(video: SavedVideo, state: UploadState) {
@@ -420,14 +420,28 @@ class VideosManagerImpl(
             with(videoDao) {
                 this?.setVideoAsFunny(is_funny = isFunny, lastID = clientId)
             }
+            with(videoDao) {
+                this?.getVideoForUpload(clientId)
+            }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .onErrorReturn {
-                it.printStackTrace()
-            }
+
             .subscribe({
+                onUpdateVideoInstance(it?.uploadId.toString(), pendingVidRegistration?.is_favorite, pendingVidRegistration?.is_funny)
             }, {
                 it.printStackTrace()
+            })
+    }
+
+    var update: Disposable? = null
+    fun onUpdateVideoInstance(id: String, isFavorite: Boolean?, isFunny: Boolean?) {
+        update?.dispose()
+        update = manager
+            .onUpdateVideoInstance(id, isFavorite, isFunny)
+            .subscribe({
+
+            }, {
+
             })
     }
 
@@ -458,22 +472,13 @@ class VideosManagerImpl(
                     override fun onTranscodeCompleted() {
                         println("TRANSCODE COMPLETE ========================================= ${savedVideo.uploadId}")
                         listener = null
-                        when (savedVideo.uploadId.isNullOrEmpty()) {
-                            true -> {
-                                println("registering video.....................")
-                                onRegisterVideoWithServer(savedVideo)
-                            }
-                            else -> {
-                                println("on next video.....................")
-                                synchronized(this) {
-                                    val alertWorker = object : TimerTask() {
-                                        override fun run() {
-                                            newVideos.onNext(true)
-                                        }
-                                    }
-                                    Timer().schedule(alertWorker, 1500)
+                        synchronized(this) {
+                            val alertWorker = object : TimerTask() {
+                                override fun run() {
+                                    newVideos.onNext(true)
                                 }
                             }
+                            Timer().schedule(alertWorker, 1500)
                         }
                     }
                 }
@@ -543,22 +548,20 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
+                onRegisterVideoWithServer(false, pendingVidRegistration ?: return@subscribe)
+                videoCheck(video)
                 updateUploadsCounter(it, false)
-                Log.d(TAG, "saved video complete... $pendingVidRegistration")
-                if (isVideoDurationLongerThanMaxTime(
-                        pendingVidRegistration ?: return@subscribe
-                    ) && pendingVidRegistration?.is_selfie == false
-                ) {
-                    onTrimVideo(pendingVidRegistration ?: return@subscribe)
-                } else {
-                    onTransCodeVideo(
-                        pendingVidRegistration ?: return@subscribe,
-                        File(pendingVidRegistration?.highRes)
-                    )
-                }
             }, {
                 it.printStackTrace()
             })
+    }
+
+    private fun videoCheck(video: SavedVideo) {
+        if (isVideoDurationLongerThanMaxTime(video) && !video?.is_selfie) {
+            onTrimVideo(video)
+        } else {
+            onTransCodeVideo(video, File(video?.highRes))
+        }
     }
 
     var pendingMediumUploads = mutableListOf<SavedVideo>()
@@ -582,7 +585,6 @@ class VideosManagerImpl(
         if (firstLoad) {
             checkConnection()
         }
-
         total.onNext(pendingMediumUploads.size)
     }
 
@@ -594,13 +596,14 @@ class VideosManagerImpl(
             with(videoDao) {
                 this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = video.clientId)
             }
+            with(videoDao){
+                this?.getVideoForUpload(video?.clientId)
+            }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .onErrorReturn {
-                it.printStackTrace()
-            }
             .subscribe({
-                println("Success from favoring video...")
+                it ?: return@subscribe
+                onUpdateVideoInstance(it.uploadId.toString(), pendingVidRegistration?.is_favorite, pendingVidRegistration?.is_funny)
             }, {
                 it.printStackTrace()
             })
@@ -639,7 +642,7 @@ class VideosManagerImpl(
     }
 
     var disp: Disposable? = null
-    override fun onRegisterVideoWithServer(saved: SavedVideo) {
+    override fun onRegisterVideoWithServer(notifyWorker: Boolean, saved: SavedVideo) {
         var uploadId = ""
         disp?.dispose()
         disp = manager
@@ -652,7 +655,7 @@ class VideosManagerImpl(
                     arrayOf("client_id = ${saved.clientId}", "failed_response = ${it.message}")
                 )
                 if (it.message.equals("HTTP 502 Bad Gateway")) {
-                    onRegisterVideoWithServer(saved)
+                    onRegisterVideoWithServer(false, saved)
                 }
             }
             .map {
@@ -664,23 +667,45 @@ class VideosManagerImpl(
                     "Registered Video",
                     arrayOf("client_id = ${saved.clientId}", "upload_id = ${uploadId}")
                 )
-
                 onUpdateUploadIdInDb(uploadId, saved)
+                if (notifyWorker) {
+                    newVideos.onNext(true)
+                }
             }, {
                 it.printStackTrace()
             })
     }
 
 
-    private var isFirstRun: Boolean = true
+    @Throws(java.lang.RuntimeException::class)
+    private fun videoIsValid(file: File): Boolean {
+        println("checking for valid video.... $file")
+
+        val retriever = MediaMetadataRetriever()
+        println("Retriever? $retriever && context? $context &&& ${Uri.fromFile(file)}")
+        retriever.setDataSource(context, Uri.fromFile(file))
+        println("Retriever? $retriever")
+        val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+        val isVideo = "yes" == hasVideo
+        retriever.release()
+        println("File Exists: ${file.exists()}")
+        println("Bytes Size: : ${file.readBytes().size}")
+        println("Is Video: : $isVideo")
+
+        println("checking for valid video....${file.exists()}// ${file.readBytes().isNotEmpty()} && ${isVideo}")
+        return file.exists() && file.readBytes().isNotEmpty() && isVideo
+    }
+
+
     @SuppressLint("CheckResult")
     override fun onResetCurrentVideo(currentVideo: SavedVideo) {
-        Log.d(TAG, "Reset happened......")
+        println("RESET HAPPENED $currentVideo")
         var trimPath = ""
         var medPath = ""
         var encodePath = ""
         val uploadId: String
         var state: UploadState = UploadState.QUEUED
+
         when (currentVideo.mediumUploaded) {
             true -> {
                 state = UploadState.UPLOADED_MEDIUM
@@ -702,25 +727,43 @@ class VideosManagerImpl(
             else -> {
                 uploadId = if (currentVideo.uploadId.isNullOrEmpty()) {
                     ""
-                } else currentVideo.uploadId.toString()
-
+                } else {
+                    currentVideo.uploadId.toString()
+                }
                 if (!currentVideo.mediumRes.isNullOrEmpty()) {
-                    medPath = ""
-                    val video = File(currentVideo.mediumRes)
-                    if (video.exists()) {
-                        video.delete()
-                    }
+                    if (File(currentVideo.mediumRes).exists()) {
+                        when (videoIsValid(File(currentVideo.mediumRes))) {
+                            true -> {
+                                medPath = currentVideo.mediumRes.toString()
+                            }
+                            false -> {
+                                medPath = ""
+                                val video = File(currentVideo.mediumRes)
+                                if (video.exists()) {
+                                    video.delete()
+                                }
+                            }
+                        }
+                    } else medPath = ""
                 }
                 if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
-                    trimPath = ""
-                    val trimFile = File(currentVideo.trimmedVidPath)
-                    if (trimFile.exists()) {
-                        trimFile.delete()
-                    }
+                    if (File(currentVideo.trimmedVidPath).exists()) {
+                        when (videoIsValid(File(currentVideo.trimmedVidPath))) {
+                            true -> {
+                                trimPath = currentVideo.trimmedVidPath.toString()
+                            }
+                            false -> {
+                                trimPath = ""
+                                val video = File(currentVideo.trimmedVidPath)
+                                if (video.exists()) {
+                                    video.delete()
+                                }
+                            }
+                        }
+                    } else trimPath = ""
                 }
             }
         }
-
         Single.fromCallable {
             with(videoDao) {
                 this?.resetUploadDataForVideo(
@@ -738,18 +781,15 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                println("Video that was reset... $it")
-                if (it?.mediumUploaded == false) {
-                    if (isVideoDurationLongerThanMaxTime(it)) {
-                        onTrimVideo(it)
-                    } else onTransCodeVideo(it, File(it.highRes))
-                } else {
-                    println("Else .. new video alert...")
-                    newVideos.onNext(true)
-                }
-                if (it?.uploadId.isNullOrEmpty() && it?.mediumUploaded == true) {
-                    onRegisterVideoWithServer(it)
-                }
+                it ?: return@subscribe
+                if (it?.uploadId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
+                    onRegisterVideoWithServer(false, it)
+                    videoCheck(it)
+                } else if (it?.uploadId.isNullOrEmpty() && !it?.mediumRes.isNullOrEmpty()) {
+                    onRegisterVideoWithServer(true, it)
+                } else if (!it?.uploadId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
+                    videoCheck(it)
+                } else newVideos.onNext(true)
 
             }, {
                 it.printStackTrace()
