@@ -31,12 +31,12 @@ class UploadsManagerImpl(
 
 
     var bodyRequest: VideoInstanceRequest? = null
-    override fun getVideoInstance(video: SavedVideo?): Observable<VideoInstanceResponse> {
+    override fun getVideoInstance(video: SavedVideo): Observable<VideoInstanceResponse> {
         bodyRequest = VideoInstanceRequest(
-            client_id = UUID.fromString(video?.clientId),
-            is_favorite = video?.is_favorite ?: false,
-            is_selfie = video?.is_selfie ?: false,
-            is_funny = video?.is_funny ?: false,
+            client_id = UUID.fromString(video.clientId),
+            is_favorite = video?.is_favorite,
+            is_selfie = video?.is_selfie,
+            is_funny = video?.is_funny,
             latitude = video?.latitude ?: 0.0,
             longitude = video?.longitude ?: 0.0,
             event_id = video?.event_id,
@@ -56,6 +56,10 @@ class UploadsManagerImpl(
     override fun onUpdateVideoInstance(id: String, isFavorite: Boolean?, isFunny: Boolean?): Observable<VideoInstanceResponse> {
         bodyRequest?.is_favorite = isFavorite
         bodyRequest?.is_funny = isFunny
+        bodyRequest?.client_id = UUID.fromString(id)
+
+        println("Id to put... $id")
+        println("Body request.... $bodyRequest")
         return api
             .updateVideoInstance(
                 id = id,
@@ -120,6 +124,7 @@ class UploadsManagerImpl(
             MediaType.parse("application/octet-stream"),
             array
         )
+
         return api
             .uploadSelectedVideo(
                 md5Header = md5(array) ?: "",

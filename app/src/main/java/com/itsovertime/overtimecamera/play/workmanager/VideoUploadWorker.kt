@@ -71,8 +71,6 @@ class VideoUploadWorker(
 
 
     @SuppressLint("CheckResult")
-
-
     var uploading: Boolean = false
     var isConnectedToInternet: Boolean = false
     private var stopUploadForNewFavorite: Boolean = false
@@ -163,7 +161,6 @@ class VideoUploadWorker(
                 .subscribe({
                     if (!currentVideo?.is_favorite!!) {
                         stopUploadForNewFavorite = true
-
                     }
                 }, {
                     it.printStackTrace()
@@ -275,10 +272,10 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-
-                    if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists()) {
+                    if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists() || !videoIsValid(File(faveList[0].mediumRes))) {
                         uploadingIsFalse()
-                        videosManager.onResetCurrentVideo(faveList[0])
+                        println("Bad fave video? ${faveList[0]}")
+                        //videosManager.onResetCurrentVideo(faveList[0])
                     } else {
                         uploadingIsTrue()
                         requestTokenForUpload(faveList[0])
@@ -291,11 +288,11 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    if (standardList[0].mediumRes.isNullOrEmpty() || !File(standardList[0].mediumRes).exists()) {
+                    if (standardList[0].mediumRes.isNullOrEmpty() || !File(standardList[0].mediumRes).exists() || !videoIsValid(File(standardList[0].mediumRes))) {
                         uploadingIsFalse()
+                        println("Bad video? ${standardList[0]}")
                         videosManager.onResetCurrentVideo(standardList[0])
                     } else {
-                        println("UPLOADING STANDARD VIDEO")
                         uploadingIsTrue()
                         requestTokenForUpload(standardList[0])
                         standardList.remove(standardList[0])
@@ -433,8 +430,12 @@ class VideoUploadWorker(
             } catch (e: FFmpegCommandAlreadyRunningException) {
                 println("FFMPEG ALREADY RUNNING :: ${e.message}")
                 ffmpeg.killRunningProcesses()
-
-                encodeVideoForUpload(currentVideo ?: return@fromCallable)
+                val delay = object : TimerTask() {
+                    override fun run() {
+                        encodeVideoForUpload(currentVideo ?: return)
+                    }
+                }
+                Timer().schedule(delay, 2000)
                 Crashlytics.log("FFMPEG -- ${e.message}")
             } catch (ex: Exception) {
                 ex.printStackTrace()
@@ -525,8 +526,6 @@ class VideoUploadWorker(
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?, video: SavedVideo) {
-        println("Begin upload....... ${isDeviceConnected()}&& $token && uploading hd? $uploadingHD")
-
         if (isDeviceConnected()) {
             tokenDisposable =
                 token?.let {
@@ -541,12 +540,11 @@ class VideoUploadWorker(
                                 Register_Upload,
                                 arrayOf(
                                     "client_id = ${video.clientId}",
-                                    "upload_id = ${video.uploadId}"
+                                    "upload_id = ${video.videoId}"
                                 )
                             )
                         }
                         .doOnError {
-
                             if (it.message.equals("HTTP 502 Bad Gateway")) {
                                 beginUpload(token, video)
                             } else {
@@ -578,9 +576,9 @@ class VideoUploadWorker(
     var remainder: Int = 0
     var count = 0
     private fun checkFileStatusBeforeUpload(video: SavedVideo) {
-        Log.d(TAG, "CHECKING FILE..... ${video?.uploadId}.")
+        Log.d(TAG, "CHECKING FILE..... ${video?.videoId}.")
         if (isDeviceConnected()) {
-            if (!video.uploadId.isNullOrEmpty()) {
+            if (!video.videoId.isNullOrEmpty()) {
                 chunkToUpload = baseChunkSize
                 if (video.mediumUploaded && uploadingHD) {
                     fullBytes = File(video.encodedPath).readBytes()
@@ -655,6 +653,8 @@ class VideoUploadWorker(
                 uploadingHD
             )
 
+            println("This is the encrypted response.... ${encryptionResponse?.upload?.id}")
+            println("This is the Video::: client:${currentVideo?.clientId} uploadid: ${currentVideo?.videoId}")
             synchronized(this) {
                 up = uploadsManager
                     .uploadVideoToServer(
@@ -684,8 +684,8 @@ class VideoUploadWorker(
                                 timeSent = it.raw().sentRequestAtMillis(),
                                 timeReceived = it.raw().receivedResponseAtMillis()
                             )) {
-                                in 0..2 -> maxChunkSize
-                                in 3..4 -> baseChunkSize
+                                in 0..1 -> maxChunkSize
+                                in 2..3 -> baseChunkSize
                                 else -> minChunkSize
                             }
 
@@ -768,7 +768,7 @@ class VideoUploadWorker(
                     .doOnError {
                         it.printStackTrace()
                         println("ERROR FROM COMPLETE! ${it.message}")
-                        if (it.message.equals("HTTP 502 Bad Gateway")) {
+                        if (it.message?.contains("502 Bad Gateway") == true) {
                             checkForComplete()
                         } else {
                             uploadingIsFalse()
@@ -784,12 +784,15 @@ class VideoUploadWorker(
                         when (it.body()?.status) {
                             CompleteResponse.COMPLETING.name -> pingServerForStatus()
                             CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
-                            else -> {
+                            CompleteResponse.FAILED.name -> {
                                 println("This is an else from complete body........ ${it.body()?.status}")
                                 uploadingIsFalse()
                                 videosManager.onResetCurrentVideo(
                                     currentVideo ?: return@subscribe
                                 )
+                            }
+                            else -> {
+                                pingServerForStatus()
                             }
                         }
                     }, {
@@ -820,7 +823,7 @@ class VideoUploadWorker(
 
                 serverDis = uploadsManager
                     .writerToServerAfterComplete(
-                        uploadId = currentVideo?.uploadId ?: "",
+                        uploadId = currentVideo?.videoId ?: "",
                         S3Key = upload?.S3Key ?: "",
                         vidWidth = width,
                         vidHeight = height,
@@ -928,6 +931,7 @@ class VideoUploadWorker(
 
     private fun uploadingIsTrue() {
         uploading = true
+        println("UPLOADING BOOLEAN =========================================== $uploading")
     }
 
     private fun uploadingIsFalse() {

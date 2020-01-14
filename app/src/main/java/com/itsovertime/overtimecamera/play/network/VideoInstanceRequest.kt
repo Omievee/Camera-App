@@ -14,7 +14,7 @@ import kotlin.collections.ArrayList
 @JsonClass(generateAdapter = true)
 data class VideoInstanceRequest(
     @field:Json(name = "client_id")
-    val client_id: UUID?,
+    var client_id: UUID,
     var is_favorite: Boolean?,
     var is_funny: Boolean? = false,
     val is_selfie: Boolean?,

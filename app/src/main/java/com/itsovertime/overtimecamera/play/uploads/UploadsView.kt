@@ -24,7 +24,6 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
     }
 
     fun bind(savedVideo: SavedVideo, debug: Boolean, hd: Boolean) {
-        println("calling on bind..................")
         this.savedVideo = savedVideo
         //medQProgressBar.setProgress(0, false)
         //highQProgressBar.setProgress(0, false)
@@ -57,7 +56,10 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                     statusText2.text = "Finished"
                 }
                 clientText.text = "Client: ${savedVideo.clientId}"
-                serverText.text = "Server: ${savedVideo.uploadId}"
+                serverText.text = when (savedVideo.videoId.isNullOrEmpty()) {
+                    true -> "Server: Pending"
+                    else -> "Server: ${savedVideo.videoId}"
+                }
             }
             else -> {
                 medQProgressBar.visibility = View.VISIBLE
@@ -91,7 +93,6 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
             else -> View.INVISIBLE
         }
 
-        println("this is the upload state!! ${savedVideo.uploadState}")
         when (savedVideo.mediumUploaded) {
             true -> medQProgressBar.setProgress(100, false)
             else -> medQProgressBar.setProgress(0, false)

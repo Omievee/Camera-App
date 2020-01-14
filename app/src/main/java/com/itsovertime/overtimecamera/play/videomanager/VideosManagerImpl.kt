@@ -11,24 +11,19 @@ import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.application.OTApplication
 import com.itsovertime.overtimecamera.play.db.AppDatabase
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
-import com.itsovertime.overtimecamera.play.network.VideoInstanceRequest
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
-import com.otaliastudios.transcoder.Transcoder
-import com.otaliastudios.transcoder.TranscoderListener
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import kotlinx.android.synthetic.main.fragment_camera.*
 import net.ypresto.androidtranscoder.MediaTranscoder
 import net.ypresto.androidtranscoder.format.MediaFormatStrategyPresets
 import java.io.File
@@ -215,6 +210,7 @@ class VideosManagerImpl(
 
     private var newVideos: BehaviorSubject<Boolean> = BehaviorSubject.create()
     override fun subscribeToNewVideos(): Observable<Boolean> {
+        println("notifying of new videos.........******")
         return newVideos
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -425,23 +421,23 @@ class VideosManagerImpl(
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-
             .subscribe({
-                onUpdateVideoInstance(it?.uploadId.toString(), pendingVidRegistration?.is_favorite, pendingVidRegistration?.is_funny)
+
+                if (!it?.videoId.isNullOrEmpty()) {
+                    onUpdateVideoInstance(it?.videoId.toString(), pendingVidRegistration?.is_favorite, pendingVidRegistration?.is_funny)
+                }
             }, {
                 it.printStackTrace()
             })
     }
 
     var update: Disposable? = null
-    fun onUpdateVideoInstance(id: String, isFavorite: Boolean?, isFunny: Boolean?) {
+    private fun onUpdateVideoInstance(id: String, isFavorite: Boolean?, isFunny: Boolean?) {
         update?.dispose()
         update = manager
             .onUpdateVideoInstance(id, isFavorite, isFunny)
             .subscribe({
-
             }, {
-
             })
     }
 
@@ -457,10 +453,7 @@ class VideosManagerImpl(
         synchronized(this) {
             try {
                 listener = object : MediaTranscoder.Listener {
-                    override fun onTranscodeProgress(progress: Double) {
-                        println("PROGRESS $progress")
-                    }
-
+                    override fun onTranscodeProgress(progress: Double) {}
                     override fun onTranscodeCanceled() {}
                     override fun onTranscodeFailed(exception: Exception?) {
                         Log.d(TAG, "transcode failed.. ${exception?.message}...")
@@ -470,16 +463,14 @@ class VideosManagerImpl(
                     }
 
                     override fun onTranscodeCompleted() {
-                        println("TRANSCODE COMPLETE ========================================= ${savedVideo.uploadId}")
+                        println("TRANSCODE COMPLETE ========================================= ${savedVideo.videoId}")
                         listener = null
-                        synchronized(this) {
-                            val alertWorker = object : TimerTask() {
-                                override fun run() {
-                                    newVideos.onNext(true)
-                                }
+                        val alertWorker = object : TimerTask() {
+                            override fun run() {
+                                newVideos.onNext(true)
                             }
-                            Timer().schedule(alertWorker, 1500)
                         }
+                        Timer().schedule(alertWorker, 1500)
                     }
                 }
                 MediaTranscoder.getInstance().transcodeVideo(
@@ -596,14 +587,15 @@ class VideosManagerImpl(
             with(videoDao) {
                 this?.setVideoAsFavorite(is_favorite = isFavorite, lastID = video.clientId)
             }
-            with(videoDao){
+            with(videoDao) {
                 this?.getVideoForUpload(video?.clientId)
             }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                it ?: return@subscribe
-                onUpdateVideoInstance(it.uploadId.toString(), pendingVidRegistration?.is_favorite, pendingVidRegistration?.is_funny)
+                if (!it?.videoId.isNullOrEmpty()) {
+                    onUpdateVideoInstance(it?.videoId.toString(), pendingVidRegistration?.is_favorite, pendingVidRegistration?.is_funny)
+                }
             }, {
                 it.printStackTrace()
             })
@@ -710,7 +702,7 @@ class VideosManagerImpl(
             true -> {
                 state = UploadState.UPLOADED_MEDIUM
                 medPath = currentVideo.mediumRes.toString()
-                uploadId = currentVideo.uploadId.toString()
+                uploadId = currentVideo.videoId.toString()
                 trimPath = if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
                     currentVideo.trimmedVidPath.toString()
                 } else {
@@ -725,10 +717,10 @@ class VideosManagerImpl(
                 }
             }
             else -> {
-                uploadId = if (currentVideo.uploadId.isNullOrEmpty()) {
+                uploadId = if (currentVideo.videoId.isNullOrEmpty()) {
                     ""
                 } else {
-                    currentVideo.uploadId.toString()
+                    currentVideo.videoId.toString()
                 }
                 if (!currentVideo.mediumRes.isNullOrEmpty()) {
                     if (File(currentVideo.mediumRes).exists()) {
@@ -738,10 +730,7 @@ class VideosManagerImpl(
                             }
                             false -> {
                                 medPath = ""
-                                val video = File(currentVideo.mediumRes)
-                                if (video.exists()) {
-                                    video.delete()
-                                }
+                                File(currentVideo.mediumRes).delete()
                             }
                         }
                     } else medPath = ""
@@ -782,14 +771,14 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 it ?: return@subscribe
-                if (it?.uploadId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
+                if (it?.videoId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
                     onRegisterVideoWithServer(false, it)
                     videoCheck(it)
-                } else if (it?.uploadId.isNullOrEmpty() && !it?.mediumRes.isNullOrEmpty()) {
+                } else if (it?.videoId.isNullOrEmpty() && !it?.mediumRes.isNullOrEmpty()) {
                     onRegisterVideoWithServer(true, it)
-                } else if (!it?.uploadId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
+                } else if (!it?.videoId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
                     videoCheck(it)
-                } else newVideos.onNext(true)
+                }
 
             }, {
                 it.printStackTrace()

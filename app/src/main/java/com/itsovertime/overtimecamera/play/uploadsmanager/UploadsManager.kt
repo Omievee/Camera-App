@@ -6,7 +6,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 
 interface UploadsManager {
-    fun getVideoInstance(video: SavedVideo?): Observable<VideoInstanceResponse>
+    fun getVideoInstance(video: SavedVideo): Observable<VideoInstanceResponse>
     fun onUpdateVideoInstance(id:String,isFavorite: Boolean?, isFunny: Boolean?): Observable<VideoInstanceResponse>
     fun registerWithMD5(data: TokenResponse, hdReady:Boolean,video:SavedVideo): Observable<EncryptedResponse>
     fun getAWSDataForUpload(): Observable<TokenResponse>

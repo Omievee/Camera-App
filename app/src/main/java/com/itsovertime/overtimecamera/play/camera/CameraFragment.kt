@@ -36,6 +36,8 @@ import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.uploads.UploadsActivity
 import dagger.android.support.AndroidSupportInjection
+import io.reactivex.BackpressureStrategy
+import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -854,10 +856,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
 
+    @SuppressLint("CheckResult")
     @Synchronized
     fun engageCamera() {
         startBackgroundThread()
-        println("TXVIEW :$txView")
         txView?.let {
             if (it.isAvailable) {
                 cameraIsClosed = false
@@ -908,7 +910,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     @SuppressLint("CheckResult")
     @Synchronized
     private fun releaseCamera(tapToSave: Boolean) {
-        Single.fromCallable {
+        Flowable.fromCallable {
             closeCamera()
             stopBackgroundThread()
         }.subscribeOn(Schedulers.io())
@@ -966,27 +968,21 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
 
     var manager: CameraManager? = null
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission", "CheckResult")
     override fun openCamera(width: Int, height: Int, camera: Int) {
-        manager = context?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        println("AT OPEN CAMERA")
         try {
+            println("inside try......")
+            manager = context?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw RuntimeException("Time out waiting to lock overtimecamera opening.")
             }
-
-
             val cameraId = manager?.cameraIdList?.get(camera) ?: "0"
-
-
             val characteristics = manager?.getCameraCharacteristics(cameraId)
-//            characteristics?.availableCaptureRequestKeys?.forEach {
-//            }
-            val map =
-                characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                    ?: throw RuntimeException("Cannot get available preview/video sizes")
+            val map = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
-
+            println("pre when.......")
             when (camera) {
                 0 -> {
                     if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -1010,8 +1006,21 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             }
 
             mediaRecorder = MediaRecorder()
-            txView?.setTransform(Matrix())
-            manager?.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
+            activity?.runOnUiThread {
+                txView?.setTransform(Matrix())
+            }
+            manager?.openCamera(camera.toString(), cameraStateCallBack, backgroundHandler)
+            Single.fromCallable {
+                println("in single...")
+
+
+            }.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally {
+                    println("open cam...")
+                }
+
+
         } catch (e: CameraAccessException) {
             activity?.finishAffinity()
         } catch (e: NullPointerException) {
@@ -1019,6 +1028,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock overtimecamera opening.")
         }
+
+//        Flowable.fromCallable {
+//
+//        }.subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .doFinally {
+//                println("AT DO FINALLY!!@D")
+//
+//            }
+
+
     }
 
     private fun startBackgroundThread() {
