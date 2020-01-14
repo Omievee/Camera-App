@@ -481,7 +481,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
         val recorder = MediaRecorder()
 
-
         when (CAMERA) {
             0 -> {
                 when (sensorOrientation) {
@@ -513,8 +512,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 }
             }
         }
-
-
         val profile =
             when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
                 true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
@@ -533,26 +530,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             setAudioEncodingBitRate(128 * 1000)
             setVideoFrameRate(60)
         }
-
         mediaRecorder = recorder
     }
-
-//    fun enableSelfieShutterButton() {
-//        activity?.runOnUiThread {
-//            tapToSave.alpha = .5F
-//            tapToSave.isClickable = false
-//        }
-//        val enable = object : TimerTask() {
-//            override fun run() {
-//                activity?.runOnUiThread {
-//                    selfieButton.isClickable = true
-//                    selfieButton.alpha = 1F
-//                }
-//            }
-//        }
-//        Timer().schedule(enable, 2500)
-//    }
-
 
     private fun enableMainShutterButton() {
         activity?.runOnUiThread {
@@ -570,7 +549,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         Timer().schedule(enable, 2500)
     }
 
-
     @SuppressLint("CheckResult")
     override fun prepareCameraForRecording() {
         recording = true
@@ -578,6 +556,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             return
         }
 
+        Single.fromCallable {
+
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
         try {
             setUpMediaRecorder()
             mediaRecorder?.prepare()
@@ -627,7 +609,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                         Range<Int>(60, 60)
                                     )
                                 }
-
                                 try {
                                     setUpCaptureRequestBuilder(previewRequestBuilder)
                                     HandlerThread("CameraPreview").start()
@@ -636,9 +617,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                         previewRequestBuilder.build(),
                                         null, recordHandler
                                     )
-
                                     startMediaRecorder()
-
                                 } catch (e: CameraAccessException) {
                                     Log.e("CameraMain", e.toString())
                                 } catch (ise: IllegalStateException) {
