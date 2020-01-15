@@ -546,7 +546,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 }
             }
         }
-        Timer().schedule(enable, 2500)
+        Timer().schedule(enable, 1500)
     }
 
     @SuppressLint("CheckResult")
@@ -556,10 +556,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             return
         }
 
-        Single.fromCallable {
-
-        }.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+//        Single.fromCallable {
+//
+//        }.subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
         try {
             setUpMediaRecorder()
             mediaRecorder?.prepare()
@@ -691,13 +691,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         stopRecordingThread()
         recording = false
         try {
+            captureSession?.stopRepeating()
+            captureSession?.abortCaptures()
+
             mediaRecorder?.stop()
             mediaRecorder?.reset()
             mediaRecorder = null
-            when (isPaused) {
-                false -> presenter.saveVideo(selectedEvent)
-                else -> deleteUnsavedFile()
-            }
+//            when (isPaused) {
+//                false -> presenter.saveVideo(selectedEvent)
+//                else -> deleteUnsavedFile()
+//            }
         } catch (r: RuntimeException) {
             r.printStackTrace()
         } catch (e: java.lang.IllegalStateException) {
@@ -890,16 +893,27 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     @Synchronized
     private fun releaseCamera(tapToSave: Boolean) {
         Flowable.fromCallable {
-            closeCamera()
-            stopBackgroundThread()
+            if (recording) {
+                saveText.visibility = View.GONE
+                presenter.clearProgressAnimation()
+                paused = !tapToSave
+
+            }
+//            captureSession?.stopRepeating()
+//            captureSession?.abortCaptures()
+
+            mediaRecorder?.stop()
+            mediaRecorder?.reset()
+            mediaRecorder = null
+
+
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-                if (recording) {
-                    saveText.visibility = View.GONE
-                    presenter.clearProgressAnimation()
-                    paused = !tapToSave
-                    stopRecording(paused)
+            .doOnComplete {
+               // stopRecording(paused)
+                when (paused) {
+                    false -> presenter.saveVideo(selectedEvent)
+                    else -> deleteUnsavedFile()
                 }
             }
             .subscribe({
@@ -989,15 +1003,15 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 txView?.setTransform(Matrix())
             }
             manager?.openCamera(camera.toString(), cameraStateCallBack, backgroundHandler)
-            Single.fromCallable {
-                println("in single...")
-
-
-            }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally {
-                    println("open cam...")
-                }
+//            Single.fromCallable {
+//                println("in single...")
+//
+//
+//            }.subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .doFinally {
+//                    println("open cam...")
+//                }
 
 
         } catch (e: CameraAccessException) {

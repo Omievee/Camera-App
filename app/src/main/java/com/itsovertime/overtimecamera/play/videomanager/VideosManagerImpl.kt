@@ -210,7 +210,6 @@ class VideosManagerImpl(
 
     private var newVideos: BehaviorSubject<Boolean> = BehaviorSubject.create()
     override fun subscribeToNewVideos(): Observable<Boolean> {
-        println("notifying of new videos.........******")
         return newVideos
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -539,7 +538,9 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
-                onRegisterVideoWithServer(false, pendingVidRegistration ?: return@subscribe)
+                synchronized(this){
+                    onRegisterVideoWithServer(false, pendingVidRegistration ?: return@subscribe)
+                }
                 videoCheck(video)
                 updateUploadsCounter(it, false)
             }, {
@@ -634,7 +635,9 @@ class VideosManagerImpl(
     }
 
     var disp: Disposable? = null
+    @Synchronized
     override fun onRegisterVideoWithServer(notifyWorker: Boolean, saved: SavedVideo) {
+        println("****************************REGISTRATION ENDPOINT STARTED.....")
         var uploadId = ""
         disp?.dispose()
         disp = manager
@@ -653,6 +656,7 @@ class VideosManagerImpl(
             .map {
                 uploadId = it.video.id ?: return@map
                 Log.d(TAG, "upload id received...")
+                println("****************************REGISTRATION ENDPOINT RETURNED.....")
             }
             .subscribe({
                 analytics.onTrackUploadEvent(
@@ -684,7 +688,7 @@ class VideosManagerImpl(
         println("Bytes Size: : ${file.readBytes().size}")
         println("Is Video: : $isVideo")
 
-        println("checking for valid video....${file.exists()}// ${file.readBytes().isNotEmpty()} && ${isVideo}")
+        println("checking for valid video....${file.exists()} // ${file.readBytes().isNotEmpty()} // ${isVideo}")
         return file.exists() && file.readBytes().isNotEmpty() && isVideo
     }
 
@@ -772,12 +776,18 @@ class VideosManagerImpl(
             .subscribe({
                 it ?: return@subscribe
                 if (it?.videoId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
+                    println("RESET MSG: No video id... transcode doesnt exists..")
                     onRegisterVideoWithServer(false, it)
                     videoCheck(it)
                 } else if (it?.videoId.isNullOrEmpty() && !it?.mediumRes.isNullOrEmpty()) {
+                    println("RESET MSG: No video id... transcode exists..")
                     onRegisterVideoWithServer(true, it)
                 } else if (!it?.videoId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
+                    println("RESET MSG:  video id... transcode  exists..")
                     videoCheck(it)
+                }else {
+                    println("RESET MSG: video id & transcode exists.....")
+                    newVideos.onNext(true)
                 }
 
             }, {
