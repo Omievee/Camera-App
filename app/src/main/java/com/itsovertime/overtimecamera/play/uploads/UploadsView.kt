@@ -17,6 +17,7 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
     ConstraintLayout(context, attrs) {
 
     var savedVideo: SavedVideo? = null
+    var isUploading: Boolean? = null
 
     init {
         View.inflate(context, R.layout.upload_item_view, this)
@@ -24,10 +25,11 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
 
     fun bind(savedVideo: SavedVideo, debug: Boolean, hd: Boolean) {
         this.savedVideo = savedVideo
-        medQProgressBar.setProgress(0, false)
-        highQProgressBar.setProgress(0, false)
+        //medQProgressBar.setProgress(0, false)
+        //highQProgressBar.setProgress(0, false)
         check1.visibility = View.GONE
         check2.visibility = View.GONE
+
         when (debug) {
             true -> {
                 check1.visibility = View.GONE
@@ -54,7 +56,10 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                     statusText2.text = "Finished"
                 }
                 clientText.text = "Client: ${savedVideo.clientId}"
-                serverText.text = "Server: ${savedVideo.uploadId}"
+                serverText.text = when (savedVideo.videoId.isNullOrEmpty()) {
+                    true -> "Server: Pending"
+                    else -> "Server: ${savedVideo.videoId}"
+                }
             }
             else -> {
                 medQProgressBar.visibility = View.VISIBLE
@@ -65,15 +70,16 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
                     true -> View.GONE
                     else -> View.VISIBLE
                 }
-                if (savedVideo.mediumUploaded) {
-                    medQProgressBar.setProgress(100, false)
-                    check1.visibility = View.VISIBLE
+
+                check1.visibility = when (savedVideo.mediumUploaded) {
+                    true -> View.VISIBLE
+                    else -> View.GONE
+                }
+                check2.visibility = when (savedVideo.highUploaded) {
+                    true -> View.VISIBLE
+                    else -> View.GONE
                 }
 
-                if (savedVideo.highUploaded) {
-                    highQProgressBar.setProgress(100, false)
-                    check2.visibility = View.VISIBLE
-                }
                 if (savedVideo.highUploaded && savedVideo.mediumUploaded) {
                     pendingProgress.visibility = View.GONE
                 }
@@ -85,6 +91,15 @@ class UploadsView(context: Context?, attrs: AttributeSet? = null) :
         faveIcon.visibility = when (savedVideo.is_favorite) {
             true -> View.VISIBLE
             else -> View.INVISIBLE
+        }
+
+        when (savedVideo.mediumUploaded) {
+            true -> medQProgressBar.setProgress(100, false)
+            else -> medQProgressBar.setProgress(0, false)
+        }
+        when (savedVideo.highUploaded) {
+            true -> highQProgressBar.setProgress(100, false)
+            else -> highQProgressBar.setProgress(0, false)
         }
 
         Glide.with(context)

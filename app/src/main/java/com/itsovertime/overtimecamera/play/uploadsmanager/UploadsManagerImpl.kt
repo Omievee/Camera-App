@@ -30,25 +30,42 @@ class UploadsManagerImpl(
 ) : UploadsManager {
 
 
-    @Synchronized
-    override fun getVideoInstance(video: SavedVideo?): Observable<VideoInstanceResponse> {
+    var bodyRequest: VideoInstanceRequest? = null
+    override fun getVideoInstance(video: SavedVideo): Observable<VideoInstanceResponse> {
+        bodyRequest = VideoInstanceRequest(
+            client_id = UUID.fromString(video.clientId),
+            is_favorite = video?.is_favorite,
+            is_selfie = video?.is_selfie,
+            is_funny = video?.is_funny,
+            latitude = video?.latitude ?: 0.0,
+            longitude = video?.longitude ?: 0.0,
+            event_id = video?.event_id,
+            address = video?.address,
+            duration_in_hours = video?.duration_in_hours,
+            max_video_length = video?.max_video_length,
+            filmed_at = video?.filmed_at
+            //   tagged_user_ids = video?.taggedUsers
+        )
         return api
             .getVideoInstance(
-                VideoInstanceRequest(
-                    client_id = UUID.fromString(video?.clientId),
-                    is_favorite = video?.is_favorite ?: false,
-                    is_selfie = video?.is_selfie ?: false,
-                    is_funny = video?.is_funny ?: false,
-                    latitude = video?.latitude ?: 0.0,
-                    longitude = video?.longitude ?: 0.0,
-                    event_id = video?.event_id,
-                    address = video?.address,
-                    duration_in_hours = video?.duration_in_hours,
-                    max_video_length = video?.max_video_length,
-                    filmed_at = video?.filmed_at
-                    //   tagged_user_ids = video?.taggedUsers
-                )
+                bodyRequest!!
             ).observeOn(AndroidSchedulers.mainThread())
+    }
+
+    @Synchronized
+    override fun onUpdateVideoInstance(id: String, isFavorite: Boolean?, isFunny: Boolean?): Observable<VideoInstanceResponse> {
+        bodyRequest?.is_favorite = isFavorite
+        bodyRequest?.is_funny = isFunny
+        bodyRequest?.client_id = UUID.fromString(id)
+
+        println("Id to put... $id")
+        println("Body request.... $bodyRequest")
+        return api
+            .updateVideoInstance(
+                id = id,
+                request = bodyRequest!!
+            )
+            .observeOn(AndroidSchedulers.mainThread())
     }
 
     @Synchronized
@@ -68,16 +85,15 @@ class UploadsManagerImpl(
         hdReady: Boolean,
         video: SavedVideo
     ): Observable<EncryptedResponse> {
+        println("Hd ready ??? uploading hd.... $hdReady")
         val md5: String? = when (hdReady) {
             true -> {
                 md5(File(video.encodedPath).readBytes()).toString()
             }
             false -> {
-                println("MD5 DATA.......${md5(File(video.mediumRes).readBytes())}")
                 md5(File(video.mediumRes).readBytes())
             }
         }
-        println("md5t ==== $md5")
         return api
             .uploadDataForMd5(
                 UploadRequest(
@@ -108,6 +124,7 @@ class UploadsManagerImpl(
             MediaType.parse("application/octet-stream"),
             array
         )
+
         return api
             .uploadSelectedVideo(
                 md5Header = md5(array) ?: "",

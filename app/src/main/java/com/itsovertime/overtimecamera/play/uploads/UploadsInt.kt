@@ -17,5 +17,6 @@ interface UploadsInt {
     fun noVideos()
     fun updateMsg()
 
+    fun updateCompletedUpload(index:Int)
 
 }

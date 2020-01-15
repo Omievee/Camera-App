@@ -13,6 +13,7 @@ import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.db.AppDatabase
+import com.itsovertime.overtimecamera.play.filemanager.FileManager
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
 import com.itsovertime.overtimecamera.play.network.EncryptedResponse
@@ -63,12 +64,13 @@ class VideoUploadWorker(
     @Inject
     lateinit var wifiManager: WifiManager
 
+    @Inject
+    lateinit var fileManager: FileManager
+
     private var hdReady: Boolean? = false
 
 
     @SuppressLint("CheckResult")
-
-
     var uploading: Boolean = false
     var isConnectedToInternet: Boolean = false
     private var stopUploadForNewFavorite: Boolean = false
@@ -159,7 +161,6 @@ class VideoUploadWorker(
                 .subscribe({
                     if (!currentVideo?.is_favorite!!) {
                         stopUploadForNewFavorite = true
-
                     }
                 }, {
                     it.printStackTrace()
@@ -205,9 +206,6 @@ class VideoUploadWorker(
                     "========================================="
                 )
                 val it = queList.iterator()
-//                it.forEach {
-//                    println("Video Status:: ${it}")
-//                }
                 while (it.hasNext()) {
                     val video = it.next()
                     if (video.highUploaded) {
@@ -274,9 +272,10 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists()) {
+                    if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists() || !videoIsValid(File(faveList[0].mediumRes))) {
                         uploadingIsFalse()
-                        videosManager.onResetCurrentVideo(faveList[0])
+                        println("Bad fave video? ${faveList[0]}")
+                        //videosManager.onResetCurrentVideo(faveList[0])
                     } else {
                         uploadingIsTrue()
                         requestTokenForUpload(faveList[0])
@@ -289,8 +288,9 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    if (standardList[0].mediumRes.isNullOrEmpty() || !File(standardList[0].mediumRes).exists()) {
+                    if (standardList[0].mediumRes.isNullOrEmpty() || !File(standardList[0].mediumRes).exists() || !videoIsValid(File(standardList[0].mediumRes))) {
                         uploadingIsFalse()
+                        println("Bad video? ${standardList[0]}")
                         videosManager.onResetCurrentVideo(standardList[0])
                     } else {
                         uploadingIsTrue()
@@ -355,18 +355,20 @@ class VideoUploadWorker(
         return File(mediaStorageDir.path + File.separator + "1080.$fileName")
     }
 
-    var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
+
     @SuppressLint("CheckResult")
     private fun encodeVideoForUpload(savedVideo: SavedVideo) {
+        var ffmpeg: FFmpeg = FFmpeg.getInstance(context)
         if (!savedVideo.encodedPath.isNullOrEmpty()) {
-            if (File(savedVideo.encodedPath).exists()) {
-                File(savedVideo.encodedPath).delete()
+            if (fileManager.onDoesFileExist(savedVideo.encodedPath.toString())) {
+                fileManager.onDeleteFile(savedVideo.encodedPath.toString())
             }
         }
         val encodeFile = when (savedVideo.trimmedVidPath.isNullOrEmpty()) {
             true -> File(savedVideo.highRes)
             else -> File(savedVideo.trimmedVidPath)
         }
+
         Single.fromCallable {
             val newFile =
                 fileForHDEncodedVideo(encodeFile.name, savedVideo.clientId)
@@ -377,16 +379,18 @@ class VideoUploadWorker(
                 encodeFile.absolutePath,
                 // video codec to write to
                 "-vcodec",
-                // value of codec - H264
+                // value of codec - h264
                 "h264",
                 "-preset",
                 "ultrafast",
                 "-crf",
-                "22",
+                "28",
                 "-maxrate",
                 "16000k",
                 "-bufsize",
                 "16000k",
+                "-filter:v",
+                "fps=fps=60",
                 // new file
                 newFile.absolutePath
             )
@@ -412,7 +416,6 @@ class VideoUploadWorker(
                             super.onFinish()
                             println("ENCODING FINISHED...")
                             getNewHDVideoForUpload(currentVideo ?: return)
-
                         }
 
                         override fun onFailure(message: String?) {
@@ -426,6 +429,13 @@ class VideoUploadWorker(
                 }
             } catch (e: FFmpegCommandAlreadyRunningException) {
                 println("FFMPEG ALREADY RUNNING :: ${e.message}")
+                ffmpeg.killRunningProcesses()
+                val delay = object : TimerTask() {
+                    override fun run() {
+                        encodeVideoForUpload(currentVideo ?: return)
+                    }
+                }
+                Timer().schedule(delay, 2000)
                 Crashlytics.log("FFMPEG -- ${e.message}")
             } catch (ex: Exception) {
                 ex.printStackTrace()
@@ -444,15 +454,17 @@ class VideoUploadWorker(
             .onGetEncodedVideo(video.clientId)
             .map {
                 currentVideo = it
+                if (!File(it?.encodedPath).exists()) {
+                    println("Wtf.. file is gone... ")
+                    // encodeVideoForUpload(currentVideo ?: return@map)
+                } else requestTokenForUpload(currentVideo ?: return@map)
             }
             .doOnError {
                 uploadingIsFalse()
                 videosManager.onResetCurrentVideo(currentVideo ?: return@doOnError)
             }
             .subscribe({
-                requestTokenForUpload(currentVideo ?: return@subscribe)
             }, {
-
             })
     }
 
@@ -496,7 +508,6 @@ class VideoUploadWorker(
 
 
                     .doAfterNext {
-                        println("After next token.... $tokenResponse")
                         analyticsManager.onTrackUploadEvent(
                             Upload_Token,
                             arrayOf(
@@ -515,45 +526,45 @@ class VideoUploadWorker(
 
     private var encryptionResponse: EncryptedResponse? = null
     private fun beginUpload(token: TokenResponse?, video: SavedVideo) {
-        println("Begin upload....... ${isDeviceConnected()}")
         if (isDeviceConnected()) {
             tokenDisposable =
-                uploadsManager
-                    .registerWithMD5(token ?: return, uploadingHD, video)
-                    .map {
-                        encryptionResponse = it
-                    }
-                    .doAfterNext {
-                        checkFileStatusBeforeUpload(video)
-                        analyticsManager.onTrackUploadEvent(
-                            Register_Upload,
-                            arrayOf(
-                                "client_id = ${video.clientId}",
-                                "upload_id = ${video.uploadId}"
-                            )
-                        )
-                    }
-                    .doOnError {
-
-                        if (it.message.equals("HTTP 502 Bad Gateway")) {
-                            beginUpload(token, video)
-                        } else {
-                            uploadingIsFalse()
+                token?.let {
+                    uploadsManager
+                        .registerWithMD5(it, uploadingHD, video)
+                        .map {
+                            encryptionResponse = it
+                        }
+                        .doAfterNext {
+                            checkFileStatusBeforeUpload(video)
                             analyticsManager.onTrackUploadEvent(
-                                Failed_Register_Upload,
+                                Register_Upload,
                                 arrayOf(
                                     "client_id = ${video.clientId}",
-                                    "failed_response = ${it.message}"
+                                    "upload_id = ${video.videoId}"
                                 )
                             )
-                            videosManager.onResetCurrentVideo(
-                                currentVideo = currentVideo ?: return@doOnError
-                            )
                         }
-                    }
-                    .subscribe({
-                    }, {
-                    })
+                        .doOnError {
+                            if (it.message.equals("HTTP 502 Bad Gateway")) {
+                                beginUpload(token, video)
+                            } else {
+                                uploadingIsFalse()
+                                analyticsManager.onTrackUploadEvent(
+                                    Failed_Register_Upload,
+                                    arrayOf(
+                                        "client_id = ${video.clientId}",
+                                        "failed_response = ${it.message}"
+                                    )
+                                )
+                                videosManager.onResetCurrentVideo(
+                                    currentVideo = currentVideo ?: return@doOnError
+                                )
+                            }
+                        }
+                        .subscribe({
+                        }, {
+                        })
+                }
         }
     }
 
@@ -565,9 +576,9 @@ class VideoUploadWorker(
     var remainder: Int = 0
     var count = 0
     private fun checkFileStatusBeforeUpload(video: SavedVideo) {
-        Log.d(TAG, "CHECKING FILE..... ${video?.uploadId}.")
+        Log.d(TAG, "CHECKING FILE..... ${video?.videoId}.")
         if (isDeviceConnected()) {
-            if (!video.uploadId.isNullOrEmpty()) {
+            if (!video.videoId.isNullOrEmpty()) {
                 chunkToUpload = baseChunkSize
                 if (video.mediumUploaded && uploadingHD) {
                     fullBytes = File(video.encodedPath).readBytes()
@@ -575,18 +586,19 @@ class VideoUploadWorker(
                     println("Video state:::::: ${video.uploadState}")
                     upload()
                 } else {
-                    if (!videoIsValid(File(video.mediumRes))) {
-                        uploadingIsFalse()
-                        println("this is your file:: ${video.mediumRes}")
-                        println("this is your file:: ${video.highRes}")
-                        videosManager.onResetCurrentVideo(
-                            video
-                        )
-                    } else {
-                        fullBytes = File(video.mediumRes).readBytes()
-                        video.uploadState = UploadState.UPLOADING_MEDIUM
-                        upload()
-                    }
+                    fullBytes = File(video.mediumRes).readBytes()
+                    video.uploadState = UploadState.UPLOADING_MEDIUM
+                    upload()
+//                    if (!videoIsValid(File(video.mediumRes))) {
+//                        uploadingIsFalse()
+//                        println("this is your file:: ${video.mediumRes}")
+//                        println("this is your file:: ${video.highRes}")
+//                        videosManager.onResetCurrentVideo(
+//                            video
+//                        )
+//                    } else {
+//
+//                    }
                 }
             } else {
                 println("Video id was null..$video")
@@ -609,44 +621,6 @@ class VideoUploadWorker(
         println("Is Video: : $isVideo")
         return file.exists() && file.readBytes().isNotEmpty() && isVideo
     }
-
-//    var instance: Disposable? = null
-//    private fun getVideoIdForFile(currentVideo: SavedVideo?) {
-//        instance = uploadsManager
-//            .getVideoInstance(currentVideo ?: return)
-//            .map {
-//                analyticsManager.onTrackUploadEvent(
-//                    Register,
-//                    arrayOf(
-//                        "client_id = ${currentVideo.clientId}"
-//                    )
-//                )
-//                currentVideo.uploadId = it.video?.id
-//                println("GETTING VIDEO ID FROM UPLOAD WORKER ---- ${it.video.id}")
-//                videosManager.onUpdateUploadIdInDb(it.video.id ?: "", currentVideo)
-//            }
-//            .doOnError {
-//                if (it.message.equals("HTTP 502 Bad Gateway")) {
-//                    getVideoIdForFile(currentVideo)
-//                } else {
-//                    uploadingIsFalse()
-//                    analyticsManager.onTrackUploadEvent(
-//                        Failed_Registration,
-//                        arrayOf(
-//                            "client_id = ${currentVideo.clientId}",
-//                            "failed_response = ${it.message}"
-//                        )
-//                    )
-//                    videosManager.onResetCurrentVideo(currentVideo)
-//                }
-//            }
-//            .subscribe({
-//                this.checkFileStatusBeforeUpload(video = currentVideo)
-//            }, {
-//
-//            })
-//
-//    }
 
     private var startRange = 0
     private var chunkToUpload: Int = 0
@@ -679,6 +653,8 @@ class VideoUploadWorker(
                 uploadingHD
             )
 
+            println("This is the encrypted response.... ${encryptionResponse?.upload?.id}")
+            println("This is the Video::: client:${currentVideo?.clientId} uploadid: ${currentVideo?.videoId}")
             synchronized(this) {
                 up = uploadsManager
                     .uploadVideoToServer(
@@ -708,8 +684,8 @@ class VideoUploadWorker(
                                 timeSent = it.raw().sentRequestAtMillis(),
                                 timeReceived = it.raw().receivedResponseAtMillis()
                             )) {
-                                in 0..2 -> maxChunkSize
-                                in 3..4 -> baseChunkSize
+                                in 0..1 -> maxChunkSize
+                                in 2..3 -> baseChunkSize
                                 else -> minChunkSize
                             }
 
@@ -790,7 +766,9 @@ class VideoUploadWorker(
                 complete = uploadsManager
                     .onCompleteUpload(encryptionResponse?.upload?.id ?: "")
                     .doOnError {
-                        if (it.message.equals("HTTP 502 Bad Gateway")) {
+                        it.printStackTrace()
+                        println("ERROR FROM COMPLETE! ${it.message}")
+                        if (it.message?.contains("502 Bad Gateway") == true) {
                             checkForComplete()
                         } else {
                             uploadingIsFalse()
@@ -798,7 +776,6 @@ class VideoUploadWorker(
                                 currentVideo ?: return@doOnError
                             )
                         }
-                        it.printStackTrace()
                     }
                     .subscribe({
                         if (it.code() == 502) {
@@ -807,11 +784,15 @@ class VideoUploadWorker(
                         when (it.body()?.status) {
                             CompleteResponse.COMPLETING.name -> pingServerForStatus()
                             CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
-                            else -> {
-                                //uploadingIsFalse()
+                            CompleteResponse.FAILED.name -> {
+                                println("This is an else from complete body........ ${it.body()?.status}")
+                                uploadingIsFalse()
                                 videosManager.onResetCurrentVideo(
                                     currentVideo ?: return@subscribe
                                 )
+                            }
+                            else -> {
+                                pingServerForStatus()
                             }
                         }
                     }, {
@@ -842,7 +823,7 @@ class VideoUploadWorker(
 
                 serverDis = uploadsManager
                     .writerToServerAfterComplete(
-                        uploadId = currentVideo?.uploadId ?: "",
+                        uploadId = currentVideo?.videoId ?: "",
                         S3Key = upload?.S3Key ?: "",
                         vidWidth = width,
                         vidHeight = height,
@@ -891,7 +872,7 @@ class VideoUploadWorker(
                             )
                         }
                         uploadingIsFalse()
-                        videosManager.onNotifyWorkIsDone()
+                        videosManager.onNotifyWorkIsDone(currentVideo ?: return@doAfterNext)
                     }
                     .subscribe({
                     },
@@ -950,6 +931,7 @@ class VideoUploadWorker(
 
     private fun uploadingIsTrue() {
         uploading = true
+        println("UPLOADING BOOLEAN =========================================== $uploading")
     }
 
     private fun uploadingIsFalse() {
@@ -980,7 +962,8 @@ class DaggerWorkerFactory(
     private val progress: ProgressManager,
     private val notifications: NotificationManager,
     private val analytics: OTAnalyticsManager,
-    private val wifi: WifiManager
+    private val wifi: WifiManager,
+    private val file: FileManager
 ) : WorkerFactory() {
     override fun createWorker(
         appContext: Context,
@@ -1000,6 +983,7 @@ class DaggerWorkerFactory(
                 instance.progressManager = progress
                 instance.analyticsManager = analytics
                 instance.wifiManager = wifi
+                instance.fileManager = file
             }
         }
         return instance

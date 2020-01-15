@@ -1,8 +1,10 @@
 package com.itsovertime.overtimecamera.play.camera
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.os.CountDownTimer
 import android.os.Environment
+import android.os.StatFs
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
@@ -11,6 +13,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
@@ -27,7 +30,6 @@ import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 class CameraPresenter(
@@ -95,6 +97,11 @@ class CameraPresenter(
         manager.onLoadDb()
         user()
         startUploadWorkManager()
+        checkStorage()
+    }
+
+    private fun checkStorage() {
+        //  if(getAvailableInternalMemorySize() < )
     }
 
     private fun startUploadWorkManager() {
@@ -102,10 +109,7 @@ class CameraPresenter(
             OneTimeWorkRequestBuilder<VideoUploadWorker>().addTag("UploadWork").build()
         WorkManager.getInstance(view.context ?: return)
             .enqueueUniqueWork("UploadWork", ExistingWorkPolicy.KEEP, workRequest)
-
     }
-
-
 
 
     private var countDownTimer: CountDownTimer? = null
@@ -290,7 +294,6 @@ class CameraPresenter(
     }
 
 
-
     fun updateTaggedAthletesField(taggedAthletesArray: ArrayList<String>) {
         manager.onUpdatedTaggedAthletesInDb(
             taggedAthletesArray = taggedAthletesArray,
@@ -305,5 +308,21 @@ class CameraPresenter(
     fun onTrackStartedRecording() {
         analytics.onTrackCameraRecording()
     }
+
+    fun getAvailableInternalMemorySize(): Long {
+        val path = Environment.getDataDirectory()
+        val stat = StatFs(path.path)
+        val blockSize: Long
+        val availableBlocks: Long
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            blockSize = stat.blockSizeLong
+            availableBlocks = stat.availableBlocksLong
+        } else {
+            blockSize = stat.blockSize.toLong()
+            availableBlocks = stat.availableBlocks.toLong()
+        }
+        return availableBlocks * blockSize
+    }
+
 
 }

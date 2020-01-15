@@ -36,6 +36,8 @@ import com.itsovertime.overtimecamera.play.itemsame.BasicDiffCallback
 import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.uploads.UploadsActivity
 import dagger.android.support.AndroidSupportInjection
+import io.reactivex.BackpressureStrategy
+import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -346,6 +348,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         eventTitle.setOnClickListener(this)
         uploadButton.setOnClickListener(this)
         cameraView.setOnTouchListener(this)
+
     }
 
     var fingerSpacing = 0;
@@ -365,7 +368,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             val point = event?.pointerCount ?: 0
             if (point == 2 && event?.action == MotionEvent.ACTION_MOVE) { //Multi touch.
                 currentFingerSpacing = getFingerSpacing(event);
-                var delta = .8f; //Control this value to control the zooming sensibility
+                var delta = .11f; //Control this value to control the zooming sensibility
                 if (fingerSpacing != 0) {
                     if (currentFingerSpacing > fingerSpacing) { //Don't over zoom-in
                         if ((maximumZoomLevel - zoomLevel) <= delta) {
@@ -376,7 +379,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                         if ((zoomLevel - delta) < 1f) {
                             delta = zoomLevel - 1f;
                         }
-                        zoomLevel -= delta;
+                        zoomLevel -= delta
                     }
                     val ratio =
                         1 / zoomLevel; //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
@@ -388,7 +391,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                     zoom = Rect(
                         croppedWidth / 2, croppedHeight / 2,
                         rect.width() - croppedWidth / 2, rect.height() - croppedHeight / 2
-                    );
+                    )
                     previewRequestBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
                 }
                 fingerSpacing = currentFingerSpacing.toInt()
@@ -478,7 +481,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
         val recorder = MediaRecorder()
 
-
         when (CAMERA) {
             0 -> {
                 when (sensorOrientation) {
@@ -510,8 +512,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 }
             }
         }
-
-
         val profile =
             when (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)) {
                 true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
@@ -530,26 +530,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             setAudioEncodingBitRate(128 * 1000)
             setVideoFrameRate(60)
         }
-
         mediaRecorder = recorder
     }
-
-//    fun enableSelfieShutterButton() {
-//        activity?.runOnUiThread {
-//            tapToSave.alpha = .5F
-//            tapToSave.isClickable = false
-//        }
-//        val enable = object : TimerTask() {
-//            override fun run() {
-//                activity?.runOnUiThread {
-//                    selfieButton.isClickable = true
-//                    selfieButton.alpha = 1F
-//                }
-//            }
-//        }
-//        Timer().schedule(enable, 2500)
-//    }
-
 
     private fun enableMainShutterButton() {
         activity?.runOnUiThread {
@@ -564,9 +546,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 }
             }
         }
-        Timer().schedule(enable, 2500)
+        Timer().schedule(enable, 1500)
     }
-
 
     @SuppressLint("CheckResult")
     override fun prepareCameraForRecording() {
@@ -574,7 +555,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         if (cameraDevice == null || txView?.isAvailable == false) {
             return
         }
-
         try {
             setUpMediaRecorder()
             mediaRecorder?.prepare()
@@ -624,7 +604,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                         Range<Int>(60, 60)
                                     )
                                 }
-
                                 try {
                                     setUpCaptureRequestBuilder(previewRequestBuilder)
                                     HandlerThread("CameraPreview").start()
@@ -633,9 +612,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                         previewRequestBuilder.build(),
                                         null, recordHandler
                                     )
-
                                     startMediaRecorder()
-
                                 } catch (e: CameraAccessException) {
                                     Log.e("CameraMain", e.toString())
                                 } catch (ise: IllegalStateException) {
@@ -709,13 +686,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         stopRecordingThread()
         recording = false
         try {
+            captureSession?.stopRepeating()
+            captureSession?.abortCaptures()
+
             mediaRecorder?.stop()
             mediaRecorder?.reset()
             mediaRecorder = null
-            when (isPaused) {
-                false -> presenter.saveVideo(selectedEvent)
-                else -> deleteUnsavedFile()
-            }
+//            when (isPaused) {
+//                false -> presenter.saveVideo(selectedEvent)
+//                else -> deleteUnsavedFile()
+//            }
         } catch (r: RuntimeException) {
             r.printStackTrace()
         } catch (e: java.lang.IllegalStateException) {
@@ -756,8 +736,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_camera, container, false)
+        val infl = inflater.inflate(R.layout.fragment_camera, container, false)
+        val myZoomView = context?.let { ZoomLayout(it) };
+        myZoomView?.addView(infl);
+        return myZoomView;
     }
+
 
     var selectedEvent: Event? = null
     private var evAdapter: EventsAdapter? = null
@@ -766,7 +750,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         txView = cameraView
         presenter.setUpClicks()
         presenter.onCreate()
-        cameraView.setOnTouchListener(this)
+        //cameraView.setOnTouchListener(MyScaleGestures(context))
         getEventData()
         eventsRecycler.layoutManager =
             LinearLayoutManager(context, RecyclerView.HORIZONTAL, true)
@@ -849,10 +833,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
 
+    @SuppressLint("CheckResult")
     @Synchronized
     fun engageCamera() {
         startBackgroundThread()
-        println("TXVIEW :$txView")
         txView?.let {
             if (it.isAvailable) {
                 cameraIsClosed = false
@@ -903,17 +887,28 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     @SuppressLint("CheckResult")
     @Synchronized
     private fun releaseCamera(tapToSave: Boolean) {
-        Single.fromCallable {
-            closeCamera()
-            stopBackgroundThread()
+        Flowable.fromCallable {
+            if (recording) {
+                saveText.visibility = View.GONE
+                presenter.clearProgressAnimation()
+                paused = !tapToSave
+
+            }
+//            captureSession?.stopRepeating()
+//            captureSession?.abortCaptures()
+
+            mediaRecorder?.stop()
+            mediaRecorder?.reset()
+            mediaRecorder = null
+
+
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doFinally {
-                if (recording) {
-                    saveText.visibility = View.GONE
-                    presenter.clearProgressAnimation()
-                    paused = !tapToSave
-                    stopRecording(paused)
+            .doOnComplete {
+               // stopRecording(paused)
+                when (paused) {
+                    false -> presenter.saveVideo(selectedEvent)
+                    else -> deleteUnsavedFile()
                 }
             }
             .subscribe({
@@ -961,27 +956,21 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
 
     var manager: CameraManager? = null
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission", "CheckResult")
     override fun openCamera(width: Int, height: Int, camera: Int) {
-        manager = context?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        println("AT OPEN CAMERA")
         try {
+            println("inside try......")
+            manager = context?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw RuntimeException("Time out waiting to lock overtimecamera opening.")
             }
-
-
             val cameraId = manager?.cameraIdList?.get(camera) ?: "0"
-
-
             val characteristics = manager?.getCameraCharacteristics(cameraId)
-//            characteristics?.availableCaptureRequestKeys?.forEach {
-//            }
-            val map =
-                characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                    ?: throw RuntimeException("Cannot get available preview/video sizes")
+            val map = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
-
+            println("pre when.......")
             when (camera) {
                 0 -> {
                     if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -1005,8 +994,21 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             }
 
             mediaRecorder = MediaRecorder()
-            txView?.setTransform(Matrix())
-            manager?.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
+            activity?.runOnUiThread {
+                txView?.setTransform(Matrix())
+            }
+            manager?.openCamera(camera.toString(), cameraStateCallBack, backgroundHandler)
+//            Single.fromCallable {
+//                println("in single...")
+//
+//
+//            }.subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .doFinally {
+//                    println("open cam...")
+//                }
+
+
         } catch (e: CameraAccessException) {
             activity?.finishAffinity()
         } catch (e: NullPointerException) {
@@ -1014,6 +1016,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock overtimecamera opening.")
         }
+
+//        Flowable.fromCallable {
+//
+//        }.subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .doFinally {
+//                println("AT DO FINALLY!!@D")
+//
+//            }
+
+
     }
 
     private fun startBackgroundThread() {

@@ -44,6 +44,15 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         //  uploadsMessage.text = ""
     }
 
+    override fun updateCompletedUpload(index: Int) {
+//        (adapter.holder?.itemView as UploadsView).getChildAt(index).medQProgressBar.setProgress(
+//            100,
+//            true
+//        )
+//        (adapter.holder?.itemView as UploadsView).getChildAt(index).check1.visibility = View.VISIBLE
+//        adapter.notifyItemChanged(index)
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
@@ -177,18 +186,23 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     private fun showToast(msg: String) {
         val toast = Toast.makeText(this, msg, Toast.LENGTH_SHORT)
         val view = toast.view
-        view.background.setColorFilter(resources.getColor(R.color.black, null), PorterDuff.Mode.SRC_IN);
+        view.background.setColorFilter(
+            resources.getColor(R.color.black, null),
+            PorterDuff.Mode.SRC_IN
+        );
         val text = view.findViewById<TextView>(android.R.id.message)
         text.setTextColor(resources.getColor(R.color.OT_White, null));
         toast.show()
 
     }
 
-    var prog: Int = 0
+
     var hd: Boolean = false
     var id: String = ""
+    var prog: Int = 0
     override fun updateProgressBar(id: String, progress: Int, hd: Boolean) {
-        this.prog += progress
+
+        prog += progress
         this.hd = hd
         this.id = id
         val vid = list?.find {
@@ -196,9 +210,11 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         }
         println("progress prog:: $progress")
         val index = list?.indexOf(vid) ?: 0
-
-        (adapter.holder?.itemView as UploadsView).getChildAt(index)
-            .medQProgressBar.setProgress(this.prog, true)
+        println("upload index  = $index")
+        (adapter.holder?.itemView as UploadsView).getChildAt(index).medQProgressBar.setProgress(
+            prog,
+            true
+        )
         adapter.notifyItemChanged(index)
     }
 
@@ -267,16 +283,14 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         )
 
         uploadsRecycler.adapter = adapter
-        (uploadsRecycler.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = true
+        (uploadsRecycler.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 
     }
 
     @Inject
     lateinit var presenter: UploadsPresenter
 
-
 }
-
 
 class UploadsViewData(
     val data: List<UploadsPresentation>,

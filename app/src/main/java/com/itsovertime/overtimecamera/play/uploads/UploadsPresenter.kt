@@ -16,6 +16,7 @@ class UploadsPresenter(
 ) {
     fun onCreate() {
         subscribeToNetworkUpdates()
+        subscribeToCompletedUploads()
     }
 
     var progDisp: Disposable? = null
@@ -32,6 +33,23 @@ class UploadsPresenter(
 
             }, {
 
+            })
+    }
+
+    var comp: Disposable? = null
+    private fun subscribeToCompletedUploads() {
+        comp?.dispose()
+        comp = manager
+            .subscribeToCompletedUploads()
+            .subscribe({ s ->
+                view.updateAdapter(list.asReversed(), debug, userEnabledHDUploads)
+//                val vid = list.find {
+//                    it.clientId == s.clientId
+//                }
+//                val index = list.indexOf(vid)
+//                view.updateCompletedUpload(index)
+            }, {
+                it.printStackTrace()
             })
     }
 

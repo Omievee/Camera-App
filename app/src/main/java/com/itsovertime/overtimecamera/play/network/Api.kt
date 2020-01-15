@@ -17,6 +17,10 @@ interface Api {
     @POST("/api/writer/videos")
     fun getVideoInstance(@Body request: VideoInstanceRequest): Observable<VideoInstanceResponse>
 
+    /*  Step 1A: Put to update necessary funny or favorite fields */
+    @PUT("/api/writer/videos/{id}")
+    fun updateVideoInstance(@Path("id") id: String,@Body request: VideoInstanceRequest): Observable<VideoInstanceResponse>
+
     /*Step 2: Post for video upload token*/
     @POST("/api/media/upload_token")
     fun uploadToken(@Body request: VideoSourceRequest): Observable<TokenResponse>

@@ -8,6 +8,8 @@ import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManagerImpl
 import com.itsovertime.overtimecamera.play.eventmanager.EventManager
 import com.itsovertime.overtimecamera.play.eventmanager.EventManagerImpl
+import com.itsovertime.overtimecamera.play.filemanager.FileManager
+import com.itsovertime.overtimecamera.play.filemanager.FileManagerImpl
 import com.itsovertime.overtimecamera.play.network.Api
 import com.itsovertime.overtimecamera.play.network.JobBindingModule
 import com.itsovertime.overtimecamera.play.network.NetworkSchedulerService
@@ -88,7 +90,8 @@ class AppModule {
         progress: ProgressManager,
         notifications: NotificationManager,
         analytics: OTAnalyticsManager,
-        wifi:WifiManager
+        wifi:WifiManager,
+        file: FileManager
     ): WorkerFactory {
         return DaggerWorkerFactory(
             uploads,
@@ -96,7 +99,8 @@ class AppModule {
             progress,
             notifications,
             analytics,
-            wifi
+            wifi,
+            file
         )
     }
 
@@ -118,5 +122,11 @@ class AppModule {
     @Singleton
     fun provideAnalyticsManager(context: OTApplication, api: Api): OTAnalyticsManager {
         return OTAnalyticsManagerImpl(context, api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFileManager(context: OTApplication): FileManager {
+        return FileManagerImpl(context)
     }
 }
