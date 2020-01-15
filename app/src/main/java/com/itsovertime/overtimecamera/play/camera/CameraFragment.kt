@@ -555,11 +555,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         if (cameraDevice == null || txView?.isAvailable == false) {
             return
         }
-
-//        Single.fromCallable {
-//
-//        }.subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
         try {
             setUpMediaRecorder()
             mediaRecorder?.prepare()
