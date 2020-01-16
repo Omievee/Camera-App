@@ -275,7 +275,7 @@ class VideoUploadWorker(
                     if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists() || !videoIsValid(File(faveList[0].mediumRes))) {
                         uploadingIsFalse()
                         println("Bad fave video? ${faveList[0]}")
-                        //videosManager.onResetCurrentVideo(faveList[0])
+                        videosManager.onResetCurrentVideo(faveList[0])
                     } else {
                         uploadingIsTrue()
                         requestTokenForUpload(faveList[0])
@@ -589,22 +589,11 @@ class VideoUploadWorker(
                     fullBytes = File(video.mediumRes).readBytes()
                     video.uploadState = UploadState.UPLOADING_MEDIUM
                     upload()
-//                    if (!videoIsValid(File(video.mediumRes))) {
-//                        uploadingIsFalse()
-//                        println("this is your file:: ${video.mediumRes}")
-//                        println("this is your file:: ${video.highRes}")
-//                        videosManager.onResetCurrentVideo(
-//                            video
-//                        )
-//                    } else {
-//
-//                    }
                 }
             } else {
                 println("Video id was null..$video")
                 uploadingIsFalse()
                 videosManager.onResetCurrentVideo(video)
-//                getVideoIdForFile(currentVideo)
             }
         }
     }
@@ -626,14 +615,10 @@ class VideoUploadWorker(
     private var chunkToUpload: Int = 0
     @SuppressLint("CheckResult")
     var up: Disposable? = null
-
-
     var part_size: Int? = 0
     var prog: Int? = 0
     private fun upload() {
         if (isDeviceConnected()) {
-            println("STOP FOR NEW UPLOAD================================= $stopUploadForNewFavorite")
-            Log.d(TAG, "Good file, starting upload......")
             val fullFileSize = fullBytes.size
             println("Filesize -------- $fullFileSize")
             val previousStartPlusDynamicChunk = startRange + chunkToUpload
@@ -653,8 +638,6 @@ class VideoUploadWorker(
                 uploadingHD
             )
 
-            println("This is the encrypted response.... ${encryptionResponse?.upload?.id}")
-            println("This is the Video::: client:${currentVideo?.clientId} uploadid: ${currentVideo?.videoId}")
             synchronized(this) {
                 up = uploadsManager
                     .uploadVideoToServer(
@@ -860,16 +843,18 @@ class VideoUploadWorker(
                         )
 
                         println("Finalized video..... ${currentVideo?.uploadState}")
-
-                        if (currentVideo?.uploadState == UploadState.UPLOADING_MEDIUM) {
-                            currentVideo?.uploadState = UploadState.UPLOADED_MEDIUM
-                            videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
-                        } else {
-                            currentVideo?.uploadState = UploadState.UPLOADED_HIGH
-                            videosManager.updateHighuploaded(
-                                true,
-                                currentVideo ?: return@doAfterNext
-                            )
+                        when (uploadingHD) {
+                            true -> {
+                                currentVideo?.uploadState = UploadState.UPLOADED_HIGH
+                                videosManager.updateHighuploaded(
+                                    true,
+                                    currentVideo ?: return@doAfterNext
+                                )
+                            }
+                            else -> {
+                                currentVideo?.uploadState = UploadState.UPLOADED_MEDIUM
+                                videosManager.updateMediumUploaded(true, currentVideo?.clientId ?: "")
+                            }
                         }
                         uploadingIsFalse()
                         videosManager.onNotifyWorkIsDone(currentVideo ?: return@doAfterNext)

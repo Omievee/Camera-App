@@ -538,7 +538,7 @@ class VideosManagerImpl(
                 it.printStackTrace()
             }
             .subscribe({
-                synchronized(this){
+                synchronized(this) {
                     onRegisterVideoWithServer(false, pendingVidRegistration ?: return@subscribe)
                 }
                 videoCheck(video)
@@ -675,12 +675,12 @@ class VideosManagerImpl(
 
     @Throws(java.lang.RuntimeException::class)
     private fun videoIsValid(file: File): Boolean {
-        println("checking for valid video.... $file")
+        if (file.readBytes().isEmpty()) {
+            return false
+        }
 
         val retriever = MediaMetadataRetriever()
-        println("Retriever? $retriever && context? $context &&& ${Uri.fromFile(file)}")
         retriever.setDataSource(context, Uri.fromFile(file))
-        println("Retriever? $retriever")
         val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
         val isVideo = "yes" == hasVideo
         retriever.release()
@@ -688,7 +688,7 @@ class VideosManagerImpl(
         println("Bytes Size: : ${file.readBytes().size}")
         println("Is Video: : $isVideo")
 
-        println("checking for valid video....${file.exists()} // ${file.readBytes().isNotEmpty()} // ${isVideo}")
+        println("checking for valid video....This is the file:${file.exists()} // This is the bytes: ${file.readBytes().isNotEmpty()} // Is there Video??: ${isVideo}")
         return file.exists() && file.readBytes().isNotEmpty() && isVideo
     }
 
@@ -727,19 +727,27 @@ class VideosManagerImpl(
                     currentVideo.videoId.toString()
                 }
                 if (!currentVideo.mediumRes.isNullOrEmpty()) {
-                    if (File(currentVideo.mediumRes).exists()) {
-                        when (videoIsValid(File(currentVideo.mediumRes))) {
-                            true -> {
-                                medPath = currentVideo.mediumRes.toString()
-                            }
-                            false -> {
-                                medPath = ""
-                                File(currentVideo.mediumRes).delete()
+                    println("FIle exisgts?? ${File(currentVideo.mediumRes).exists()}")
+                    when (File(currentVideo.mediumRes).exists()) {
+                        true -> {
+                            when (videoIsValid(File(currentVideo.mediumRes))) {
+                                true -> {
+                                    medPath = currentVideo.mediumRes.toString()
+                                }
+                                false -> {
+                                    medPath = ""
+                                    File(currentVideo.mediumRes).delete()
+                                }
                             }
                         }
-                    } else medPath = ""
+                        false -> {
+                            println("this is false....")
+                            medPath = ""
+                        }
+                    }
                 }
                 if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
+                    println("Trimmed exists?? ${File(currentVideo.trimmedVidPath).exists()}")
                     if (File(currentVideo.trimmedVidPath).exists()) {
                         when (videoIsValid(File(currentVideo.trimmedVidPath))) {
                             true -> {
@@ -785,7 +793,7 @@ class VideosManagerImpl(
                 } else if (!it?.videoId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
                     println("RESET MSG:  video id... transcode  exists..")
                     videoCheck(it)
-                }else {
+                } else {
                     println("RESET MSG: video id & transcode exists.....")
                     newVideos.onNext(true)
                 }
