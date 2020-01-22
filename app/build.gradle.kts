@@ -57,7 +57,7 @@ val WORKER_VERSION = "2.2.0"
 dependencies {
 
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.41")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.60")
     implementation("com.android.support:appcompat-v7:28.0.0")
     implementation("com.android.support:design:28.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")

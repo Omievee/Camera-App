@@ -1,6 +1,7 @@
 package com.itsovertime.overtimecamera.play.camera
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -44,6 +45,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.event_view.*
 import kotlinx.android.synthetic.main.events_recycler_view.*
 import kotlinx.android.synthetic.main.fragment_camera.*
+import kotlinx.android.synthetic.main.rotate_warning_view.*
 import kotlinx.android.synthetic.main.tagged_players_view.*
 import kotlinx.android.synthetic.main.upload_button_view.*
 import java.io.File
@@ -202,15 +204,19 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             }
             R.id.tapToSave -> {
                 progress.visibility = View.VISIBLE
-                synchronized(this) {
-                    when (CAMERA) {
+                when (presenter.getAvailableInternalMemory() > 5) {
+                    true -> when (CAMERA) {
                         1 -> tapToSaveSelfie()
                         else -> {
                             tapToSaveRegularRecording()
                         }
                     }
+                    else -> {
+                        recording = false
+                        releaseCamera(false)
+                        notifyOfLowStorage()
+                    }
                 }
-
             }
             R.id.favoriteIcon -> {
                 presenter.updateFavoriteField()
@@ -238,6 +244,11 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 progress.visibility = View.VISIBLE
                 engageCamera()
             }
+            R.id.switchPortrait -> {
+                switchedToPortrait = true
+                hideWarnings()
+                orientation?.disable()
+            }
             R.id.hahaIcon -> {
                 presenter.updateFunnyField()
                 hahaIcon.setImageDrawable(
@@ -261,6 +272,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         }
     }
 
+    override fun notifyOfLowStorage() {
+        AlertDialog.Builder(context, R.style.CUSTOM_ALERT).apply {
+            setTitle("Not Enough Storage")
+            setCancelable(false)
+            setMessage("Your Device is running low on storage. Free up some space before continuing")
+        }.setPositiveButton("Ok") { _, _ ->
+            activity?.finishAffinity()
+        }.show()
+    }
+
+    var switchedToPortrait: Boolean? = false
     private fun determineVisibility() {
         if (hiddenEvents.visibility == View.VISIBLE) {
             hiddenEvents.visibility = View.GONE
@@ -272,6 +294,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     private fun tapToSaveRegularRecording() {
         register?.cancel()
         hideViews?.cancel()
+
         activity?.runOnUiThread {
             favoriteIcon.visibility = View.VISIBLE
             hahaIcon.visibility = View.VISIBLE
@@ -279,7 +302,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
 
         if (!newData.isNullOrEmpty()) {
-            taggedAdapter.notifyDataSetChanged()
+            //taggedAdapter.notifyDataSetChanged()
             activity?.runOnUiThread {
                 taggedView.visibility = View.VISIBLE
             }
@@ -348,7 +371,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         eventTitle.setOnClickListener(this)
         uploadButton.setOnClickListener(this)
         cameraView.setOnTouchListener(this)
-
+        switchPortrait.setOnClickListener(this)
     }
 
     var fingerSpacing = 0;
@@ -481,35 +504,20 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
         val recorder = MediaRecorder()
 
-        when (CAMERA) {
-            0 -> {
-                when (sensorOrientation) {
-                    SENSOR_ORIENTATION_DEFAULT_DEGREES -> recorder.setOrientationHint(
-                        DEFAULT_ORIENTATIONS.get(
-                            rotation ?: 0
-                        )
-                    )
-                    SENSOR_ORIENTATION_INVERSE_DEGREES -> recorder.setOrientationHint(
-                        INVERSE_ORIENTATIONS.get(
-                            rotation ?: 0
-                        )
-                    )
-                }
+        println("rotation is.... $rotation")
+        when (switchedToPortrait) {
+            true -> {
+                println("This is true..")
+                recorder.setOrientationHint(
+                    180
+                )
             }
-            1 -> {
-                when (sensorOrientation) {
-                    SENSOR_ORIENTATION_DEFAULT_DEGREES -> recorder.setOrientationHint(
-                        INVERSE_ORIENTATIONS.get(
-                            rotation ?: 0
-                        )
-
+            else -> {
+                recorder.setOrientationHint(
+                    DEFAULT_ORIENTATIONS.get(
+                        rotation ?: 0
                     )
-                    SENSOR_ORIENTATION_INVERSE_DEGREES -> recorder.setOrientationHint(
-                        DEFAULT_ORIENTATIONS.get(
-                            rotation ?: 0
-                        )
-                    )
-                }
+                )
             }
         }
         val profile =
@@ -517,6 +525,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 true -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
                 else -> CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
             }
+
 
         recorder.apply {
             setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
@@ -529,6 +538,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             setVideoEncodingBitRate(32 * 1024 * 1024)
             setAudioEncodingBitRate(128 * 1000)
             setVideoFrameRate(60)
+            prepare()
         }
         mediaRecorder = recorder
     }
@@ -562,14 +572,13 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             .observeOn(AndroidSchedulers.mainThread())
         try {
             setUpMediaRecorder()
-            mediaRecorder?.prepare()
+            // mediaRecorder?.prepare()
             val texture = txView?.surfaceTexture.apply {
                 this?.setDefaultBufferSize(
                     videoSize?.width ?: 0, videoSize?.height
                         ?: 0
                 )
             }
-
             val previewSurface = Surface(texture)
             val recorderSurface = mediaRecorder?.surface
             val surfaces = ArrayList<Surface>().apply {
@@ -601,8 +610,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                         CaptureRequest.CONTROL_MODE,
                                         CaptureRequest.CONTROL_SCENE_MODE_ACTION
                                     )
-                                    if (zoom != null) {
-                                        set(CaptureRequest.SCALER_CROP_REGION, zoom);
+                                    zoom?.let {
+                                        set(CaptureRequest.SCALER_CROP_REGION, it);
                                     }
                                     set(
                                         CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
@@ -641,9 +650,9 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
     var hideViews: TimerTask? = null
+    var rec: TimerTask? = null
     var register: TimerTask? = null
     private fun startMediaRecorder() {
-
         when (CAMERA) {
             0 -> {
                 enableMainShutterButton()
@@ -672,7 +681,12 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                         }
                     }
                 }
-                mediaRecorder?.start()
+                rec = object : TimerTask() {
+                    override fun run() {
+                        mediaRecorder?.start()
+                    }
+                }
+                Timer().schedule(rec, 500)
                 Timer().schedule(hideViews, 3500)
             }
             1 -> {
@@ -760,8 +774,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         detectOrientation()
         determineNavigationSpacing()
-        //testing()
-
+//        testing()
     }
 
     private fun determineNavigationSpacing() {
@@ -851,9 +864,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
     override fun onPause() {
-        deleteUnsavedFile()
-        releaseCamera(tapToSave = false)
         super.onPause()
+        releaseCamera(tapToSave = false)
     }
 
     override fun onResume() {
@@ -872,17 +884,17 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     }
 
-    fun testing() {
-        val task = object : TimerTask() {
-            override fun run() {
-                when (CAMERA) {
-                    1 -> tapToSaveSelfie()
-                    else -> tapToSaveRegularRecording()
-                }
-            }
-        }
-        Timer().schedule(task, 1000)
-    }
+//    fun testing() {
+//        val task = object : TimerTask() {
+//            override fun run() {
+//                when (CAMERA) {
+//                    1 -> tapToSaveSelfie()
+//                    else -> tapToSaveRegularRecording()
+//                }
+//            }
+//        }
+//        Timer().schedule(task, 5000)
+//    }
 
     var selfieCameraEngaged: Boolean? = false
     private var paused: Boolean = false
@@ -890,14 +902,21 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     @Synchronized
     private fun releaseCamera(tapToSave: Boolean) {
         Flowable.fromCallable {
-                if (recording) {
-                    saveText.visibility = View.GONE
-                    presenter.clearProgressAnimation()
-                    paused = !tapToSave
+            if (recording) {
+                saveText.visibility = View.GONE
+                presenter.clearProgressAnimation()
+                paused = !tapToSave
 
             }
-//            captureSession?.stopRepeating()
-//            captureSession?.abortCaptures()
+            try {
+                captureSession?.stopRepeating()
+            } catch (e: CameraAccessException) {
+                cameraDevice?.close()
+                e.printStackTrace();
+            } catch (s: java.lang.Exception) {
+                s.printStackTrace()
+            }
+
 
             mediaRecorder?.stop()
             mediaRecorder?.reset()
@@ -907,7 +926,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnComplete {
-               // stopRecording(paused)
+                // stopRecording(paused)
                 when (paused) {
                     false -> presenter.saveVideo(selectedEvent)
                     else -> deleteUnsavedFile()
@@ -956,6 +975,33 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         ).show()
     }
 
+    var device: CameraDevice? = null
+    private val cameraStateCallBack = object : CameraDevice.StateCallback() {
+        override fun onOpened(cameraDevice: CameraDevice) {
+
+            cameraOpenCloseLock.release()
+            println("OPENED!! $cameraDevice")
+            this@CameraFragment.cameraDevice = cameraDevice
+            startLiveView()
+        }
+
+        override fun onDisconnected(cameraDevice: CameraDevice) {
+            cameraOpenCloseLock.release()
+            println("DISCONNECT!! $cameraDevice")
+            cameraDevice.close()
+            this@CameraFragment.cameraDevice = null
+            callback?.onRefreshFragmentFromDisconnect()
+        }
+
+        override fun onError(cameraDevice: CameraDevice, error: Int) {
+            cameraOpenCloseLock.release()
+            println("ERROR FROM CAMERA ::$error")
+            cameraDevice.close()
+            this@CameraFragment.cameraDevice = null
+            activity?.finishAffinity()
+        }
+    }
+
 
     var manager: CameraManager? = null
     @SuppressLint("MissingPermission", "CheckResult")
@@ -972,7 +1018,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             val map = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
-            println("pre when.......")
+            println("pre when.......${resources.configuration.orientation}")
             when (camera) {
                 0 -> {
                     if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -999,7 +1045,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             activity?.runOnUiThread {
                 txView?.setTransform(Matrix())
             }
-            manager?.openCamera(camera.toString(), cameraStateCallBack, backgroundHandler)
+            manager?.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
             Single.fromCallable {
                 println("in single...")
 
@@ -1079,30 +1125,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         }
     }
 
-    private val cameraStateCallBack = object : CameraDevice.StateCallback() {
-        override fun onOpened(cameraDevice: CameraDevice) {
-            cameraOpenCloseLock.release()
-            println("OPENED!! $cameraDevice")
-            this@CameraFragment.cameraDevice = cameraDevice
-            startLiveView()
-        }
-
-        override fun onDisconnected(cameraDevice: CameraDevice) {
-            cameraOpenCloseLock.release()
-            println("DISCONNECT!! $cameraDevice")
-            cameraDevice.close()
-            this@CameraFragment.cameraDevice = null
-            callback?.onRefreshFragmentFromDisconnect()
-        }
-
-        override fun onError(cameraDevice: CameraDevice, error: Int) {
-            cameraOpenCloseLock.release()
-            println("ERROR FROM CAMERA ::$error")
-            cameraDevice.close()
-            this@CameraFragment.cameraDevice = null
-            activity?.finishAffinity()
-        }
-    }
 
     private fun chooseVideoSize(choices: Array<Size>) = choices.firstOrNull {
         it.width == it.height * 4 / 3 && it.width <= 1080

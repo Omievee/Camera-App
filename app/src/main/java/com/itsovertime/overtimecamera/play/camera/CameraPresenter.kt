@@ -13,7 +13,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
@@ -97,11 +96,40 @@ class CameraPresenter(
         manager.onLoadDb()
         user()
         startUploadWorkManager()
-        checkStorage()
+
+        if (getAvailableInternalMemory() < 5) {
+            view.notifyOfLowStorage()
+        }
     }
 
-    private fun checkStorage() {
-        //  if(getAvailableInternalMemorySize() < )
+    fun getAvailableInternalMemory(): Int {
+        val path = Environment.getDataDirectory()
+        val stat = StatFs(path.path)
+        val blockSize = stat.blockSizeLong
+        val availableBlocks = stat.availableBlocksLong
+        return formatSize(availableBlocks * blockSize)
+    }
+
+    private fun formatSize(size: Long): Int {
+        var size = size
+        var suffix: String? = null
+        if (size >= 1024) {
+            suffix = "KB"
+            size /= 1024
+            if (size >= 1024) {
+                suffix = "MB"
+                size /= 1024
+            }
+        }
+        return size.toInt()
+//        val resultBuffer = StringBuilder(java.lang.Long.toString(size))
+//        var commaOffset = resultBuffer.length - 3
+//        while (commaOffset > 0) {
+//            resultBuffer.insert(commaOffset, '.')
+//            commaOffset -= 3
+//        }
+//        if (suffix != null) resultBuffer.append(suffix)
+//        return resultBuffer.toString()
     }
 
     private fun startUploadWorkManager() {
@@ -307,21 +335,6 @@ class CameraPresenter(
 
     fun onTrackStartedRecording() {
         analytics.onTrackCameraRecording()
-    }
-
-    fun getAvailableInternalMemorySize(): Long {
-        val path = Environment.getDataDirectory()
-        val stat = StatFs(path.path)
-        val blockSize: Long
-        val availableBlocks: Long
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            blockSize = stat.blockSizeLong
-            availableBlocks = stat.availableBlocksLong
-        } else {
-            blockSize = stat.blockSize.toLong()
-            availableBlocks = stat.availableBlocks.toLong()
-        }
-        return availableBlocks * blockSize
     }
 
 

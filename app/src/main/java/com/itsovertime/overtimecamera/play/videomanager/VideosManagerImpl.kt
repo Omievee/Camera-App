@@ -43,7 +43,7 @@ class VideosManagerImpl(
     var data = AppDatabase.getAppDataBase(context)
     override fun onGetVideosForUploadScreen(): Single<List<SavedVideo>> {
         return data!!.videoDao()
-            .getVideosForUpload()
+            .getVideosForUploadScreen()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
 
@@ -422,7 +422,7 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
 
-                if (!it?.videoId.isNullOrEmpty()) {
+                if (it?.videoId != null) {
                     onUpdateVideoInstance(it?.videoId.toString(), pendingVidRegistration?.is_favorite, pendingVidRegistration?.is_funny)
                 }
             }, {
@@ -458,11 +458,11 @@ class VideosManagerImpl(
                         Log.d(TAG, "transcode failed.. ${exception?.message}...")
                         listener = null
                         exception?.printStackTrace()
-                        onResetCurrentVideo(savedVideo)
+//                        onResetCurrentVideo(savedVideo, RESET.RESET_NO_TRANSCODE, "Transcode Failed")
                     }
 
                     override fun onTranscodeCompleted() {
-                        println("TRANSCODE COMPLETE ========================================= ${savedVideo.videoId}")
+                        println("TRANSCODE COMPLETE ========================================= ")
                         listener = null
                         val alertWorker = object : TimerTask() {
                             override fun run() {
@@ -570,10 +570,6 @@ class VideosManagerImpl(
         pendingMediumUploads.removeIf {
             it.mediumUploaded
         }
-        if (firstLoad && pendingMediumUploads.size > 0) {
-            analytics.debugMessage("Checking First Run", "this is a first run....")
-            newVideos.onNext(true)
-        }
         if (firstLoad) {
             checkConnection()
         }
@@ -594,8 +590,10 @@ class VideosManagerImpl(
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                if (!it?.videoId.isNullOrEmpty()) {
-                    onUpdateVideoInstance(it?.videoId.toString(), pendingVidRegistration?.is_favorite, pendingVidRegistration?.is_funny)
+                println("THIS IS YOUR VIDEO ID ------------> ${it?.videoId}")
+                if (it?.videoId != null) {
+                    println("Video instance ....... ${it.videoId.toString()}")
+                    onUpdateVideoInstance(it.videoId.toString(), pendingVidRegistration?.is_favorite, pendingVidRegistration?.is_funny)
                 }
             }, {
                 it.printStackTrace()
@@ -673,95 +671,134 @@ class VideosManagerImpl(
     }
 
 
+    var resetSubject: BehaviorSubject<ResetReasons> = BehaviorSubject.create()
+
     @Throws(java.lang.RuntimeException::class)
-    private fun videoIsValid(file: File): Boolean {
-        if (file.readBytes().isEmpty()) {
-            return false
-        }
-
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(context, Uri.fromFile(file))
-        val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
-        val isVideo = "yes" == hasVideo
-        retriever.release()
-        println("File Exists: ${file.exists()}")
-        println("Bytes Size: : ${file.readBytes().size}")
-        println("Is Video: : $isVideo")
-
-        println("checking for valid video....This is the file:${file.exists()} // This is the bytes: ${file.readBytes().isNotEmpty()} // Is there Video??: ${isVideo}")
-        return file.exists() && file.readBytes().isNotEmpty() && isVideo
-    }
+    override fun videoIsValid(vid: SavedVideo): Boolean {
+        println("checking if valid....$vid")
 
 
-    @SuppressLint("CheckResult")
-    override fun onResetCurrentVideo(currentVideo: SavedVideo) {
-        println("RESET HAPPENED $currentVideo")
-        var trimPath = ""
-        var medPath = ""
-        var encodePath = ""
-        val uploadId: String
-        var state: UploadState = UploadState.QUEUED
+        var validVideo = true
 
-        when (currentVideo.mediumUploaded) {
-            true -> {
-                state = UploadState.UPLOADED_MEDIUM
-                medPath = currentVideo.mediumRes.toString()
-                uploadId = currentVideo.videoId.toString()
-                trimPath = if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
-                    currentVideo.trimmedVidPath.toString()
-                } else {
-                    ""
-                }
-                if (!currentVideo.encodedPath.isNullOrEmpty()) {
-                    encodePath = ""
-                    val encodeFile = File(currentVideo.encodedPath)
-                    if (encodeFile.exists()) {
-                        encodeFile.delete()
+        println("Null or empty... ${vid.mediumRes.isNullOrEmpty()}")
+
+        when {
+            !checkForNullValues(vid.videoId) -> {
+                println("THIS IS A NULL VIDEO ID ")
+                validVideo = false
+                resetSubject.onNext(ResetReasons(RESET.RESET_NO_VIDEO_ID))
+            }
+            vid.mediumRes.isNullOrEmpty() -> {
+                println("Med is empty...")
+                validVideo = false
+                resetSubject.onNext(ResetReasons(RESET.RESET_NO_TRANSCODE))
+            }
+
+            !File(vid.mediumRes).exists() -> {
+                validVideo = false
+                resetSubject.onNext(ResetReasons(RESET.RESET_NO_FILE))
+            }
+            File(vid.mediumRes).readBytes().isEmpty() -> {
+                validVideo = false
+                resetSubject.onNext(ResetReasons(RESET.RESET_NO_BYTES))
+            }
+            else -> {
+                val retriever = MediaMetadataRetriever()
+                retriever.setDataSource(context, Uri.fromFile(File(vid.mediumRes)))
+                val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+                println("has video....???? $hasVideo")
+                val isVideo = "yes" == hasVideo
+                retriever.release()
+                println("is there video.... $hasVideo")
+                println("is file valid.... ${File(vid.mediumRes).readBytes().size}")
+                when (isVideo) {
+                    true -> {
+                        resetSubject.onNext(ResetReasons(RESET.NO_RESET))
+                    }
+                    else -> {
+                        validVideo = false
+                        println("INVALID !! ${File(vid.mediumRes).name}")
+                        resetSubject.onNext(ResetReasons(RESET.RESET_CORRUPT_FILE))
                     }
                 }
             }
-            else -> {
-                uploadId = if (currentVideo.videoId.isNullOrEmpty()) {
-                    ""
-                } else {
-                    currentVideo.videoId.toString()
-                }
-                if (!currentVideo.mediumRes.isNullOrEmpty()) {
-                    println("FIle exisgts?? ${File(currentVideo.mediumRes).exists()}")
-                    when (File(currentVideo.mediumRes).exists()) {
-                        true -> {
-                            when (videoIsValid(File(currentVideo.mediumRes))) {
-                                true -> {
-                                    medPath = currentVideo.mediumRes.toString()
-                                }
-                                false -> {
-                                    medPath = ""
-                                    File(currentVideo.mediumRes).delete()
-                                }
+        }
+        println("Is video valid? $validVideo")
+        return validVideo
+    }
+
+    private fun checkForNullValues(id: String?): Boolean {
+        return id != null && !id.isNullOrEmpty() && id != "null"
+    }
+
+    override fun subscribeToResetReasons(): Observable<ResetReasons> {
+        return resetSubject
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+    }
+
+
+    var trimPath = ""
+    var medPath = ""
+    var encodePath = ""
+    var videoId = ""
+    var state: UploadState = UploadState.QUEUED
+    @SuppressLint("CheckResult")
+    override fun onResetCurrentVideo(currentVideo: SavedVideo, reason: RESET, stage: String) {
+        println("RESETTING VIDEO :::::::::::::::::: $reason && $stage")
+        when (currentVideo.mediumUploaded) {
+            true -> {
+                state = UploadState.UPLOADED_MEDIUM
+                videoId = currentVideo.videoId.toString()
+                medPath = currentVideo.mediumRes.toString()
+                trimPath = currentVideo.trimmedVidPath.toString()
+                when (reason) {
+                    RESET.RESET_NO_VIDEO_ID -> {
+                        videoId = ""
+                    }
+                    RESET.RESET_CORRUPT_FILE -> {
+                        if (!currentVideo.encodedPath.isNullOrEmpty()) {
+                            if (File(currentVideo.encodedPath).exists()) {
+                                File(currentVideo.encodedPath).delete()
+                                encodePath = ""
                             }
-                        }
-                        false -> {
-                            println("this is false....")
-                            medPath = ""
                         }
                     }
+                    else -> println("Reset Else?? $reason")
                 }
-                if (!currentVideo.trimmedVidPath.isNullOrEmpty()) {
-                    println("Trimmed exists?? ${File(currentVideo.trimmedVidPath).exists()}")
-                    if (File(currentVideo.trimmedVidPath).exists()) {
-                        when (videoIsValid(File(currentVideo.trimmedVidPath))) {
-                            true -> {
-                                trimPath = currentVideo.trimmedVidPath.toString()
-                            }
-                            false -> {
-                                trimPath = ""
-                                val video = File(currentVideo.trimmedVidPath)
-                                if (video.exists()) {
-                                    video.delete()
-                                }
-                            }
-                        }
-                    } else trimPath = ""
+            }
+            else -> {
+                when (reason) {
+                    RESET.RESET_NO_VIDEO_ID -> {
+                        videoId = ""
+                        medPath = currentVideo.mediumRes.toString()
+                        trimPath = currentVideo.trimmedVidPath.toString()
+                    }
+                    RESET.RESET_NO_TRANSCODE -> {
+                        videoId = currentVideo.videoId.toString()
+                        medPath = ""
+                        trimPath = ""
+                    }
+                    RESET.RESET_NO_FILE -> {
+                        videoId = currentVideo.videoId.toString()
+                        medPath = ""
+                        trimPath = ""
+                    }
+                    RESET.RESET_NO_BYTES -> {
+                        videoId = currentVideo.videoId.toString()
+                        deleteForReset(currentVideo)
+                    }
+                    RESET.RESET_CORRUPT_FILE -> {
+                        videoId = currentVideo.videoId.toString()
+                        deleteForReset(currentVideo)
+                    }
+                    RESET.NO_RESET -> {
+                    }
+                    RESET.RESET_UNKOWN -> {
+                        videoId = currentVideo?.videoId.toString()
+                        medPath = ""
+                        trimPath = ""
+                    }
                 }
             }
         }
@@ -769,7 +806,7 @@ class VideosManagerImpl(
             with(videoDao) {
                 this?.resetUploadDataForVideo(
                     uploadState = state,
-                    uploadId = uploadId,
+                    uploadId = videoId,
                     lastID = currentVideo.clientId,
                     trimmedVidPath = trimPath,
                     mediumVidPath = medPath,
@@ -783,24 +820,38 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 it ?: return@subscribe
-                if (it?.videoId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
-                    println("RESET MSG: No video id... transcode doesnt exists..")
+                if (!checkForNullValues(it.videoId) && it?.mediumRes.isNullOrEmpty()) {
+                    println("RESET MSG: No video id... no transcode  ..")
                     onRegisterVideoWithServer(false, it)
                     videoCheck(it)
-                } else if (it?.videoId.isNullOrEmpty() && !it?.mediumRes.isNullOrEmpty()) {
+                } else if (!checkForNullValues(it.videoId) && !it?.mediumRes.isNullOrEmpty()) {
                     println("RESET MSG: No video id... transcode exists..")
                     onRegisterVideoWithServer(true, it)
-                } else if (!it?.videoId.isNullOrEmpty() && it?.mediumRes.isNullOrEmpty()) {
-                    println("RESET MSG:  video id... transcode  exists..")
+                } else if (checkForNullValues(it.videoId) && it?.mediumRes.isNullOrEmpty()) {
+                    println("RESET MSG:  video id... NO transcode  exists..")
+
                     videoCheck(it)
                 } else {
-                    println("RESET MSG: video id & transcode exists.....")
+                    println("RESET MSG: Else, all good...")
                     newVideos.onNext(true)
                 }
 
             }, {
                 it.printStackTrace()
             })
+    }
+
+    private fun deleteForReset(currentVideo: SavedVideo) {
+        medPath = currentVideo.mediumRes.toString()
+        if (File(medPath).exists()) {
+            File(medPath).delete()
+        }
+        medPath = ""
+        trimPath = currentVideo.trimmedVidPath.toString()
+        if (File(trimPath).exists()) {
+            File(trimPath).delete()
+        }
+        trimPath = ""
     }
 
 
@@ -816,11 +867,22 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
     }
 
-
     var newFave: BehaviorSubject<SavedVideo> = BehaviorSubject.create()
     override fun subscribeToNewFavoriteVideoEvent(): Observable<SavedVideo> {
         return newFave
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
     }
+
+    enum class RESET {
+        RESET_NO_VIDEO_ID,
+        RESET_NO_TRANSCODE,
+        RESET_NO_FILE,
+        RESET_NO_BYTES,
+        RESET_CORRUPT_FILE,
+        NO_RESET,
+        RESET_UNKOWN
+    }
+
+    class ResetReasons(val reason: RESET)
 }
