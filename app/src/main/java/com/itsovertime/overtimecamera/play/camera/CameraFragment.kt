@@ -10,6 +10,7 @@ import android.graphics.Rect
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.media.CamcorderProfile
+import android.media.MediaCodec
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Handler
@@ -527,6 +528,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             }
 
 
+
         recorder.apply {
             setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -574,10 +576,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             setUpMediaRecorder()
             // mediaRecorder?.prepare()
             val texture = txView?.surfaceTexture.apply {
-                this?.setDefaultBufferSize(
-                    videoSize?.width ?: 0, videoSize?.height
-                        ?: 0
-                )
+                this?.setDefaultBufferSize(videoSize?.width ?: 0, videoSize?.height ?: 0)
             }
             val previewSurface = Surface(texture)
             val recorderSurface = mediaRecorder?.surface
@@ -865,6 +864,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
     override fun onPause() {
         super.onPause()
+        paused = true
+        progress.visibility = View.VISIBLE
         releaseCamera(tapToSave = false)
     }
 
@@ -1018,7 +1019,8 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             val map = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: throw RuntimeException("Cannot get available preview/video sizes")
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0
             videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
-            println("pre when.......${resources.configuration.orientation}")
+
+            println("pre when.......${videoSize}")
             when (camera) {
                 0 -> {
                     if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
