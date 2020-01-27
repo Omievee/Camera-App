@@ -82,11 +82,10 @@ class CameraPresenter(
                 filmed_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             )
         }
-        synchronized(this) {
-            analytics.onTrackVideoFileCreated(video)
-            manager.onSaveVideoToDb(video ?: return)
-            view.engageCamera()
-        }
+        analytics.onTrackVideoFileCreated(video)
+        manager.onSaveVideoToDb(video ?: return)
+        view.engageCamera()
+
     }
 
 

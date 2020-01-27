@@ -255,7 +255,7 @@ class VideosManagerImpl(
             // video codec to write to
             videoCodec,
             // value of codec - H264
-            "h264",
+            codecValue,
             // C command dictates what to do w/ file
             commandCCopy,
             // copy the file to given location
@@ -296,7 +296,6 @@ class VideosManagerImpl(
                                 )}"
                             )
                         )
-
                     }
 
                     override fun onFailure(message: String?) {
@@ -320,13 +319,41 @@ class VideosManagerImpl(
             with(videoDao) {
                 this?.updateMediumQualityPath(absolutePath, clientId)
             }
+
+            with(videoDao) {
+                this?.getVideoForUpload(clientId)
+            }
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .onErrorReturn {
-
+            .doOnError {
                 it.printStackTrace()
             }
             .subscribe({
+                transCodeVideo = it
+                println("SAVE PATH COMPLETE ========================================= ")
+            }, {
+                it.printStackTrace()
+            })
+    }
+
+    @SuppressLint("CheckResult")
+    private fun updateVideoWasProcessed(success: Boolean, clientId: String) {
+        Single.fromCallable {
+            with(videoDao) {
+                this?.updateVideoIsProcessed(success, clientId)
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnError {
+                it.printStackTrace()
+            }
+            .subscribe({
+                val alertWorker = object : TimerTask() {
+                    override fun run() {
+                        newVideos.onNext(true)
+                    }
+                }
+                Timer().schedule(alertWorker, 1500)
             }, {
                 it.printStackTrace()
             })
@@ -444,6 +471,7 @@ class VideosManagerImpl(
     private val subject: BehaviorSubject<List<SavedVideo>> = BehaviorSubject.create()
     private val total: BehaviorSubject<Int> = BehaviorSubject.create()
     var listener: MediaTranscoder.Listener? = null
+    var transCodeVideo: SavedVideo? = null
     override fun onTransCodeVideo(savedVideo: SavedVideo, videoFile: File) {
         println("STARTING TRANSCODE =========================================")
         val file = Uri.fromFile(videoFile)
@@ -458,18 +486,13 @@ class VideosManagerImpl(
                         Log.d(TAG, "transcode failed.. ${exception?.message}...")
                         listener = null
                         exception?.printStackTrace()
-//                        onResetCurrentVideo(savedVideo, RESET.RESET_NO_TRANSCODE, "Transcode Failed")
+                        onResetCurrentVideo(savedVideo, RESET.RESET_NO_TRANSCODE, "Transcode Failed")
                     }
 
                     override fun onTranscodeCompleted() {
                         println("TRANSCODE COMPLETE ========================================= ")
                         listener = null
-                        val alertWorker = object : TimerTask() {
-                            override fun run() {
-                                newVideos.onNext(true)
-                            }
-                        }
-                        Timer().schedule(alertWorker, 1500)
+                        updateVideoWasProcessed(true, savedVideo.clientId)
                     }
                 }
                 MediaTranscoder.getInstance().transcodeVideo(
@@ -676,12 +699,7 @@ class VideosManagerImpl(
     @Throws(java.lang.RuntimeException::class)
     override fun videoIsValid(vid: SavedVideo): Boolean {
         println("checking if valid....$vid")
-
-
         var validVideo = true
-
-        println("Null or empty... ${vid.mediumRes.isNullOrEmpty()}")
-
         when {
             !checkForNullValues(vid.videoId) -> {
                 println("THIS IS A NULL VIDEO ID ")
@@ -702,30 +720,29 @@ class VideosManagerImpl(
                 validVideo = false
                 resetSubject.onNext(ResetReasons(RESET.RESET_NO_BYTES))
             }
+            !vid.isProcessed -> {
+                validVideo = false
+                resetSubject.onNext(ResetReasons(RESET.RESET_NO_TRANSCODE))
+            }
             else -> {
-                val retriever = MediaMetadataRetriever()
-                retriever.setDataSource(context, Uri.fromFile(File(vid.mediumRes)))
-                val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
-                println("has video....???? $hasVideo")
-                val isVideo = "yes" == hasVideo
-                retriever.release()
-                println("is there video.... $hasVideo")
-                println("is file valid.... ${File(vid.mediumRes).readBytes().size}")
-                when (isVideo) {
-                    true -> {
-                        resetSubject.onNext(ResetReasons(RESET.NO_RESET))
-                    }
-                    else -> {
-                        validVideo = false
-                        println("INVALID !! ${File(vid.mediumRes).name}")
-                        resetSubject.onNext(ResetReasons(RESET.RESET_CORRUPT_FILE))
-                    }
-                }
+                resetSubject.onNext(ResetReasons(RESET.NO_RESET))
             }
         }
         println("Is video valid? $validVideo")
         return validVideo
     }
+
+//    fun valid(vid: SavedVideo?): Boolean {
+//        val retriever = MediaMetadataRetriever()
+//        retriever.setDataSource(context, Uri.fromFile(File(vid?.mediumRes)))
+//        val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+//        //println("has video....???? $hasVideo")
+//        val isVideo = "yes" == hasVideo
+//        retriever.release()
+//        //println("is there video.... $hasVideo")
+//        //println("is file valid.... ${File(vid?.mediumRes).readBytes().size}")
+//        return isVideo
+//    }
 
     private fun checkForNullValues(id: String?): Boolean {
         return id != null && !id.isNullOrEmpty() && id != "null"
@@ -829,12 +846,10 @@ class VideosManagerImpl(
                     onRegisterVideoWithServer(true, it)
                 } else if (checkForNullValues(it.videoId) && it?.mediumRes.isNullOrEmpty()) {
                     println("RESET MSG:  video id... NO transcode  exists..")
-
                     videoCheck(it)
-                } else {
-                    println("RESET MSG: Else, all good...")
-                    newVideos.onNext(true)
-                }
+                } else if (!it?.isProcessed) {
+                    videoCheck(it)
+                } else newVideos.onNext(true)
 
             }, {
                 it.printStackTrace()

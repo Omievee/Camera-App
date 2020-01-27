@@ -76,4 +76,7 @@ interface VideoObjectDAO {
 
     @Query("SELECT * FROM SavedVideo")
     fun getVideosForUpload(): Single<List<SavedVideo>>
+
+    @Query("SELECT * FROM SavedVideo")
+    fun getVideosForUploadScreen(): Single<List<SavedVideo>>
 }

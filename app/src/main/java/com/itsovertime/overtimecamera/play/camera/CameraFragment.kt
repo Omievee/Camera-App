@@ -303,7 +303,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 
 
         if (!newData.isNullOrEmpty()) {
-            //taggedAdapter.notifyDataSetChanged()
+            taggedAdapter.notifyDataSetChanged()
             activity?.runOnUiThread {
                 taggedView.visibility = View.VISIBLE
             }
@@ -674,6 +674,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                     if (taggedAthletesArray.isNotEmpty()) {
                                         presenter.updateTaggedAthletesField(taggedAthletesArray)
                                         taggedAthletesArray.clear()
+
                                     }
                                 }
                             }
@@ -902,40 +903,57 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     @SuppressLint("CheckResult")
     @Synchronized
     private fun releaseCamera(tapToSave: Boolean) {
-        Flowable.fromCallable {
-            if (recording) {
-                saveText.visibility = View.GONE
-                presenter.clearProgressAnimation()
-                paused = !tapToSave
-
-            }
-            try {
-                captureSession?.stopRepeating()
-            } catch (e: CameraAccessException) {
-                cameraDevice?.close()
-                e.printStackTrace();
-            } catch (s: java.lang.Exception) {
-                s.printStackTrace()
-            }
-
-
-            mediaRecorder?.stop()
-            mediaRecorder?.reset()
-            mediaRecorder = null
-
-
+        Single.fromCallable {
+            closeCamera()
+            stopBackgroundThread()
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnComplete {
-                // stopRecording(paused)
-                when (paused) {
-                    false -> presenter.saveVideo(selectedEvent)
-                    else -> deleteUnsavedFile()
+            .doFinally {
+                if (recording) {
+                    saveText.visibility = View.GONE
+                    presenter.clearProgressAnimation()
+                    paused = !tapToSave
+                    stopRecording(paused)
                 }
             }
             .subscribe({
             }, {
             })
+
+//        Flowable.fromCallable {
+//            if (recording) {
+//                saveText.visibility = View.GONE
+//                presenter.clearProgressAnimation()
+//                paused = !tapToSave
+//
+//            }
+//            try {
+//                captureSession?.stopRepeating()
+//            } catch (e: CameraAccessException) {
+//                cameraDevice?.close()
+//                e.printStackTrace();
+//            } catch (s: java.lang.Exception) {
+//                s.printStackTrace()
+//            }
+//
+//
+//            mediaRecorder?.stop()
+//            mediaRecorder?.reset()
+//            mediaRecorder = null
+//
+//
+//        }.subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .doOnComplete {
+//                // stopRecording(paused)
+//                when (paused) {
+//                    false -> presenter.saveVideo(selectedEvent)
+//                    else -> deleteUnsavedFile()
+//                }
+//            }
+//            .subscribe({
+//            }, {
+//            })
 
 
     }

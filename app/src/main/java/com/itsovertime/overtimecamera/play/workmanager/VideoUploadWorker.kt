@@ -132,7 +132,6 @@ class VideoUploadWorker(
                             uploadingIsTrue()
                             true
                         }
-
                     }
                 }, {
                     it.printStackTrace()
@@ -185,6 +184,7 @@ class VideoUploadWorker(
 
     }
 
+    var num: Int = 0
     var vidDisp: Disposable? = null
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
@@ -207,7 +207,11 @@ class VideoUploadWorker(
                     "Sorting Que",
                     "========================================="
                 )
+                println("list size ${queList.size}")
                 val it = queList.iterator()
+//                queList.forEach {
+//                    println("${num++} medium Res? ${it.mediumRes} && ${File(it.mediumRes).exists()} &&  ${File(it.mediumRes).readBytes().size}")
+//                }
                 while (it.hasNext()) {
                     val video = it.next()
                     if (video.highUploaded) {
@@ -239,6 +243,7 @@ class VideoUploadWorker(
     }
 
     var uploadingHD: Boolean = false
+
     @Synchronized
     private fun beginProcess() {
         serverDis?.dispose()
@@ -344,7 +349,7 @@ class VideoUploadWorker(
                     when (it.reason) {
                         VideosManagerImpl.RESET.NO_RESET -> {
                             uploadingIsTrue()
-                            requestTokenForUpload(currentVideo ?: return@subscribe)
+                           // requestTokenForUpload(currentVideo ?: return@subscribe)
                         }
                         else -> {
                             println("INVALID VIDEO!! ${it.reason}")
