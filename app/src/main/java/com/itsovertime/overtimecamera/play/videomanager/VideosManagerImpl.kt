@@ -421,9 +421,9 @@ class VideosManagerImpl(
     }
 
     private fun compressedFile(file: File, video: SavedVideo): File {
-        val mediaStorageDir =
-            File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "UploadMedium")
+        val mediaStorageDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "UploadMedium")
         if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+
         }
 
         val filePath = mediaStorageDir.path + File.separator + "720.${file.name}"
@@ -492,7 +492,13 @@ class VideosManagerImpl(
                     override fun onTranscodeCompleted() {
                         println("TRANSCODE COMPLETE ========================================= ")
                         listener = null
-                        updateVideoWasProcessed(true, savedVideo.clientId)
+                        println("Complete -- ${transCodeVideo?.mediumRes}")
+                        println("Complete -- ${File(transCodeVideo?.mediumRes).exists()}")
+                        if (File(transCodeVideo?.mediumRes).exists()) {
+                            println("Complete -- ${File(transCodeVideo?.mediumRes).readBytes().size > 0} ")
+                        }
+
+                        // updateVideoWasProcessed(true, savedVideo.clientId)
                     }
                 }
                 MediaTranscoder.getInstance().transcodeVideo(
@@ -699,37 +705,41 @@ class VideosManagerImpl(
     @Throws(java.lang.RuntimeException::class)
     override fun videoIsValid(vid: SavedVideo): Boolean {
         println("checking if valid....$vid")
+        println("checking if valid....${vid.mediumRes.isNullOrEmpty()}")
+        println("checking if valid....${File(vid.mediumRes).exists()}")
+        println("checking if valid....${File(vid.mediumRes).readBytes().size}")
         var validVideo = true
-        when {
-            !checkForNullValues(vid.videoId) -> {
-                println("THIS IS A NULL VIDEO ID ")
-                validVideo = false
-                resetSubject.onNext(ResetReasons(RESET.RESET_NO_VIDEO_ID))
-            }
-            vid.mediumRes.isNullOrEmpty() -> {
-                println("Med is empty...")
-                validVideo = false
-                resetSubject.onNext(ResetReasons(RESET.RESET_NO_TRANSCODE))
-            }
 
-            !File(vid.mediumRes).exists() -> {
-                validVideo = false
-                resetSubject.onNext(ResetReasons(RESET.RESET_NO_FILE))
-            }
-            File(vid.mediumRes).readBytes().isEmpty() -> {
-                validVideo = false
-                resetSubject.onNext(ResetReasons(RESET.RESET_NO_BYTES))
-            }
-            !vid.isProcessed -> {
-                validVideo = false
-                resetSubject.onNext(ResetReasons(RESET.RESET_NO_TRANSCODE))
-            }
-            else -> {
-                resetSubject.onNext(ResetReasons(RESET.NO_RESET))
-            }
-        }
-        println("Is video valid? $validVideo")
-        return validVideo
+//        when {
+//            !checkForNullValues(vid.videoId) -> {
+//                println("THIS IS A NULL VIDEO ID ")
+//                validVideo = false
+//                resetSubject.onNext(ResetReasons(RESET.RESET_NO_VIDEO_ID))
+//            }
+//            vid.mediumRes.isNullOrEmpty() -> {
+//                println("Med is empty...")
+//                validVideo = false
+//                resetSubject.onNext(ResetReasons(RESET.RESET_NO_TRANSCODE))
+//            }
+//
+//            !File(vid.mediumRes).exists() -> {
+//                validVideo = false
+//                resetSubject.onNext(ResetReasons(RESET.RESET_NO_FILE))
+//            }
+//            File(vid.mediumRes).readBytes().isEmpty() -> {
+//                validVideo = false
+//                resetSubject.onNext(ResetReasons(RESET.RESET_NO_BYTES))
+//            }
+//            !vid.isProcessed -> {
+//                validVideo = false
+//                resetSubject.onNext(ResetReasons(RESET.RESET_NO_TRANSCODE))
+//            }
+//            else -> {
+//                resetSubject.onNext(ResetReasons(RESET.NO_RESET))
+//            }
+//        }
+//        println("Is video valid? $validVideo")
+        return false
     }
 
 //    fun valid(vid: SavedVideo?): Boolean {
