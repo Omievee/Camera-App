@@ -106,7 +106,6 @@ class VideoUploadWorker(
                     Log.d(TAG, "Subscribed to db updates.. $it... $uploading")
                     if (it && !uploading) {
                         Log.d(TAG, "Getting videos $it && $uploading ")
-                        uploadingIsTrue()
                         getVideosFromDB()
                     }
                 }, {
@@ -184,7 +183,7 @@ class VideoUploadWorker(
 
     }
 
-    var num: Int = 0
+
     var vidDisp: Disposable? = null
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
@@ -195,7 +194,7 @@ class VideoUploadWorker(
         standardList.clear()
         faveListHQ.clear()
         standardListHQ.clear()
-
+        var num: Int = 0
         vidDisp = videosManager
             .onGetVideosForUpload()
             .map {
@@ -209,14 +208,12 @@ class VideoUploadWorker(
                 )
                 println("list size ${queList.size}")
                 val it = queList.iterator()
-//                queList.forEach {
-//                    println("${num++} medium Res? ${it.mediumRes} && ${File(it.mediumRes).exists()} &&  ${File(it.mediumRes).readBytes().size}")
-//                }
+                queList.forEach {
+                    println("${num++} ${it.isProcessed} && ")
+                }
+                println("Pre while...")
                 while (it.hasNext()) {
                     val video = it.next()
-                    if (video.highUploaded) {
-                        it.remove()
-                    }
                     if (video.is_favorite && !video.mediumUploaded) {
                         faveList.add(video)
                         it.remove()
@@ -236,14 +233,12 @@ class VideoUploadWorker(
                 beginProcess()
             }
             .subscribe({
-
             }, {
 
             })
     }
 
     var uploadingHD: Boolean = false
-
     @Synchronized
     private fun beginProcess() {
         serverDis?.dispose()
@@ -279,11 +274,15 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    println("this is standard logic...")
+                    println("this is fave logic...")
                     currentVideo = faveList[0]
-                    println("this is standard logic... $currentVideo")
-                    if (videosManager.videoIsValid(currentVideo ?: return@synchronized)) {
+                    if (faveList[0].isProcessed && !faveList[0].videoId.isNullOrEmpty()) {
+                        uploadingIsTrue()
+                        requestTokenForUpload(faveList[0])
                         faveList.remove(faveList[0])
+                    } else {
+                        uploadingIsFalse()
+                        videosManager.onResetCurrentVideo(faveList[0], VideosManagerImpl.RESET.RESET_NO_FILE, "Process Start")
                     }
                 }
             }
@@ -294,8 +293,13 @@ class VideoUploadWorker(
                 synchronized(this) {
                     println("this is standard logic...")
                     currentVideo = standardList[0]
-                    if (videosManager.videoIsValid(currentVideo ?: return@synchronized)) {
+                    if (standardList[0].isProcessed && !standardList[0].videoId.isNullOrEmpty()) {
+                        uploadingIsTrue()
+                        requestTokenForUpload(standardList[0])
                         standardList.remove(standardList[0])
+                    } else {
+                        uploadingIsFalse()
+                        videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_NO_FILE, "Process Start")
                     }
                 }
             }
@@ -349,7 +353,7 @@ class VideoUploadWorker(
                     when (it.reason) {
                         VideosManagerImpl.RESET.NO_RESET -> {
                             uploadingIsTrue()
-                           // requestTokenForUpload(currentVideo ?: return@subscribe)
+                            // requestTokenForUpload(currentVideo ?: return@subscribe)
                         }
                         else -> {
                             println("INVALID VIDEO!! ${it.reason}")
@@ -525,8 +529,9 @@ class VideoUploadWorker(
             awsDataDisposable =
                 uploadsManager
                     .getAWSDataForUpload()
+                    .retry(3)
                     .doOnError {
-                        if (it.message.equals("HTTP 502 Bad Gateway")) {
+                        if (it.message.equals("HTTP 502 Bad Gateway") || it.message.equals("HTTP 504 Gateway Time-out")) {
                             requestTokenForUpload(savedVideo)
                         } else {
                             it.printStackTrace()
