@@ -768,14 +768,16 @@ class VideoUploadWorker(
                             CompleteResponse.COMPLETING.name -> pingServerForStatus()
                             CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
                             CompleteResponse.FAILED.name -> {
-                                println("This is an else from complete body........ ${it.body()?.status}")
                                 uploadingIsFalse()
                                 videosManager.onResetCurrentVideo(
                                     currentVideo ?: return@subscribe
                                 )
                             }
                             else -> {
-                                pingServerForStatus()
+                                uploadingIsFalse()
+                                videosManager.onResetCurrentVideo(
+                                    currentVideo ?: return@subscribe
+                                )
                             }
                         }
                     }, {
