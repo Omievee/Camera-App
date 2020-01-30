@@ -55,19 +55,6 @@ class StaticApiModule {
     fun provideMoshi(): Moshi {
         return Moshi.Builder().apply {
             add(KotlinJsonAdapterFactory())
-//            add(object {
-//                @ToJson
-//                fun fromString(value: String): ArrayList<String> {
-//                    val listType = object : TypeToken<ArrayList<String>>() {
-//                    }.type
-//                    return Gson().fromJson(value, listType)
-//                }
-//
-//                @TypeConverter
-//                fun fromArrayList(list: ArrayList<String>): String {
-//                    return Gson().toJson(list)
-//                }
-//            })
             add(Date::class.java, Rfc3339DateJsonAdapter())
             add(object {
                 @ToJson

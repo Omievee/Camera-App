@@ -1,5 +1,6 @@
 package com.itsovertime.overtimecamera.play.uploads
 
+import android.annotation.SuppressLint
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.progressmanager.ProgressManager
 import com.itsovertime.overtimecamera.play.progressmanager.UploadsMessage
@@ -139,8 +140,22 @@ class UploadsPresenter(
     }
 }
 
-enum class CompleteResponse {
-    COMPLETING,
-    COMPLETED,
-    FAILED
+enum class CompleteResponse(val id: Int) {
+    COMPLETING(0),
+    COMPLETED(1),
+    FAILED(2);
+
+
+    companion object {
+        private val status by lazy { values().associateBy { it.name } }
+        private val statusInt by lazy { values().associateBy { it.id } }
+        @SuppressLint("DefaultLocale")
+        fun from(str: String): CompleteResponse {
+            return status.get(str.toUpperCase()) ?: FAILED
+        }
+
+        fun from(id: Int): CompleteResponse {
+            return statusInt.get(id) ?: FAILED
+        }
+    }
 }

@@ -22,7 +22,6 @@ import com.itsovertime.overtimecamera.play.itemsame.ItemSame
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.settings.SettingsFragment
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
-import com.timehop.stickyheadersrecyclerview.StickyRecyclerHeadersDecoration
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_uploads.*
 import kotlinx.android.synthetic.main.fragment_camera.navSpace

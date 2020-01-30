@@ -128,15 +128,20 @@ class VideosManagerImpl(
     var db = AppDatabase.getAppDataBase(context = context)
     private var videoDao = db?.videoDao()
     @SuppressLint("CheckResult")
-    override fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo) {
+    override fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo, notify: Boolean) {
         Single.fromCallable {
             with(videoDao) {
                 this?.updateUploadId(uplaodId, savedVideo.clientId)
+                this?.getVideoForUpload(savedVideo.clientId)
             }
+
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                println("VIDEO REGISTRATION SUCCESSFUL.... $uplaodId")
+                if (notify) {
+                    newVideos.onNext(true)
+                }
+                println("VIDEO REGISTRATION SUCCESSFUL.... ${it?.videoId}")
             }, {
                 it.printStackTrace()
             })
@@ -574,7 +579,7 @@ class VideosManagerImpl(
             }
             .subscribe({
                 synchronized(this) {
-                    // onRegisterVideoWithServer(false, pendingVidRegistration ?: return@subscribe)
+                    onRegisterVideoWithServer(false, pendingVidRegistration ?: return@subscribe)
                     videoCheck(video)
                     updateUploadsCounter(it, false)
                 }
@@ -676,7 +681,6 @@ class VideosManagerImpl(
         disp?.dispose()
         disp = manager
             .getVideoInstance(saved)
-            .retry(3)
             .doOnError {
                 it.printStackTrace()
                 analytics.onTrackUploadEvent(
@@ -684,7 +688,8 @@ class VideosManagerImpl(
                     arrayOf("client_id = ${saved.clientId}", "failed_response = ${it.message}")
                 )
                 if (it.message.equals("HTTP 502 Bad Gateway")) {
-                    onRegisterVideoWithServer(false, saved)
+                    println("bad gateway!")
+                    //    onRegisterVideoWithServer(false, saved)
                 }
             }
             .map {
@@ -697,10 +702,7 @@ class VideosManagerImpl(
                     "Registered Video",
                     arrayOf("client_id = ${saved.clientId}", "upload_id = ${uploadId}")
                 )
-                onUpdateUploadIdInDb(uploadId, saved)
-                if (notifyWorker) {
-                    newVideos.onNext(true)
-                }
+                onUpdateUploadIdInDb(uploadId, saved, notifyWorker)
             }, {
                 it.printStackTrace()
             })
@@ -854,6 +856,7 @@ class VideosManagerImpl(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 it ?: return@subscribe
+                println("This is the reset video.. $it")
                 if (!checkForNullValues(it.videoId) && it?.mediumRes.isNullOrEmpty()) {
                     println("RESET MSG: No video id... no transcode  ..")
                     onRegisterVideoWithServer(false, it)
@@ -866,7 +869,7 @@ class VideosManagerImpl(
                     videoCheck(it)
                 } else if (!it?.isProcessed) {
                     videoCheck(it)
-                } else newVideos.onNext(true)
+                }
             }, {
                 it.printStackTrace()
             })

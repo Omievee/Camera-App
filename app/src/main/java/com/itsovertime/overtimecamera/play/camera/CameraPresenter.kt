@@ -133,6 +133,7 @@ class CameraPresenter(
     }
 
     private fun startUploadWorkManager() {
+        println("First run work manager ________________")
         val workRequest =
             OneTimeWorkRequestBuilder<VideoUploadWorker>().addTag("UploadWork").build()
         WorkManager.getInstance(view.context ?: return)
@@ -222,7 +223,9 @@ class CameraPresenter(
     }
 
 
+    var taggedEvents: MutableList<Event> = arrayListOf()
     fun getEvents() {
+        taggedEvents?.clear()
         var defaultEvent: Event? = null
         val eventsList = mutableListOf<Event>()
         eventDisposable?.dispose()
@@ -232,22 +235,26 @@ class CameraPresenter(
                 er.events.forEachIndexed { i, event ->
                     event.videographer_ids.forEach { s ->
                         if (s == user?.id) {
-                            defaultEvent = er.events[i]
+                            taggedEvents.add(er.events[i])
                         }
                     }
                 }
                 eventsList.addAll(er.events)
+                taggedEvents.asReversed().forEach {
+                    eventsList.remove(it)
+                    eventsList.add(0, it)
+                }
             }
             .doOnError {
+                it.printStackTrace()
                 println("ERROR from events.... ${it.message}")
             }
             .subscribe({
                 view.setUpEventViewData(eventsList)
-                view.setUpDefaultEvent(defaultEvent)
+                view.setUpDefaultEvent(taggedEvents[0])
             }, {
             })
     }
-
 
     private var authdisp: Disposable? = null
     var user: User? = null

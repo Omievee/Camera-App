@@ -26,7 +26,7 @@ interface VideosManager {
     fun subscribeToResetReasons(): Observable<VideosManagerImpl.ResetReasons>
 
     fun updateVideoMd5(md5: String, clientId: String)
-    fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo)
+    fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo, notify:Boolean)
     fun updateVideoStatus(video: SavedVideo, state: UploadState)
     fun onUpdatedTaggedAthletesInDb(taggedAthletesArray: ArrayList<String>, clientId: String)
     fun onResetCurrentVideo(currentVideo: SavedVideo, reason: VideosManagerImpl.RESET, stage: String)
