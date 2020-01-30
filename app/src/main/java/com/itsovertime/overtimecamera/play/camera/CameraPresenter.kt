@@ -79,7 +79,8 @@ class CameraPresenter(
                 longitude = e?.longitude ?: 0.0,
                 uploadState = UploadState.QUEUED,
                 max_video_length = e?.max_video_length ?: 12,
-                filmed_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                filmed_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+                videoId = ""
             )
         }
         analytics.onTrackVideoFileCreated(video)

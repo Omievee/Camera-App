@@ -127,8 +127,9 @@ class VideoUploadWorker(
                             false
                         }
                         else -> {
-                            getVideosFromDB()
-                            uploadingIsTrue()
+                            if (!uploading) {
+                                getVideosFromDB()
+                            }
                             true
                         }
                     }
@@ -202,16 +203,12 @@ class VideoUploadWorker(
                 queList.removeIf {
                     it.highUploaded
                 }
-                analyticsManager.debugMessage(
-                    "Sorting Que",
-                    "========================================="
-                )
-                println("list size ${queList.size}")
                 val it = queList.iterator()
+                println("QUE LIST =====================================================================")
                 queList.forEach {
-                    println("${num++} ${it.isProcessed} && ")
+                    println("${num++} ${it.isProcessed} && ${it.mediumRes} && ${it.clientId}")
                 }
-                println("Pre while...")
+                // println("Pre while...")
                 while (it.hasNext()) {
                     val video = it.next()
                     if (video.is_favorite && !video.mediumUploaded) {
@@ -291,16 +288,61 @@ class VideoUploadWorker(
                     UploadsMessage.Uploading_Medium
                 )
                 synchronized(this) {
-                    println("this is standard logic...")
+                    println("this is standard logic... ${standardList[0]}")
                     currentVideo = standardList[0]
-                    if (standardList[0].isProcessed && !standardList[0].videoId.isNullOrEmpty()) {
-                        uploadingIsTrue()
-                        requestTokenForUpload(standardList[0])
-                        standardList.remove(standardList[0])
-                    } else {
-                        uploadingIsFalse()
-                        videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_NO_FILE, "Process Start")
+                    println("This is not null ------- ${standardList[0].videoId == null}")
+                    println("This is not null ------- ${standardList[0].videoId.isNullOrEmpty()}")
+                    println("This is not null ------- ${standardList[0].videoId.equals("null")}")
+
+                    when (currentVideo?.videoId.isNullOrEmpty() ) {
+                        true -> {
+                            videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, "Process Start")
+                        }
+                        else -> {
+                            when (currentVideo?.isProcessed) {
+                                true -> {
+                                    requestTokenForUpload(currentVideo ?: return@synchronized)
+                                    standardList.remove(standardList[0])
+                                }
+                                else -> {
+                                    filecheck(currentVideo)
+                                    when (filecheck(currentVideo)) {
+                                        true -> {
+                                            requestTokenForUpload(currentVideo ?: return@synchronized)
+                                            standardList.remove(standardList[0])
+                                        }
+                                        else -> {
+                                            videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_NO_FILE, "Process Start")
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
+
+                    //when(standardList[0].videoId != null )
+                    // when (!standardList[0].videoId.isNullOrEmpty())
+//                    if (!standardList[0].isProcessed) {
+//                        val invalidPath = !standardList[0].mediumRes.isNullOrEmpty()
+//                        val goodFile = File(standardList[0].mediumRes).exists()
+//                        val notEmpty = File(standardList[0].mediumRes).readBytes().isNotEmpty()
+//
+//                        if (invalidPath && goodFile && notEmpty && !standardList[0].videoId.equals("null")) {
+//                            requestTokenForUpload(standardList[0])
+//                            standardList.remove(standardList[0])
+//                        } else {
+//                            uploadingIsFalse()
+//                            videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_UNKOWN, "Process Start")
+//                        }
+//                    } else if (standardList[0].videoId.equals("null")) {
+//                        uploadingIsFalse()
+//                        println("first null check for id ${standardList[0].videoId.isNullOrEmpty()}")
+//                         videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, "Process Start")
+//                    } else {
+//                        println("second null check for id == ${checkForNullValues(standardList[0].videoId)}")
+//                         requestTokenForUpload(standardList[0])
+//                        standardList.remove(standardList[0])
+//                    }
                 }
             }
             faveListHQ.size > 0 && hdReady ?: false && faveList.isEmpty() && standardList.isEmpty() -> {
@@ -342,6 +384,23 @@ class VideoUploadWorker(
                 )
             }
         }
+    }
+
+    private fun filecheck(currentVideo: SavedVideo?): Boolean {
+        val path = currentVideo?.mediumRes != null
+        val goodFile = File(currentVideo?.mediumRes).exists()
+        val notEmpty = File(currentVideo?.mediumRes).readBytes().isNotEmpty()
+        return path && goodFile && notEmpty
+    }
+
+
+    private fun checkForNullValues(id: String?): Boolean {
+        println("NULL ${id == null}")
+        println("NULL ${id.isNullOrEmpty()}")
+        println("NULL ${id.equals("null")}")
+
+
+        return id != null && !id.isNullOrEmpty() && id != "null"
     }
 
     var resetDisp: Disposable? = null
@@ -782,10 +841,11 @@ class VideoUploadWorker(
                             checkForComplete()
                         } else {
                             uploadingIsFalse()
-//                            videosManager.onResetCurrentVideo(
-//                                currentVideo ?: return@doOnError,
-//                                reason
-//                            )
+                            videosManager.onResetCurrentVideo(
+                                currentVideo ?: return@doOnError,
+                                VideosManagerImpl.RESET.RESET_UNKOWN,
+                                "Complete Stage"
+                            )
                         }
                     }
                     .subscribe({

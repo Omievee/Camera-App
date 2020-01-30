@@ -153,6 +153,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
     override fun stopProgressAnimation() {
+
         progressBar?.clearAnimation()
     }
 
@@ -204,7 +205,10 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 hiddenEvents.visibility = View.VISIBLE
             }
             R.id.tapToSave -> {
-                progress.visibility = View.VISIBLE
+                activity?.runOnUiThread {
+                    progress.visibility = View.VISIBLE
+                }
+
                 when (presenter.getAvailableInternalMemory() > 5) {
                     true -> when (CAMERA) {
                         1 -> tapToSaveSelfie()
@@ -480,22 +484,33 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
     var cameraIsClosed: Boolean = false
+    @SuppressLint("CheckResult")
     override fun closeCamera() {
         cameraIsClosed = true
-        try {
-            cameraOpenCloseLock.acquire()
-            cameraDevice?.close()
-            cameraDevice = null
-            mediaRecorder?.release()
-            mediaRecorder = null
-        } catch (e: InterruptedException) {
-            throw RuntimeException(
-                "Interrupted while trying to lock overtimecamera closing.",
-                e
-            )
-        } finally {
-            cameraOpenCloseLock.release()
-        }
+        Single.fromCallable {
+            try {
+
+                cameraOpenCloseLock.acquire()
+                cameraDevice?.close()
+                cameraDevice = null
+                mediaRecorder?.release()
+                mediaRecorder = null
+            } catch (e: InterruptedException) {
+                throw RuntimeException(
+                    "Interrupted while trying to lock overtimecamera closing.",
+                    e
+                )
+            } finally {
+
+                cameraOpenCloseLock.release()
+            }
+        }.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doFinally {
+                println("Do finally....")
+
+            }
+
     }
 
     @Throws(IOException::class)
@@ -528,7 +543,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             }
 
 
-
+        //Hardcoded values - per iOS code
         recorder.apply {
             setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -686,7 +701,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                         mediaRecorder?.start()
                     }
                 }
-                Timer().schedule(rec, 500)
+                Timer().schedule(rec, 700)
                 Timer().schedule(hideViews, 3500)
             }
             1 -> {
@@ -921,25 +936,16 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             })
 
 //        Flowable.fromCallable {
+//
+//            closeCamera()
 //            if (recording) {
 //                saveText.visibility = View.GONE
 //                presenter.clearProgressAnimation()
 //                paused = !tapToSave
-//
 //            }
-//            try {
-//                captureSession?.stopRepeating()
-//            } catch (e: CameraAccessException) {
-//                cameraDevice?.close()
-//                e.printStackTrace();
-//            } catch (s: java.lang.Exception) {
-//                s.printStackTrace()
-//            }
-//
-//
-//            mediaRecorder?.stop()
-//            mediaRecorder?.reset()
-//            mediaRecorder = null
+////            mediaRecorder?.stop()
+////            mediaRecorder?.reset()
+////            mediaRecorder = null
 //
 //
 //        }.subscribeOn(Schedulers.io())
@@ -954,8 +960,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
 //            .subscribe({
 //            }, {
 //            })
-
-
     }
 
     private fun getEventData() {
@@ -1009,7 +1013,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             println("DISCONNECT!! $cameraDevice")
             cameraDevice.close()
             this@CameraFragment.cameraDevice = null
-            callback?.onRefreshFragmentFromDisconnect()
         }
 
         override fun onError(cameraDevice: CameraDevice, error: Int) {
