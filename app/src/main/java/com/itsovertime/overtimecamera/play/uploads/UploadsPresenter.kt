@@ -145,17 +145,21 @@ enum class CompleteResponse(val id: Int) {
     COMPLETED(1),
     FAILED(2);
 
-
     companion object {
-        private val status by lazy { values().associateBy { it.name } }
-        private val statusInt by lazy { values().associateBy { it.id } }
+        private val status by lazy {
+            values().associateBy { it.name }
+        }
+        private val statusInt by lazy {
+            values().associateBy { it.id }
+        }
+
         @SuppressLint("DefaultLocale")
         fun from(str: String): CompleteResponse {
-            return status.get(str.toUpperCase()) ?: FAILED
+            return status[str.toUpperCase()] ?: FAILED
         }
 
         fun from(id: Int): CompleteResponse {
-            return statusInt.get(id) ?: FAILED
+            return statusInt[id] ?: FAILED
         }
     }
 }

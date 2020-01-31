@@ -3,6 +3,7 @@ package com.itsovertime.overtimecamera.play.workmanager
 import android.annotation.SuppressLint
 import android.content.Context
 import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import androidx.work.*
@@ -81,7 +82,6 @@ class VideoUploadWorker(
             subscribeToHDSwitch()
             subscribeToEncodeComplete()
             subscribeToWifiStatus()
-            subscribeToResetReasons()
             Result.success()
         } catch (throwable: Throwable) {
             throwable.printStackTrace()
@@ -319,21 +319,22 @@ class VideoUploadWorker(
         }
     }
 
+    val start = "Process Start"
     private fun determineVideoStatus(video: SavedVideo, list: MutableList<SavedVideo>) {
         currentVideo = video
-        when (video?.videoId.isNullOrEmpty()) {
+        when (video?.videoId.isEmpty()) {
             true -> {
-                println("this is true...")
-                videosManager.onResetCurrentVideo(video ?: return, VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, "Process Start")
+                println("this is empty....${video.videoId}")
+                reset(video, VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, start)
             }
             else -> {
                 when (fileCheck(video)) {
                     true -> {
-                        requestTokenForUpload(video ?: return)
+                        requestTokenForUpload(video)
                         list.remove(list[0])
                     }
                     else -> {
-                        videosManager.onResetCurrentVideo(video ?: return, VideosManagerImpl.RESET.RESET_NO_FILE, "Process Start")
+                        reset(video, VideosManagerImpl.RESET.RESET_CORRUPT_FILE, start)
                     }
                 }
             }
@@ -349,43 +350,21 @@ class VideoUploadWorker(
         val goodFile = File(currentVideo?.mediumRes).exists()
         if (!goodFile) {
             return valid
-        } else if (File(currentVideo?.mediumRes).readBytes().isNotEmpty()) {
+        } else if (File(currentVideo?.mediumRes).readBytes().isEmpty()) {
+            return valid
+        }
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(context, Uri.fromFile(File(currentVideo?.mediumRes)))
+        val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+        val isVideo = "yes" == hasVideo
+        retriever.release()
+        if (isVideo) {
             valid = true
             return valid
         }
         return valid
     }
 
-
-    private fun checkForNullValues(id: String?): Boolean {
-        println("NULL ${id == null}")
-        println("NULL ${id.isNullOrEmpty()}")
-        println("NULL ${id.equals("null")}")
-        return id != null && !id.isNullOrEmpty() && id != "null"
-    }
-
-    var resetDisp: Disposable? = null
-    private fun subscribeToResetReasons() {
-        resetDisp =
-            videosManager
-                .subscribeToResetReasons()
-                .subscribe({
-                    when (it.reason) {
-                        VideosManagerImpl.RESET.NO_RESET -> {
-                            uploadingIsTrue()
-                            // requestTokenForUpload(currentVideo ?: return@subscribe)
-                        }
-                        else -> {
-                            println("INVALID VIDEO!! ${it.reason}")
-//                            reset(currentVideo ?: return@subscribe, it.reason)
-                        }
-                    }
-                },
-                    {
-                        it.printStackTrace()
-                    }
-                )
-    }
 
     fun reset(video: SavedVideo, reason: VideosManagerImpl.RESET, stage: String) {
         uploadingIsFalse()
@@ -420,7 +399,6 @@ class VideoUploadWorker(
         println("what is this file.... ${savedVideo.trimmedVidPath.isNullOrEmpty()}")
         println("what is this file.... ${savedVideo.trimmedVidPath == null}")
         println("what is this file.... ${savedVideo.trimmedVidPath.equals("null")}")
-        //println("what is this file.... ${savedVideo.highRes}")
 
         val encodeFile = if (savedVideo.trimmedVidPath.equals("null") || savedVideo.trimmedVidPath == null || savedVideo.trimmedVidPath == "") {
             File(savedVideo.highRes)
@@ -450,7 +428,7 @@ class VideoUploadWorker(
                 "-bufsize",
                 "16000k",
                 "-filter:v",
-                "fps=fps=60",
+                "fps=60",
                 // new file
                 newFile.absolutePath
             )
@@ -645,14 +623,15 @@ class VideoUploadWorker(
         if (isDeviceConnected()) {
             chunkToUpload = baseChunkSize
             if (video.mediumUploaded && uploadingHD) {
-                fullBytes = File(video.encodedPath).readBytes()
                 video.uploadState = UploadState.UPLOADING_HIGH
-                println("Video state:::::: ${video.uploadState}")
+                fullBytes = File(video.encodedPath).readBytes()
                 upload()
             } else {
-                fullBytes = File(video.mediumRes).readBytes()
-                video.uploadState = UploadState.UPLOADING_MEDIUM
-                upload()
+                if (fileCheck(video)) {
+                    fullBytes = File(video.mediumRes).readBytes()
+                    video.uploadState = UploadState.UPLOADING_MEDIUM
+                    upload()
+                } else println("BAD FILE BEFORE UPLOAD")
             }
         }
     }
@@ -666,7 +645,7 @@ class VideoUploadWorker(
     private fun upload() {
         if (isDeviceConnected()) {
             val fullFileSize = fullBytes.size
-            println("Filesize -------- $fullFileSize")
+
             val previousStartPlusDynamicChunk = startRange + chunkToUpload
             val end = minOf(fullFileSize, previousStartPlusDynamicChunk)
             val chunkFromFile = fullBytes.sliceArray(
@@ -675,6 +654,10 @@ class VideoUploadWorker(
                     end - 1
                 )
             )
+            println("----------------- chunk to upload $uploadChunkIndex")
+            println("----------------- slice to upload ${chunkFromFile.size}")
+            println("----------------- full file $fullFileSize")
+
             part_size = chunkFromFile.size
             val progress = (end * 100L / fullFileSize).toInt()
             prog = progress
@@ -709,10 +692,9 @@ class VideoUploadWorker(
                             )
                         )
                         if (it.body()?.success == true) {
-                            chunkToUpload = when (checkResponseTimeDifference(
-                                timeSent = it.raw().sentRequestAtMillis(),
-                                timeReceived = it.raw().receivedResponseAtMillis()
-                            )) {
+                            val sent = it.raw().sentRequestAtMillis()
+                            val received = it.raw().receivedResponseAtMillis()
+                            chunkToUpload = when (checkResponseTimeDifference(timeSent = sent, timeReceived = received)) {
                                 in 0..1 -> maxChunkSize
                                 in 2..3 -> baseChunkSize
                                 else -> minChunkSize
@@ -811,10 +793,16 @@ class VideoUploadWorker(
                         val status = it.body()?.status?.let { it1 -> CompleteResponse.valueOf(it1) }
                         println("THIS IS THE COMPLETE STATUS:::::: $status")
                         when (status) {
-                            CompleteResponse.COMPLETING -> pingServerForStatus()
-                            CompleteResponse.COMPLETED -> finalizeUpload(it.body()?.upload)
+                            CompleteResponse.COMPLETING -> {
+                                println("COMPLETING RESPONSE...... ${it.body()?.status}")
+                                pingServerForStatus()
+                            }
+                            CompleteResponse.COMPLETED -> {
+                                println("DONE RESPONSE...... ${it.body()?.status}")
+                                finalizeUpload(it.body()?.upload)
+                            }
                             CompleteResponse.FAILED -> {
-                                println("This is an else from complete body........ ${it.body()?.status}")
+                                println("FAILED RESPONSE........ ${it.body()?.status}")
                                 reset(currentVideo ?: return@subscribe, VideosManagerImpl.RESET.RESET_UNKOWN, "Failed Md5 Matching ${fullBytes.size}")
                             }
                             else -> {
@@ -918,7 +906,6 @@ class VideoUploadWorker(
         val timerTask = object : TimerTask() {
             override fun run() {
                 synchronized(this) {
-                    Log.d(TAG, "PING SERVER......")
                     checkForComplete()
                 }
             }
