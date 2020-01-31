@@ -207,9 +207,8 @@ class VideoUploadWorker(
                 val it = queList.iterator()
                 println("QUE LIST =====================================================================")
                 queList.forEach {
-                    println("${num++} ${it.isProcessed} && ${it.mediumRes} && ${it.videoId}")
+                    println("${num++} client:${it.clientId} && video:${it.videoId}")
                 }
-                // println("Pre while...")
                 while (it.hasNext()) {
                     val video = it.next()
                     if (video.is_favorite && !video.mediumUploaded) {
@@ -271,53 +270,13 @@ class VideoUploadWorker(
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )
-                synchronized(this) {
-                    println("this is fave logic...")
-                    currentVideo = faveList[0]
-                    println("Current video.... $currentVideo")
-                    when (currentVideo?.videoId.isNullOrEmpty()) {
-                        true -> {
-                            println("this is true...")
-                            videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, "Process Start")
-                        }
-                        else -> {
-                            when (fileCheck(currentVideo)) {
-                                true -> {
-                                    requestTokenForUpload(currentVideo ?: return@synchronized)
-                                    standardList.remove(standardList[0])
-                                }
-                                else -> {
-                                    videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_NO_FILE, "Process Start")
-                                }
-                            }
-                        }
-                    }
-                }
+                determineVideoStatus(faveList[0], faveList)
             }
             standardList.size > 0 -> {
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )
-                synchronized(this) {
-                    currentVideo = standardList[0]
-                    println("this is standard logic $currentVideo")
-                    when (currentVideo?.videoId.isNullOrEmpty()) {
-                        true -> {
-                            videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, "Process Start")
-                        }
-                        else -> {
-                            when (fileCheck(currentVideo)) {
-                                true -> {
-                                    requestTokenForUpload(currentVideo ?: return@synchronized)
-                                    standardList.remove(standardList[0])
-                                }
-                                else -> {
-                                    videosManager.onResetCurrentVideo(standardList[0], VideosManagerImpl.RESET.RESET_NO_FILE, "Process Start")
-                                }
-                            }
-                        }
-                    }
-                }
+                determineVideoStatus(standardList[0], standardList)
             }
             faveListHQ.size > 0 && hdReady ?: false && faveList.isEmpty() && standardList.isEmpty() -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
@@ -356,6 +315,27 @@ class VideoUploadWorker(
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Finished
                 )
+            }
+        }
+    }
+
+    private fun determineVideoStatus(video: SavedVideo, list: MutableList<SavedVideo>) {
+        currentVideo = video
+        when (video?.videoId.isNullOrEmpty()) {
+            true -> {
+                println("this is true...")
+                videosManager.onResetCurrentVideo(video ?: return, VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, "Process Start")
+            }
+            else -> {
+                when (fileCheck(video)) {
+                    true -> {
+                        requestTokenForUpload(video ?: return)
+                        list.remove(list[0])
+                    }
+                    else -> {
+                        videosManager.onResetCurrentVideo(video ?: return, VideosManagerImpl.RESET.RESET_NO_FILE, "Process Start")
+                    }
+                }
             }
         }
     }

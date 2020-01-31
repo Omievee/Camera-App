@@ -129,10 +129,12 @@ class VideosManagerImpl(
     private var videoDao = db?.videoDao()
     @SuppressLint("CheckResult")
     override fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo, notify: Boolean) {
+        println("Saved video.... ${savedVideo.clientId}")
+        var num: Int = 0
         Single.fromCallable {
             with(videoDao) {
                 this?.updateUploadId(uplaodId, savedVideo.clientId)
-                this?.getVideoForUpload(savedVideo.clientId)
+                this?.getVideos()
             }
 
         }.subscribeOn(Schedulers.io())
@@ -141,7 +143,10 @@ class VideosManagerImpl(
                 if (notify) {
                     newVideos.onNext(true)
                 }
-                println("VIDEO REGISTRATION SUCCESSFUL.... ${it?.videoId}")
+                it?.forEach {
+                    println("This is the video id----- ${num++} -- ${it.videoId} -- ${it.clientId}")
+                }
+                println("VIDEO REGISTRATION SUCCESSFUL.... ")
             }, {
                 it.printStackTrace()
             })
@@ -677,6 +682,7 @@ class VideosManagerImpl(
     @Synchronized
     override fun onRegisterVideoWithServer(notifyWorker: Boolean, saved: SavedVideo) {
         println("****************************REGISTRATION ENDPOINT STARTED.....")
+        println("Saved video ${saved.clientId}")
         var uploadId = ""
         disp?.dispose()
         disp = manager
