@@ -290,10 +290,12 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/topGuide">
 
+
         <com.itsovertime.overtimecamera.play.events.EventsRecyclerView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@android:drawable/screen_background_dark_transparent" />
+
 
     </androidx.cardview.widget.CardView>
 

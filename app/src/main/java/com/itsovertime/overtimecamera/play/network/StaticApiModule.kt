@@ -12,6 +12,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import okhttp3.Cache
+import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -20,6 +21,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import kotlin.math.max
 
 
 @Module
@@ -37,9 +39,12 @@ class StaticApiModule {
                 logging.level = HttpLoggingInterceptor.Level.BODY
                 this.addInterceptor(logging)
             }
-            connectTimeout(2, TimeUnit.MINUTES)
-            writeTimeout(2, TimeUnit.MINUTES)
-            readTimeout(2, TimeUnit.MINUTES)
+            connectTimeout(1, TimeUnit.MINUTES)
+            writeTimeout(1, TimeUnit.MINUTES)
+            readTimeout(1, TimeUnit.MINUTES)
+            dispatcher(Dispatcher().apply {
+                maxRequests = 3
+            })
             cache(cache)
         }
     }
@@ -50,19 +55,6 @@ class StaticApiModule {
     fun provideMoshi(): Moshi {
         return Moshi.Builder().apply {
             add(KotlinJsonAdapterFactory())
-//            add(object {
-//                @ToJson
-//                fun fromString(value: String): ArrayList<String> {
-//                    val listType = object : TypeToken<ArrayList<String>>() {
-//                    }.type
-//                    return Gson().fromJson(value, listType)
-//                }
-//
-//                @TypeConverter
-//                fun fromArrayList(list: ArrayList<String>): String {
-//                    return Gson().toJson(list)
-//                }
-//            })
             add(Date::class.java, Rfc3339DateJsonAdapter())
             add(object {
                 @ToJson

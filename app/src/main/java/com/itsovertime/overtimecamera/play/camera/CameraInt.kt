@@ -14,7 +14,7 @@ interface CameraInt {
     fun showOrHideViewsForCamera()
     fun setUpEventViewData(eventList: MutableList<Event>?)
     fun setUpDefaultEvent(event: Event?)
-
+    fun notifyOfLowStorage()
 
 
 }

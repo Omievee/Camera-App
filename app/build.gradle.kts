@@ -57,7 +57,7 @@ val WORKER_VERSION = "2.2.0"
 dependencies {
 
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.41")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.60")
     implementation("com.android.support:appcompat-v7:28.0.0")
     implementation("com.android.support:design:28.0.0")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
@@ -106,10 +106,11 @@ dependencies {
     //Glide
     implementation("com.github.bumptech.glide:glide:4.9.0")
 
+
     //Room
-    implementation("android.arch.persistence.room:runtime:1.1.1")
-    kapt("android.arch.persistence.room:compiler:1.1.1")
-    implementation("android.arch.persistence.room:rxjava2:1.1.1")
+    implementation("android.arch.persistence.room:runtime:2.2.3")
+    kapt("android.arch.persistence.room:compiler:2.2.3")
+    implementation("android.arch.persistence.room:rxjava2:2.2.3")
     //NEW Transcoder:
     implementation("com.otaliastudios:transcoder:0.7.3")
     //Old Transcoder:
@@ -132,6 +133,7 @@ dependencies {
 
     //country code detection
     implementation("io.michaelrocks:libphonenumber-android:8.10.16")
+    //section recycler
 
     //Testing
     testImplementation("junit:junit:4.12")

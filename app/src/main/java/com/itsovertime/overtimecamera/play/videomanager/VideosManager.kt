@@ -1,10 +1,7 @@
 package com.itsovertime.overtimecamera.play.videomanager
 
-import com.itsovertime.overtimecamera.play.model.Event
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.model.UploadState
-import com.itsovertime.overtimecamera.play.network.EncryptedResponse
-import com.itsovertime.overtimecamera.play.network.VideoInstanceRequest
 import io.reactivex.Observable
 import io.reactivex.Single
 import java.io.File
@@ -21,17 +18,18 @@ interface VideosManager {
     fun subscribeToCompletedUploads(): Observable<SavedVideo>
     fun onLoadDb()
     fun onSaveVideoToDb(video: SavedVideo)
-    fun onRegisterVideoWithServer( notifyWorker:Boolean,saved: SavedVideo)
+    fun onRegisterVideoWithServer(notifyWorker: Boolean, saved: SavedVideo)
     fun onTransCodeVideo(savedVideo: SavedVideo, videoFile: File)
     fun onVideoIsFavorite(isFavorite: Boolean, video: SavedVideo)
     fun onVideoIsFunny(isFunny: Boolean, clientId: String)
-
+    fun videoIsValid(vid: SavedVideo): Boolean
+    fun subscribeToResetReasons(): Observable<VideosManagerImpl.ResetReasons>
 
     fun updateVideoMd5(md5: String, clientId: String)
-    fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo)
+    fun onUpdateUploadIdInDb(uplaodId: String, savedVideo: SavedVideo, notify:Boolean)
     fun updateVideoStatus(video: SavedVideo, state: UploadState)
     fun onUpdatedTaggedAthletesInDb(taggedAthletesArray: ArrayList<String>, clientId: String)
-    fun onResetCurrentVideo(currentVideo: SavedVideo)
+    fun onResetCurrentVideo(currentVideo: SavedVideo, reason: VideosManagerImpl.RESET, stage: String)
     fun updateMediumUploaded(qualityUploaded: Boolean, clientId: String)
     fun onLoadFFMPEG()
     fun updateHighuploaded(qualityUploaded: Boolean, video: SavedVideo)

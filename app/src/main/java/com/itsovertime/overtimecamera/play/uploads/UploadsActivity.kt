@@ -24,14 +24,13 @@ import com.itsovertime.overtimecamera.play.settings.SettingsFragment
 import com.itsovertime.overtimecamera.play.userpreference.UserPreference
 import dagger.android.AndroidInjection
 import kotlinx.android.synthetic.main.activity_uploads.*
-import kotlinx.android.synthetic.main.fragment_camera.*
 import kotlinx.android.synthetic.main.fragment_camera.navSpace
-import kotlinx.android.synthetic.main.fragment_uploads.*
 import kotlinx.android.synthetic.main.fragment_uploads.swipe2refresh
 import kotlinx.android.synthetic.main.fragment_uploads.uploadsRecycler
 import kotlinx.android.synthetic.main.upload_item_view.*
 import kotlinx.android.synthetic.main.upload_item_view.view.*
 import kotlinx.android.synthetic.main.uploads_view_toolbar.*
+
 import javax.inject.Inject
 
 
@@ -85,7 +84,11 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         debug.setOnClickListener(this)
         switchHD.setOnCheckedChangeListener(this)
         swipe2refresh.setOnRefreshListener(this)
+
+
+
         switchHD.isChecked = UserPreference.isChecked
+
         window.apply {
             addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             setFlags(
@@ -104,9 +107,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
         uploadsRecycler.layoutManager =
             CustomLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
-        presenter.onRefresh()
         uploadsRecycler.adapter = adapter
-
         val itemDecorator = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
         ContextCompat.getDrawable(
             this, R.drawable.divider
@@ -115,10 +116,13 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
                 it
             )
         }
+
         uploadsRecycler.addItemDecoration(itemDecorator)
+        //  uploadsRecycler.addItemDecoration(StickyRecyclerHeadersDecoration(adapter))
         determineNavigationSpacing()
+        presenter.onRefresh()
 
-
+        println("Uploading hd bool...... ${UserPreference.isChecked}")
     }
 
     private fun determineNavigationSpacing() {
@@ -168,6 +172,7 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
                 }.setPositiveButton(getString(R.string.hd_uploads_button)) { _, _ ->
                     isHD = true
                     UserPreference.isChecked = true
+                    println("this was reached.... ${UserPreference.isChecked}")
                     presenter.hdSwitchWasChecked(isChecked)
                 }.setNegativeButton(getString(R.string.hd_uploads_cancel_button)) { d, i ->
                     switchHD.isChecked = false
@@ -232,11 +237,15 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     }
 
     override fun swipe2RefreshIsTrue() {
-        swipe2refresh.isRefreshing = true
+        this.runOnUiThread {
+            swipe2refresh.isRefreshing = true
+        }
     }
 
     override fun swipe2RefreshIsFalse() {
-        swipe2refresh.isRefreshing = false
+        this.runOnUiThread {
+            swipe2refresh.isRefreshing = false
+        }
     }
 
     override fun displaySettings() {
@@ -253,7 +262,10 @@ class UploadsActivity : OTActivity(), UploadsInt, View.OnClickListener,
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.settingsButton -> presenter.displayBottomSheetSettings()
-            R.id.back -> onBackPressed()
+            R.id.back ->{
+                println("-------- ${UserPreference.isChecked}")
+                onBackPressed()
+            }
             R.id.debug -> presenter.updateAdapterForDebug()
         }
     }

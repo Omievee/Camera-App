@@ -19,7 +19,7 @@ data class SavedVideo(
     @ColumnInfo(name = "clientId")
     val clientId: String,
     @ColumnInfo(name = "uploadId")
-    var videoId: String? = null,
+    var videoId: String,
     @ColumnInfo(name = "highRes")
     val highRes: String?,
     @ColumnInfo(name = "mediumRes")

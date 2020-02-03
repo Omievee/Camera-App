@@ -1,5 +1,6 @@
 package com.itsovertime.overtimecamera.play.uploads
 
+import android.annotation.SuppressLint
 import com.itsovertime.overtimecamera.play.model.SavedVideo
 import com.itsovertime.overtimecamera.play.progressmanager.ProgressManager
 import com.itsovertime.overtimecamera.play.progressmanager.UploadsMessage
@@ -89,15 +90,19 @@ class UploadsPresenter(
     var debug: Boolean = false
     private var managerDisposable: Disposable? = null
     private fun loadVideoGallery() {
+        managerDisposable?.dispose()
         managerDisposable = manager
             .onGetVideosForUploadScreen()
             .map {
                 this.list.clear()
                 this.list.addAll(it)
             }
-            .subscribe({
+            .doFinally {
                 view.updateAdapter(list.asReversed(), debug, userEnabledHDUploads)
                 view.swipe2RefreshIsFalse()
+            }
+            .subscribe({
+
             }, {
                 println("throwable: ${it.printStackTrace()}")
             })
@@ -139,8 +144,26 @@ class UploadsPresenter(
     }
 }
 
-enum class CompleteResponse {
-    COMPLETING,
-    COMPLETED,
-    FAILED
+enum class CompleteResponse(val id: Int) {
+    COMPLETING(0),
+    COMPLETED(1),
+    FAILED(2);
+
+    companion object {
+        private val status by lazy {
+            values().associateBy { it.name }
+        }
+        private val statusInt by lazy {
+            values().associateBy { it.id }
+        }
+
+        @SuppressLint("DefaultLocale")
+        fun from(str: String): CompleteResponse {
+            return status[str.toUpperCase()] ?: FAILED
+        }
+
+        fun from(id: Int): CompleteResponse {
+            return statusInt[id] ?: FAILED
+        }
+    }
 }

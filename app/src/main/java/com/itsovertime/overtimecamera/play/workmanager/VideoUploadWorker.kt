@@ -25,6 +25,7 @@ import com.itsovertime.overtimecamera.play.progressmanager.UploadsMessage
 import com.itsovertime.overtimecamera.play.uploads.CompleteResponse
 import com.itsovertime.overtimecamera.play.uploadsmanager.UploadsManager
 import com.itsovertime.overtimecamera.play.videomanager.VideosManager
+import com.itsovertime.overtimecamera.play.videomanager.VideosManagerImpl
 import com.itsovertime.overtimecamera.play.wifimanager.NETWORK_TYPE
 import com.itsovertime.overtimecamera.play.wifimanager.WifiManager
 import io.reactivex.Single
@@ -105,13 +106,13 @@ class VideoUploadWorker(
                     Log.d(TAG, "Subscribed to db updates.. $it... $uploading")
                     if (it && !uploading) {
                         Log.d(TAG, "Getting videos $it && $uploading ")
-                        uploadingIsTrue()
                         getVideosFromDB()
                     }
                 }, {
                     it.printStackTrace()
                 })
     }
+
 
     var wifiD: Disposable? = null
     private fun subscribeToWifiStatus() {
@@ -126,11 +127,11 @@ class VideoUploadWorker(
                             false
                         }
                         else -> {
-                            getVideosFromDB()
-                            uploadingIsTrue()
+                            if (!uploading) {
+                                getVideosFromDB()
+                            }
                             true
                         }
-
                     }
                 }, {
                     it.printStackTrace()
@@ -183,6 +184,7 @@ class VideoUploadWorker(
 
     }
 
+
     var vidDisp: Disposable? = null
     var db = AppDatabase.getAppDataBase(context = context)
     @SuppressLint("CheckResult")
@@ -193,7 +195,8 @@ class VideoUploadWorker(
         standardList.clear()
         faveListHQ.clear()
         standardListHQ.clear()
-
+        var num: Int = 0
+        vidDisp?.dispose()
         vidDisp = videosManager
             .onGetVideosForUpload()
             .map {
@@ -201,16 +204,16 @@ class VideoUploadWorker(
                 queList.removeIf {
                     it.highUploaded
                 }
-                analyticsManager.debugMessage(
-                    "Sorting Que",
-                    "========================================="
-                )
                 val it = queList.iterator()
+                println("QUE LIST =====================================================================")
+                queList.forEach {
+                    if (it.videoId.isEmpty()) {
+                        println("REGISTER.....")
+                       videosManager.onRegisterVideoWithServer(false, it)
+                    }
+                }
                 while (it.hasNext()) {
                     val video = it.next()
-                    if (video.highUploaded) {
-                        it.remove()
-                    }
                     if (video.is_favorite && !video.mediumUploaded) {
                         faveList.add(video)
                         it.remove()
@@ -230,7 +233,6 @@ class VideoUploadWorker(
                 beginProcess()
             }
             .subscribe({
-
             }, {
 
             })
@@ -265,41 +267,21 @@ class VideoUploadWorker(
                 "HD Uploads complete!"
             )
         }
-
+        println("pre when...")
         when {
             faveList.size > 0 -> {
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )
-                synchronized(this) {
-                    if (faveList[0].mediumRes.isNullOrEmpty() || !File(faveList[0].mediumRes).exists() || !videoIsValid(File(faveList[0].mediumRes))) {
-                        uploadingIsFalse()
-                        println("Bad fave video? ${faveList[0]}")
-                        videosManager.onResetCurrentVideo(faveList[0])
-                    } else {
-                        uploadingIsTrue()
-                        requestTokenForUpload(faveList[0])
-                        faveList.remove(faveList[0])
-                    }
-                }
+                determineVideoStatus(faveList[0], faveList)
             }
             standardList.size > 0 -> {
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )
-                synchronized(this) {
-                    if (standardList[0].mediumRes.isNullOrEmpty() || !File(standardList[0].mediumRes).exists() || !videoIsValid(File(standardList[0].mediumRes))) {
-                        uploadingIsFalse()
-                        println("Bad video? ${standardList[0]}")
-                        videosManager.onResetCurrentVideo(standardList[0])
-                    } else {
-                        uploadingIsTrue()
-                        requestTokenForUpload(standardList[0])
-                        standardList.remove(standardList[0])
-                    }
-                }
+                println("standard logic... ${standardList[0]}")
+                determineVideoStatus(standardList[0], standardList)
             }
-
             faveListHQ.size > 0 && hdReady ?: false && faveList.isEmpty() && standardList.isEmpty() -> {
                 progressManager.onCurrentUploadProcess(UploadsMessage.Uploading_High)
                 notifications.onCreateProgressNotification(
@@ -341,6 +323,59 @@ class VideoUploadWorker(
         }
     }
 
+    val start = "Process Start"
+    private fun determineVideoStatus(video: SavedVideo, list: MutableList<SavedVideo>) {
+        currentVideo = video
+        println("This is the video to upload... $currentVideo")
+        when (video?.videoId.isEmpty()) {
+            true -> {
+                println("this is empty....${video.videoId}")
+                reset(video, VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, start)
+            }
+            else -> {
+                when (fileCheck(video)) {
+                    true -> {
+                        requestTokenForUpload(video)
+                        list.remove(list[0])
+                    }
+                    else -> {
+                        reset(video, VideosManagerImpl.RESET.RESET_CORRUPT_FILE, start)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun fileCheck(currentVideo: SavedVideo?): Boolean {
+        var valid = false
+        val path = currentVideo?.mediumRes != null
+        if (!path) {
+            return valid
+        }
+        val goodFile = File(currentVideo?.mediumRes).exists()
+        if (!goodFile) {
+            return valid
+        } else if (File(currentVideo?.mediumRes).readBytes().isEmpty()) {
+            return valid
+        }
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(context, Uri.fromFile(File(currentVideo?.mediumRes)))
+        val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+        val isVideo = "yes" == hasVideo
+        retriever.release()
+        if (isVideo) {
+            valid = true
+            return valid
+        }
+        return valid
+    }
+
+
+    fun reset(video: SavedVideo, reason: VideosManagerImpl.RESET, stage: String) {
+        uploadingIsFalse()
+        videosManager.onResetCurrentVideo(video, reason, stage)
+    }
+
 
     private fun fileForHDEncodedVideo(fileName: String, clientId: String): File {
         val mediaStorageDir =
@@ -364,11 +399,19 @@ class VideoUploadWorker(
                 fileManager.onDeleteFile(savedVideo.encodedPath.toString())
             }
         }
-        val encodeFile = when (savedVideo.trimmedVidPath.isNullOrEmpty()) {
-            true -> File(savedVideo.highRes)
-            else -> File(savedVideo.trimmedVidPath)
+
+        println("File to upload... $savedVideo")
+        println("what is this file.... ${savedVideo.trimmedVidPath.isNullOrEmpty()}")
+        println("what is this file.... ${savedVideo.trimmedVidPath == null}")
+        println("what is this file.... ${savedVideo.trimmedVidPath.equals("null")}")
+
+        val encodeFile = if (savedVideo.trimmedVidPath.equals("null") || savedVideo.trimmedVidPath == null || savedVideo.trimmedVidPath == "") {
+            File(savedVideo.highRes)
+        } else {
+            File(savedVideo.trimmedVidPath)
         }
 
+        println("This is a file... $encodeFile")
         Single.fromCallable {
             val newFile =
                 fileForHDEncodedVideo(encodeFile.name, savedVideo.clientId)
@@ -390,7 +433,7 @@ class VideoUploadWorker(
                 "-bufsize",
                 "16000k",
                 "-filter:v",
-                "fps=fps=60",
+                "fps=60",
                 // new file
                 newFile.absolutePath
             )
@@ -405,6 +448,7 @@ class VideoUploadWorker(
                         override fun onSuccess(message: String?) {
                             super.onSuccess(message)
                             println("ENCODE Successful... $message")
+
                         }
 
                         override fun onProgress(message: String?) {
@@ -420,9 +464,9 @@ class VideoUploadWorker(
 
                         override fun onFailure(message: String?) {
                             super.onFailure(message)
-                            println("ENCODING FAILED")
+                            println("ENCODING FAILED $message")
                             uploadingIsFalse()
-                            videosManager.onResetCurrentVideo(savedVideo)
+//                            encodeVideoForUpload(currentVideo ?: return)
                             Crashlytics.log("Failed to execute ffmpeg -- $message")
                         }
                     })
@@ -453,6 +497,7 @@ class VideoUploadWorker(
         encodeDisp = videosManager
             .onGetEncodedVideo(video.clientId)
             .map {
+                println("Retrieved video $it")
                 currentVideo = it
                 if (!File(it?.encodedPath).exists()) {
                     println("Wtf.. file is gone... ")
@@ -461,7 +506,7 @@ class VideoUploadWorker(
             }
             .doOnError {
                 uploadingIsFalse()
-                videosManager.onResetCurrentVideo(currentVideo ?: return@doOnError)
+                videosManager.onResetCurrentVideo(currentVideo ?: return@doOnError, VideosManagerImpl.RESET.RESET_UNKOWN, "Get Encode From DB")
             }
             .subscribe({
             }, {
@@ -482,20 +527,22 @@ class VideoUploadWorker(
     private var tokenDisposable: Disposable? = null
     private var awsDataDisposable: Disposable? = null
     private fun requestTokenForUpload(savedVideo: SavedVideo) {
-        currentVideo = savedVideo
+        println("")
         if (isDeviceConnected()) {
             awsDataDisposable =
                 uploadsManager
                     .getAWSDataForUpload()
+                    .retry(3)
                     .doOnError {
-                        if (it.message.equals("HTTP 502 Bad Gateway")) {
+                        if (it.message.equals("HTTP 502 Bad Gateway") || it.message.equals("HTTP 504 Gateway Time-out")) {
                             requestTokenForUpload(savedVideo)
                         } else {
                             it.printStackTrace()
                             uploadingIsFalse()
-                            videosManager.onResetCurrentVideo(
-                                currentVideo ?: return@doOnError
-                            )
+//                            videosManager.onResetCurrentVideo(
+//                                currentVideo ?: return@doOnError,
+//                                reason
+//                            )
                             analyticsManager.onTrackUploadEvent(
                                 Failed_Token,
                                 arrayOf(
@@ -556,9 +603,10 @@ class VideoUploadWorker(
                                         "failed_response = ${it.message}"
                                     )
                                 )
-                                videosManager.onResetCurrentVideo(
-                                    currentVideo = currentVideo ?: return@doOnError
-                                )
+//                                videosManager.onResetCurrentVideo(
+//                                    currentVideo = currentVideo ?: return@doOnError,
+//                                    reason = reason
+//                                )
                             }
                         }
                         .subscribe({
@@ -577,38 +625,26 @@ class VideoUploadWorker(
     var count = 0
     private fun checkFileStatusBeforeUpload(video: SavedVideo) {
         Log.d(TAG, "CHECKING FILE..... ${video?.videoId}.")
-        if (isDeviceConnected()) {
-            if (!video.videoId.isNullOrEmpty()) {
-                chunkToUpload = baseChunkSize
-                if (video.mediumUploaded && uploadingHD) {
-                    fullBytes = File(video.encodedPath).readBytes()
-                    video.uploadState = UploadState.UPLOADING_HIGH
-                    println("Video state:::::: ${video.uploadState}")
-                    upload()
-                } else {
-                    fullBytes = File(video.mediumRes).readBytes()
-                    video.uploadState = UploadState.UPLOADING_MEDIUM
-                    upload()
+        when (video?.videoId?.isEmpty()) {
+            true -> reset(video, VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, "checkFileStatusBeforeUpload")
+            else -> {
+                if (isDeviceConnected()) {
+                    chunkToUpload = baseChunkSize
+                    if (video.mediumUploaded && uploadingHD) {
+                        video.uploadState = UploadState.UPLOADING_HIGH
+                        fullBytes = File(video.encodedPath).readBytes()
+                        upload()
+                    } else {
+                        if (fileCheck(video)) {
+                            fullBytes = File(video.mediumRes).readBytes()
+                            video.uploadState = UploadState.UPLOADING_MEDIUM
+                            upload()
+                        } else println("BAD FILE BEFORE UPLOAD")
+                    }
                 }
-            } else {
-                println("Video id was null..$video")
-                uploadingIsFalse()
-                videosManager.onResetCurrentVideo(video)
             }
         }
-    }
 
-    @Throws(RuntimeException::class)
-    private fun videoIsValid(file: File): Boolean {
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(context, Uri.fromFile(file))
-        val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
-        val isVideo = "yes" == hasVideo
-        retriever.release()
-        println("File Exists: ${file.exists()}")
-        println("Bytes Size: : ${file.readBytes().size}")
-        println("Is Video: : $isVideo")
-        return file.exists() && file.readBytes().isNotEmpty() && isVideo
     }
 
     private var startRange = 0
@@ -620,7 +656,7 @@ class VideoUploadWorker(
     private fun upload() {
         if (isDeviceConnected()) {
             val fullFileSize = fullBytes.size
-            println("Filesize -------- $fullFileSize")
+
             val previousStartPlusDynamicChunk = startRange + chunkToUpload
             val end = minOf(fullFileSize, previousStartPlusDynamicChunk)
             val chunkFromFile = fullBytes.sliceArray(
@@ -629,6 +665,10 @@ class VideoUploadWorker(
                     end - 1
                 )
             )
+            println("----------------- chunk to upload $uploadChunkIndex")
+            println("----------------- slice to upload ${chunkFromFile.size}")
+            println("----------------- full file $fullFileSize")
+
             part_size = chunkFromFile.size
             val progress = (end * 100L / fullFileSize).toInt()
             prog = progress
@@ -663,10 +703,9 @@ class VideoUploadWorker(
                             )
                         )
                         if (it.body()?.success == true) {
-                            chunkToUpload = when (checkResponseTimeDifference(
-                                timeSent = it.raw().sentRequestAtMillis(),
-                                timeReceived = it.raw().receivedResponseAtMillis()
-                            )) {
+                            val sent = it.raw().sentRequestAtMillis()
+                            val received = it.raw().receivedResponseAtMillis()
+                            chunkToUpload = when (checkResponseTimeDifference(timeSent = sent, timeReceived = received)) {
                                 in 0..1 -> maxChunkSize
                                 in 2..3 -> baseChunkSize
                                 else -> minChunkSize
@@ -708,9 +747,10 @@ class VideoUploadWorker(
                                 )
                             )
                             uploadingIsFalse()
-                            videosManager.onResetCurrentVideo(
-                                currentVideo = currentVideo ?: return@doOnError
-                            )
+//                            videosManager.onResetCurrentVideo(
+//                                currentVideo = currentVideo ?: return@doOnError,
+//                                reason = reason
+//                            )
                         }
 
                     }
@@ -754,37 +794,37 @@ class VideoUploadWorker(
                         if (it.message?.contains("502 Bad Gateway") == true) {
                             checkForComplete()
                         } else {
-                            uploadingIsFalse()
-                            videosManager.onResetCurrentVideo(
-                                currentVideo ?: return@doOnError
-                            )
+                            reset(currentVideo ?: return@doOnError, VideosManagerImpl.RESET.RESET_UNKOWN, "Failed onComplete: ${it.message}")
                         }
                     }
                     .subscribe({
                         if (it.code() == 502) {
                             checkForComplete()
                         }
-                        when (it.body()?.status) {
-                            CompleteResponse.COMPLETING.name -> pingServerForStatus()
-                            CompleteResponse.COMPLETED.name -> finalizeUpload(it.body()?.upload)
-                            CompleteResponse.FAILED.name -> {
-                                uploadingIsFalse()
-                                videosManager.onResetCurrentVideo(
-                                    currentVideo ?: return@subscribe
-                                )
+                        val status = it.body()?.status?.let { it1 -> CompleteResponse.valueOf(it1) }
+                        println("THIS IS THE COMPLETE STATUS:::::: $status")
+                        when (status) {
+                            CompleteResponse.COMPLETING -> {
+                                println("COMPLETING RESPONSE...... ${it.body()?.status}")
+                                pingServerForStatus()
+                            }
+                            CompleteResponse.COMPLETED -> {
+                                println("DONE RESPONSE...... ${it.body()?.status}")
+                                finalizeUpload(it.body()?.upload)
+                            }
+                            CompleteResponse.FAILED -> {
+                                println("FAILED RESPONSE........ ${it.body()?.status}")
+                                reset(currentVideo ?: return@subscribe, VideosManagerImpl.RESET.RESET_UNKOWN, "Failed Md5 Matching ${fullBytes.size}")
                             }
                             else -> {
-                                uploadingIsFalse()
-                                videosManager.onResetCurrentVideo(
-                                    currentVideo ?: return@subscribe
-                                )
+                                println("This is an else from complete body........ ${it.body()?.status}")
+                                reset(currentVideo ?: return@subscribe, VideosManagerImpl.RESET.RESET_UNKOWN, "Failed Md5 Matching ${fullBytes.size}")
                             }
                         }
                     }, {
                         it.printStackTrace()
                     })
             }
-
         }
     }
 
@@ -803,13 +843,14 @@ class VideoUploadWorker(
                 } catch (arg: IllegalAccessException) {
                     arg.printStackTrace()
                     uploadingIsFalse()
-                    videosManager.onResetCurrentVideo(currentVideo ?: return)
+                    //videosManager.onResetCurrentVideo(currentVideo ?: return, reason)
                 }
 
+                println("Write to server final.... ${currentVideo?.videoId}")
                 serverDis = uploadsManager
                     .writerToServerAfterComplete(
-                        uploadId = currentVideo?.videoId ?: "",
-                        S3Key = upload?.S3Key ?: "",
+                        uploadId = currentVideo?.videoId ?: return@synchronized,
+                        S3Key = upload?.S3Key ?: return@synchronized,
                         vidWidth = width,
                         vidHeight = height,
                         hq = uploadingHD,
@@ -820,9 +861,10 @@ class VideoUploadWorker(
                             finalizeUpload(upload)
                         } else {
                             uploadingIsFalse()
-                            videosManager.onResetCurrentVideo(
-                                currentVideo ?: return@doOnError
-                            )
+//                            videosManager.onResetCurrentVideo(
+//                                currentVideo ?: return@doOnError,
+//                                reason
+//                            )
                             it.printStackTrace()
                         }
                     }
@@ -865,8 +907,6 @@ class VideoUploadWorker(
                     },
                         {
                             it.printStackTrace()
-
-
                         })
             }
         }
@@ -877,7 +917,6 @@ class VideoUploadWorker(
         val timerTask = object : TimerTask() {
             override fun run() {
                 synchronized(this) {
-                    Log.d(TAG, "PING SERVER......")
                     checkForComplete()
                 }
             }
@@ -900,16 +939,16 @@ class VideoUploadWorker(
             retriever.release()
         } catch (nf: NumberFormatException) {
             uploadingIsFalse()
-            videosManager.onResetCurrentVideo(currentVideo ?: return)
+            // videosManager.onResetCurrentVideo(currentVideo ?: return, reason)
             retriever.release()
         } catch (ia: IllegalArgumentException) {
             uploadingIsFalse()
-            videosManager.onResetCurrentVideo(currentVideo ?: return)
+            //  videosManager.onResetCurrentVideo(currentVideo ?: return, reason)
             retriever.release()
         } catch (r: RuntimeException) {
             r.printStackTrace()
             uploadingIsFalse()
-            videosManager.onResetCurrentVideo(currentVideo ?: return)
+            // videosManager.onResetCurrentVideo(currentVideo ?: return, reason)
             retriever.release()
         }
         this.width = width
@@ -941,7 +980,6 @@ class VideoUploadWorker(
         const val Failed_Path = "Failed to set video path"
     }
 }
-
 
 class DaggerWorkerFactory(
     private val uploads: UploadsManager,

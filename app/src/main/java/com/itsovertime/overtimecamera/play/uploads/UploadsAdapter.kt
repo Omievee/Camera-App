@@ -51,4 +51,30 @@ class UploadsAdapter : RecyclerView.Adapter<BaseViewHolder>() {
         }
         return list?.size ?: 0
     }
+
+//    override fun getHeaderId(position: Int): Long {
+//        //  val element = (data?.data?.get(position)) ?: return 0
+//        return data?.data?.size?.toLong() ?: 0L
+//    }
+//
+//    override fun onCreateHeaderViewHolder(parent: ViewGroup): BaseViewHolder {
+//        return BaseViewHolder(EventHeader(parent?.context))
+//    }
+//
+//    override fun onBindHeaderViewHolder(holder: BaseViewHolder, p1: Int) {
+//        println("ELEMENTS? ${data?.data?.get(p1)}")
+//        println("ELEMENTS? ${data?.data?.get(p1)?.list?.size}")
+//        val view = holder?.itemView
+//        when (view) {
+//            is EventHeader -> view.bind(
+//                list?.get(p1)?.eventName.toString()
+//            )
+//        }
+//        list?.get(p1)?.eventName?.let { (holder?.itemView as EventHeader).bind(it) }
+//    }
+
+    companion object {
+        const val EVENT = 0
+        const val UNE = 1
+    }
 }

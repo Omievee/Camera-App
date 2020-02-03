@@ -13,7 +13,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.itsovertime.overtimecamera.play.analytics.OTAnalyticsManager
 import com.itsovertime.overtimecamera.play.authmanager.AuthenticationManager
@@ -80,14 +79,14 @@ class CameraPresenter(
                 longitude = e?.longitude ?: 0.0,
                 uploadState = UploadState.QUEUED,
                 max_video_length = e?.max_video_length ?: 12,
-                filmed_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+                filmed_at = DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
+                videoId = ""
             )
         }
-        synchronized(this) {
-            analytics.onTrackVideoFileCreated(video)
-            manager.onSaveVideoToDb(video ?: return)
-            view.engageCamera()
-        }
+        analytics.onTrackVideoFileCreated(video)
+        manager.onSaveVideoToDb(video ?: return)
+        view.engageCamera()
+
     }
 
 
@@ -97,14 +96,44 @@ class CameraPresenter(
         manager.onLoadDb()
         user()
         startUploadWorkManager()
-        checkStorage()
+
+        if (getAvailableInternalMemory() < 5) {
+            view.notifyOfLowStorage()
+        }
     }
 
-    private fun checkStorage() {
-        //  if(getAvailableInternalMemorySize() < )
+    fun getAvailableInternalMemory(): Int {
+        val path = Environment.getDataDirectory()
+        val stat = StatFs(path.path)
+        val blockSize = stat.blockSizeLong
+        val availableBlocks = stat.availableBlocksLong
+        return formatSize(availableBlocks * blockSize)
+    }
+
+    private fun formatSize(size: Long): Int {
+        var size = size
+        var suffix: String? = null
+        if (size >= 1024) {
+            suffix = "KB"
+            size /= 1024
+            if (size >= 1024) {
+                suffix = "MB"
+                size /= 1024
+            }
+        }
+        return size.toInt()
+//        val resultBuffer = StringBuilder(java.lang.Long.toString(size))
+//        var commaOffset = resultBuffer.length - 3
+//        while (commaOffset > 0) {
+//            resultBuffer.insert(commaOffset, '.')
+//            commaOffset -= 3
+//        }
+//        if (suffix != null) resultBuffer.append(suffix)
+//        return resultBuffer.toString()
     }
 
     private fun startUploadWorkManager() {
+        println("First run work manager ________________")
         val workRequest =
             OneTimeWorkRequestBuilder<VideoUploadWorker>().addTag("UploadWork").build()
         WorkManager.getInstance(view.context ?: return)
@@ -194,7 +223,9 @@ class CameraPresenter(
     }
 
 
+    var taggedEvents: MutableList<Event> = arrayListOf()
     fun getEvents() {
+        taggedEvents?.clear()
         var defaultEvent: Event? = null
         val eventsList = mutableListOf<Event>()
         eventDisposable?.dispose()
@@ -204,22 +235,26 @@ class CameraPresenter(
                 er.events.forEachIndexed { i, event ->
                     event.videographer_ids.forEach { s ->
                         if (s == user?.id) {
-                            defaultEvent = er.events[i]
+                            taggedEvents.add(er.events[i])
                         }
                     }
                 }
                 eventsList.addAll(er.events)
+                taggedEvents.asReversed().forEach {
+                    eventsList.remove(it)
+                    eventsList.add(0, it)
+                }
             }
             .doOnError {
+                it.printStackTrace()
                 println("ERROR from events.... ${it.message}")
             }
             .subscribe({
                 view.setUpEventViewData(eventsList)
-                view.setUpDefaultEvent(defaultEvent)
+                view.setUpDefaultEvent(taggedEvents[0])
             }, {
             })
     }
-
 
     private var authdisp: Disposable? = null
     var user: User? = null
@@ -307,21 +342,6 @@ class CameraPresenter(
 
     fun onTrackStartedRecording() {
         analytics.onTrackCameraRecording()
-    }
-
-    fun getAvailableInternalMemorySize(): Long {
-        val path = Environment.getDataDirectory()
-        val stat = StatFs(path.path)
-        val blockSize: Long
-        val availableBlocks: Long
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            blockSize = stat.blockSizeLong
-            availableBlocks = stat.availableBlocksLong
-        } else {
-            blockSize = stat.blockSize.toLong()
-            availableBlocks = stat.availableBlocks.toLong()
-        }
-        return availableBlocks * blockSize
     }
 
 
