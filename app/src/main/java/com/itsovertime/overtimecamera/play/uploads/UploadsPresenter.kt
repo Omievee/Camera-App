@@ -90,15 +90,19 @@ class UploadsPresenter(
     var debug: Boolean = false
     private var managerDisposable: Disposable? = null
     private fun loadVideoGallery() {
+        managerDisposable?.dispose()
         managerDisposable = manager
             .onGetVideosForUploadScreen()
             .map {
                 this.list.clear()
                 this.list.addAll(it)
             }
-            .subscribe({
+            .doFinally {
                 view.updateAdapter(list.asReversed(), debug, userEnabledHDUploads)
                 view.swipe2RefreshIsFalse()
+            }
+            .subscribe({
+
             }, {
                 println("throwable: ${it.printStackTrace()}")
             })

@@ -207,7 +207,10 @@ class VideoUploadWorker(
                 val it = queList.iterator()
                 println("QUE LIST =====================================================================")
                 queList.forEach {
-                    println("${num++} client:${it.clientId} && video:${it.videoId}")
+                    if (it.videoId.isEmpty()) {
+                        println("REGISTER.....")
+                       videosManager.onRegisterVideoWithServer(false, it)
+                    }
                 }
                 while (it.hasNext()) {
                     val video = it.next()
@@ -264,7 +267,7 @@ class VideoUploadWorker(
                 "HD Uploads complete!"
             )
         }
-
+        println("pre when...")
         when {
             faveList.size > 0 -> {
                 progressManager.onCurrentUploadProcess(
@@ -276,6 +279,7 @@ class VideoUploadWorker(
                 progressManager.onCurrentUploadProcess(
                     UploadsMessage.Uploading_Medium
                 )
+                println("standard logic... ${standardList[0]}")
                 determineVideoStatus(standardList[0], standardList)
             }
             faveListHQ.size > 0 && hdReady ?: false && faveList.isEmpty() && standardList.isEmpty() -> {
@@ -322,6 +326,7 @@ class VideoUploadWorker(
     val start = "Process Start"
     private fun determineVideoStatus(video: SavedVideo, list: MutableList<SavedVideo>) {
         currentVideo = video
+        println("This is the video to upload... $currentVideo")
         when (video?.videoId.isEmpty()) {
             true -> {
                 println("this is empty....${video.videoId}")
@@ -620,20 +625,26 @@ class VideoUploadWorker(
     var count = 0
     private fun checkFileStatusBeforeUpload(video: SavedVideo) {
         Log.d(TAG, "CHECKING FILE..... ${video?.videoId}.")
-        if (isDeviceConnected()) {
-            chunkToUpload = baseChunkSize
-            if (video.mediumUploaded && uploadingHD) {
-                video.uploadState = UploadState.UPLOADING_HIGH
-                fullBytes = File(video.encodedPath).readBytes()
-                upload()
-            } else {
-                if (fileCheck(video)) {
-                    fullBytes = File(video.mediumRes).readBytes()
-                    video.uploadState = UploadState.UPLOADING_MEDIUM
-                    upload()
-                } else println("BAD FILE BEFORE UPLOAD")
+        when (video?.videoId?.isEmpty()) {
+            true -> reset(video, VideosManagerImpl.RESET.RESET_NO_VIDEO_ID, "checkFileStatusBeforeUpload")
+            else -> {
+                if (isDeviceConnected()) {
+                    chunkToUpload = baseChunkSize
+                    if (video.mediumUploaded && uploadingHD) {
+                        video.uploadState = UploadState.UPLOADING_HIGH
+                        fullBytes = File(video.encodedPath).readBytes()
+                        upload()
+                    } else {
+                        if (fileCheck(video)) {
+                            fullBytes = File(video.mediumRes).readBytes()
+                            video.uploadState = UploadState.UPLOADING_MEDIUM
+                            upload()
+                        } else println("BAD FILE BEFORE UPLOAD")
+                    }
+                }
             }
         }
+
     }
 
     private var startRange = 0

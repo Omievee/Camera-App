@@ -267,7 +267,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
             R.id.uploadButton -> {
                 paused = true
                 progress.visibility = View.VISIBLE
-                deleteUnsavedFile()
                 if (CAMERA == 1) {
                     resetSelfieViews()
                 }
@@ -573,7 +572,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 }
             }
         }
-        Timer().schedule(enable, 2500)
+        Timer().schedule(enable, 1500)
     }
 
     @SuppressLint("CheckResult")
@@ -634,7 +633,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                                 }
                                 try {
                                     setUpCaptureRequestBuilder(previewRequestBuilder)
-                                    HandlerThread("CameraPreview").start()
+
                                     startRecordingThread()
                                     captureSession?.setRepeatingRequest(
                                         previewRequestBuilder.build(),
@@ -1069,17 +1068,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
                 txView?.setTransform(Matrix())
             }
             manager?.openCamera(cameraId, cameraStateCallBack, backgroundHandler)
-            Single.fromCallable {
-                println("in single...")
-
-
-            }.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally {
-                    println("open cam...")
-                }
-
-
         } catch (e: CameraAccessException) {
             activity?.finishAffinity()
         } catch (e: NullPointerException) {
@@ -1087,17 +1075,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock overtimecamera opening.")
         }
-
-//        Flowable.fromCallable {
-//
-//        }.subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .doFinally {
-//                println("AT DO FINALLY!!@D")
-//
-//            }
-
-
     }
 
     private fun startBackgroundThread() {
@@ -1108,6 +1085,7 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     }
 
     fun startRecordingThread() {
+        HandlerThread("CameraPreview").start()
         recordThread = HandlerThread("Recording")
         recordThread?.start()
         recordHandler = Handler(recordThread?.looper)
@@ -1116,7 +1094,6 @@ class CameraFragment : Fragment(), CameraInt, View.OnClickListener, OnTouchListe
     var recordHandler: Handler? = null
     private fun stopRecordingThread() {
         recordThread?.quitSafely()
-
         try {
             recordThread?.join()
             recordThread = null

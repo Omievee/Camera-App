@@ -679,6 +679,7 @@ class VideosManagerImpl(
     }
 
     var disp: Disposable? = null
+    var failure: Int = 0
     @Synchronized
     override fun onRegisterVideoWithServer(notifyWorker: Boolean, saved: SavedVideo) {
         println("****************************REGISTRATION ENDPOINT STARTED.....")
@@ -689,13 +690,22 @@ class VideosManagerImpl(
             .getVideoInstance(saved)
             .doOnError {
                 it.printStackTrace()
+                failure++
+                if (failure == 3) {
+                    val cool = object : TimerTask() {
+                        override fun run() {
+                            onRegisterVideoWithServer(notifyWorker, saved)
+                        }
+                    }
+                    Timer().schedule(cool, 3000)
+                }
                 analytics.onTrackUploadEvent(
                     "Failed to register Video",
                     arrayOf("client_id = ${saved.clientId}", "failed_response = ${it.message}")
                 )
                 if (it.message.equals("HTTP 502 Bad Gateway")) {
                     println("bad gateway!")
-                    //    onRegisterVideoWithServer(false, saved)
+                    onRegisterVideoWithServer(false, saved)
                 }
             }
             .map {
@@ -756,18 +766,6 @@ class VideosManagerImpl(
         println("Is video valid? $validVideo")
         return validVideo
     }
-
-//    fun valid(vid: SavedVideo?): Boolean {
-//        val retriever = MediaMetadataRetriever()
-//        retriever.setDataSource(context, Uri.fromFile(File(vid?.mediumRes)))
-//        val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
-//        //println("has video....???? $hasVideo")
-//        val isVideo = "yes" == hasVideo
-//        retriever.release()
-//        //println("is there video.... $hasVideo")
-//        //println("is file valid.... ${File(vid?.mediumRes).readBytes().size}")
-//        return isVideo
-//    }
 
     private fun checkForNullValues(id: String?): Boolean {
         return id != null && !id.isNullOrEmpty() && id != "null"

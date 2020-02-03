@@ -13,12 +13,13 @@ class AuthenticatedNetworkInterceptor : Interceptor {
         val original = chain.request()
         val requestBuilder = original.newBuilder()
 
+
+
         requestBuilder.apply {
             header(
                 Constants.Authorization,
                 "Bearer ${UserPreference.authToken}"
             )
-
         }
         return chain.proceed(requestBuilder.build())
     }
