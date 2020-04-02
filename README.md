@@ -13,6 +13,8 @@ Dagger
 Room
 WorkManager
 FFMPEG
+Retrofit
+Moshi
 MVP Architecture
 
 
